@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Строка — Кабинет автора</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-card: #161618;
+            --bg-input: #1a1a1c;
+            --text-primary: #e8e6e3;
+            --text-secondary: #8a8a8a;
+            --text-muted: #5a5a5a;
+            --accent: #c9a55c;
+            --accent-dim: #8a7340;
+            --accent-light: #d4b876;
+            --border: #2a2a2c;
+            --danger: #c44;
+            --success: #4a8;
+            --warning: #c90;
+            
+            --font-display: 'Cormorant Garamond', serif;
+            --font-ui: 'IBM Plex Sans', sans-serif;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+        
+        body {
+            font-family: var(--font-ui);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+        
+        /* ===== APP CONTAINER ===== */
+        .app {
+            min-height: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            position: relative;
+            background: var(--bg-primary);
+        }
+        
+        /* ===== HEADER ===== */
+        .header {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .logo {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: 0.05em;
+        }
+        
+        .logo span {
+            color: var(--accent);
+        }
+        
+        .logo-sub {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-left: 8px;
+        }
+        
+        .header-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--accent-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        /* ===== SCREENS ===== */
+        .screen {
+            display: none;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        /* ===== AUTH SCREEN ===== */
+        .auth-container {
+            padding-top: 60px;
+            text-align: center;
+        }
+        
+        .auth-logo {
+            font-family: var(--font-display);
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .auth-logo span {
+            color: var(--accent);
+        }
+        
+        .auth-subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 48px;
+        }
+        
+        .auth-form {
+            max-width: 320px;
+            margin: 0 auto;
+        }
+        
+        .input-group {
+            margin-bottom: 16px;
+            text-align: left;
+        }
+        
+        .input-label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        
+        .input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: var(--font-ui);
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        
+        .input:focus {
+            border-color: var(--accent);
+        }
+        
+        .input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 24px;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            color: var(--bg-primary);
+            font-family: var(--font-ui);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background: var(--accent-light);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            background: var(--bg-secondary);
+        }
+        
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            margin: 24px 0;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+        
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+        
+        .auth-divider span {
+            padding: 0 12px;
+        }
+        
+        .auth-switch {
+            margin-top: 24px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .auth-switch a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        /* ===== DASHBOARD ===== */
+        .welcome-card {
+            background: linear-gradient(135deg, var(--accent-dim) 0%, var(--bg-card) 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .welcome-title {
+            font-family: var(--font-display);
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        
+        .welcome-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .stat-value.accent {
+            color: var(--accent);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 20px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-title a {
+            font-family: var(--font-ui);
+            font-size: 13px;
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        /* ===== BOOK LIST ===== */
+        .book-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .book-item {
+            display: flex;
+            gap: 14px;
+            padding: 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        
+        .book-item:hover {
+            border-color: var(--accent-dim);
+        }
+        
+        .book-cover {
+            width: 50px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--accent-dim), var(--bg-secondary));
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        
+        .book-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .book-title {
+            font-weight: 500;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .book-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+        
+        .book-status.published {
+            background: rgba(74, 170, 136, 0.2);
+            color: var(--success);
+        }
+        
+        .book-status.moderation {
+            background: rgba(204, 153, 0, 0.2);
+            color: var(--warning);
+        }
+        
+        .book-status.draft {
+            background: rgba(138, 138, 138, 0.2);
+            color: var(--text-secondary);
+        }
+        
+        .book-stats {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .book-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        /* ===== ADD BOOK BUTTON ===== */
+        .add-book-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 16px;
+            background: transparent;
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 12px;
+        }
+        
+        .add-book-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        /* ===== ADD BOOK FORM ===== */
+        .form-steps {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+        }
+        
+        .form-step {
+            flex: 1;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+        }
+        
+        .form-step.active {
+            background: var(--accent);
+        }
+        
+        .form-step.done {
+            background: var(--success);
+        }
+        
+        .step-title {
+            font-family: var(--font-display);
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .step-subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 16px;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--accent);
+        }
+        
+        .upload-area.dragover {
+            border-color: var(--accent);
+            background: rgba(201, 165, 92, 0.1);
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        
+        .upload-text {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .upload-text span {
+            color: var(--accent);
+        }
+        
+        .upload-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+        
+        .file-uploaded {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--success);
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .file-uploaded-icon {
+            font-size: 24px;
+        }
+        
+        .file-uploaded-info {
+            flex: 1;
+        }
+        
+        .file-uploaded-name {
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+        
+        .file-uploaded-size {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .file-uploaded-remove {
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 18px;
+        }
+        
+        /* ===== TAGS INPUT ===== */
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tag:hover {
+            border-color: var(--accent-dim);
+        }
+        
+        .tag.selected {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg-primary);
+        }
+        
+        /* ===== SHORTS PREVIEW ===== */
+        .shorts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .short-preview {
+            padding: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            position: relative;
+        }
+        
+        .short-preview.selected {
+            border-color: var(--accent);
+        }
+        
+        .short-preview-check {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        .short-preview.selected .short-preview-check {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg-primary);
+        }
+        
+        .short-preview-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            padding-right: 40px;
+        }
+        
+        .short-preview-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+        
+        /* ===== FORM NAVIGATION ===== */
+        .form-nav {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+        
+        .form-nav .btn {
+            flex: 1;
+        }
+        
+        /* ===== BOOK DETAIL ===== */
+        .book-detail-header {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .book-detail-cover {
+            width: 100px;
+            height: 140px;
+            background: linear-gradient(135deg, var(--accent-dim), var(--bg-secondary));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 36px;
+            flex-shrink: 0;
+        }
+        
+        .book-detail-info {
+            flex: 1;
+        }
+        
+        .book-detail-title {
+            font-family: var(--font-display);
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        
+        .book-detail-meta {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+        
+        .chart-placeholder {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+        
+        .chart-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+        
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            height: 100px;
+        }
+        
+        .chart-bar {
+            flex: 1;
+            background: var(--accent-dim);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+        }
+        
+        .chart-bar-label {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        
+        .funnel {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .funnel-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .funnel-bar {
+            height: 24px;
+            background: var(--accent);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--bg-primary);
+        }
+        
+        .funnel-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            min-width: 80px;
+        }
+        
+        /* ===== FINANCES ===== */
+        .balance-card {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            color: var(--bg-primary);
+        }
+        
+        .balance-label {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 4px;
+        }
+        
+        .balance-value {
+            font-size: 36px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .balance-btn {
+            background: rgba(0,0,0,0.2);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            font-family: var(--font-ui);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .transaction-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .transaction {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            background: var(--bg-card);
+            border-radius: 8px;
+        }
+        
+        .transaction-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .transaction-title {
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+        
+        .transaction-date {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .transaction-amount {
+            font-weight: 600;
+        }
+        
+        .transaction-amount.positive {
+            color: var(--success);
+        }
+        
+        .transaction-amount.negative {
+            color: var(--text-secondary);
+        }
+        
+        /* ===== BOTTOM NAV ===== */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            display: flex;
+            max-width: 480px;
+            margin: 0 auto;
+            z-index: 100;
+        }
+        
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 12px 8px;
+            color: var(--text-muted);
+            font-size: 10px;
+            cursor: pointer;
+            transition: color 0.2s;
+            border: none;
+            background: none;
+        }
+        
+        .nav-item:hover,
+        .nav-item.active {
+            color: var(--accent);
+        }
+        
+        .nav-item-icon {
+            font-size: 22px;
+        }
+        
+        /* ===== BACK BUTTON ===== */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 16px;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+        
+        .back-btn:hover {
+            color: var(--accent);
+        }
+        
+        /* ===== SELECT ===== */
+        .select {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: var(--font-ui);
+            font-size: 15px;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238a8a8a'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+        }
+        
+        .select:focus {
+            border-color: var(--accent);
+        }
+        
+        /* ===== TEXTAREA ===== */
+        .textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: var(--font-ui);
+            font-size: 15px;
+            outline: none;
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .textarea:focus {
+            border-color: var(--accent);
+        }
+        
+        /* ===== RANGE SLIDER ===== */
+        .range-group {
+            margin-bottom: 16px;
+        }
+        
+        .range-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .range-value {
+            color: var(--accent);
+            font-weight: 500;
+        }
+        
+        .range {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            outline: none;
+        }
+        
+        .range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 360px;
+            width: 100%;
+        }
+        
+        .modal-title {
+            font-family: var(--font-display);
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+        
+        .modal-text {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .modal-actions .btn {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- ===== AUTH SCREEN ===== -->
+        <div class="screen active" id="auth-screen">
+            <div class="auth-container">
+                <div class="auth-logo">Стро<span>ка</span></div>
+                <div class="auth-subtitle">Кабинет автора</div>
+                
+                <div class="auth-form">
+                    <div class="input-group">
+                        <label class="input-label">Email</label>
+                        <input type="email" class="input" placeholder="author@example.com">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Пароль</label>
+                        <input type="password" class="input" placeholder="••••••••">
+                    </div>
+                    <button class="btn" onclick="showScreen('dashboard')">Войти</button>
+                    
+                    <div class="auth-divider"><span>или</span></div>
+                    
+                    <button class="btn btn-secondary">📱 Войти через Telegram</button>
+                    
+                    <div class="auth-switch">
+                        Нет аккаунта? <a href="#" onclick="showScreen('register')">Зарегистрироваться</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ===== REGISTER SCREEN ===== -->
+        <div class="screen" id="register-screen">
+            <div class="auth-container">
+                <div class="auth-logo">Стро<span>ка</span></div>
+                <div class="auth-subtitle">Регистрация автора</div>
+                
+                <div class="auth-form">
+                    <div class="input-group">
+                        <label class="input-label">Имя или псевдоним</label>
+                        <input type="text" class="input" placeholder="Андрей Петров">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Email</label>
+                        <input type="email" class="input" placeholder="author@example.com">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Пароль</label>
+                        <input type="password" class="input" placeholder="Минимум 8 символов">
+                    </div>
+                    <button class="btn" onclick="showScreen('dashboard')">Создать аккаунт</button>
+                    
+                    <div class="auth-switch">
+                        Уже есть аккаунт? <a href="#" onclick="showScreen('auth')">Войти</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ===== DASHBOARD ===== -->
+        <div class="screen" id="dashboard-screen">
+            <header class="header">
+                <div>
+                    <span class="logo">Стро<span>ка</span></span>
+                    <span class="logo-sub">автор</span>
+                </div>
+                <div class="header-avatar" onclick="showScreen('profile')">АП</div>
+            </header>
+            
+            <div style="padding: 20px; padding-bottom: 100px;">
+                <div class="welcome-card">
+                    <div class="welcome-title">Привет, Андрей!</div>
+                    <div class="welcome-subtitle">У тебя 3 новых читателя сегодня</div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">12 480</div>
+                        <div class="stat-label">Просмотров за месяц</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">847</div>
+                        <div class="stat-label">Лайков</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">14.2%</div>
+                        <div class="stat-label">Конверсия в чтение</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value accent">4 560 ₽</div>
+                        <div class="stat-label">Заработано</div>
+                    </div>
+                </div>
+                
+                <div class="section-title">
+                    Мои книги
+                    <a href="#" onclick="showScreen('books')">Все →</a>
+                </div>
+                
+                <div class="book-list">
+                    <div class="book-item" onclick="showScreen('book-detail')">
+                        <div class="book-cover">К</div>
+                        <div class="book-info">
+                            <div class="book-title">Колёсики</div>
+                            <div class="book-status published">Опубликовано</div>
+                            <div class="book-stats">
+                                <span>👁 1 240</span>
+                                <span>♥ 89</span>
+                                <span>💰 2 340 ₽</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="book-item">
+                        <div class="book-cover">Н</div>
+                        <div class="book-info">
+                            <div class="book-title">Не буди</div>
+                            <div class="book-status moderation">На модерации</div>
+                            <div class="book-stats">
+                                <span>Ожидает проверки</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="add-book-btn" onclick="showScreen('add-book-1')">
+                    + Добавить книгу
+                </button>
+            </div>
+            
+            <nav class="bottom-nav">
+                <button class="nav-item active">
+                    <span class="nav-item-icon">📊</span>
+                    Главная
+                </button>
+                <button class="nav-item" onclick="showScreen('books')">
+                    <span class="nav-item-icon">📚</span>
+                    Книги
+                </button>
+                <button class="nav-item" onclick="showScreen('add-book-1')">
+                    <span class="nav-item-icon">➕</span>
+                    Добавить
+                </button>
+                <button class="nav-item" onclick="showScreen('finances')">
+                    <span class="nav-item-icon">💰</span>
+                    Финансы
+                </button>
+                <button class="nav-item" onclick="showScreen('profile')">
+                    <span class="nav-item-icon">👤</span>
+                    Профиль
+                </button>
+            </nav>
+        </div>
+        
+        <!-- ===== BOOKS LIST ===== -->
+        <div class="screen" id="books-screen">
+            <header class="header">
+                <div>
+                    <span class="logo">Стро<span>ка</span></span>
+                    <span class="logo-sub">автор</span>
+                </div>
+                <div class="header-avatar">АП</div>
+            </header>
+            
+            <div style="padding: 20px; padding-bottom: 100px;">
+                <div class="section-title">Мои книги</div>
+                
+                <div class="book-list">
+                    <div class="book-item" onclick="showScreen('book-detail')">
+                        <div class="book-cover">К</div>
+                        <div class="book-info">
+                            <div class="book-title">Колёсики</div>
+                            <div class="book-status published">Опубликовано</div>
+                            <div class="book-stats">
+                                <span>👁 1 240</span>
+                                <span>♥ 89</span>
+                                <span>💰 2 340 ₽</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="book-item">
+                        <div class="book-cover">Н</div>
+                        <div class="book-info">
+                            <div class="book-title">Не буди</div>
+                            <div class="book-status moderation">На модерации</div>
+                            <div class="book-stats">
+                                <span>Ожидает проверки</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="book-item">
+                        <div class="book-cover">Д</div>
+                        <div class="book-info">
+                            <div class="book-title">Дверь</div>
+                            <div class="book-status draft">Черновик</div>
+                            <div class="book-stats">
+                                <span>Не опубликовано</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="add-book-btn" onclick="showScreen('add-book-1')">
+                    + Добавить книгу
+                </button>
+            </div>
+            
+            <nav class="bottom-nav">
+                <button class="nav-item" onclick="showScreen('dashboard')">
+                    <span class="nav-item-icon">📊</span>
+                    Главная
+                </button>
+                <button class="nav-item active">
+                    <span class="nav-item-icon">📚</span>
+                    Книги
+                </button>
+                <button class="nav-item" onclick="showScreen('add-book-1')">
+                    <span class="nav-item-icon">➕</span>
+                    Добавить
+                </button>
+                <button class="nav-item" onclick="showScreen('finances')">
+                    <span class="nav-item-icon">💰</span>
+                    Финансы
+                </button>
+                <button class="nav-item" onclick="showScreen('profile')">
+                    <span class="nav-item-icon">👤</span>
+                    Профиль
+                </button>
+            </nav>
+        </div>
+        
+        <!-- ===== BOOK DETAIL ===== -->
+        <div class="screen" id="book-detail-screen">
+            <header class="header">
+                <button class="back-btn" onclick="showScreen('books')">← Назад</button>
+            </header>
+            
+            <div style="padding: 20px; padding-bottom: 100px;">
+                <div class="book-detail-header">
+                    <div class="book-detail-cover">К</div>
+                    <div class="book-detail-info">
+                        <div class="book-detail-title">Колёсики</div>
+                        <div class="book-detail-meta">Хоррор • 45 мин чтения</div>
+                        <div class="book-status published">Опубликовано</div>
+                    </div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">1 240</div>
+                        <div class="stat-label">Просмотров шортсов</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">89</div>
+                        <div class="stat-label">Лайков</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">176</div>
+                        <div class="stat-label">Перешли читать</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">23</div>
+                        <div class="stat-label">Купили</div>
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder">
+                    <div class="chart-title">Просмотры за неделю</div>
+                    <div class="chart-bars">
+                        <div class="chart-bar" style="height: 40%"><span class="chart-bar-label">Пн</span></div>
+                        <div class="chart-bar" style="height: 65%"><span class="chart-bar-label">Вт</span></div>
+                        <div class="chart-bar" style="height: 45%"><span class="chart-bar-label">Ср</span></div>
+                        <div class="chart-bar" style="height: 80%"><span class="chart-bar-label">Чт</span></div>
+                        <div class="chart-bar" style="height: 100%"><span class="chart-bar-label">Пт</span></div>
+                        <div class="chart-bar" style="height: 70%"><span class="chart-bar-label">Сб</span></div>
+                        <div class="chart-bar" style="height: 55%"><span class="chart-bar-label">Вс</span></div>
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder">
+                    <div class="chart-title">Воронка конверсии</div>
+                    <div class="funnel">
+                        <div class="funnel-step">
+                            <span class="funnel-label">Шортсы</span>
+                            <div class="funnel-bar" style="width: 100%">1 240</div>
+                        </div>
+                        <div class="funnel-step">
+                            <span class="funnel-label">Лайки</span>
+                            <div class="funnel-bar" style="width: 60%">89</div>
+                        </div>
+                        <div class="funnel-step">
+                            <span class="funnel-label">Читать</span>
+                            <div class="funnel-bar" style="width: 40%">176</div>
+                        </div>
+                        <div class="funnel-step">
+                            <span class="funnel-label">Покупка</span>
+                            <div class="funnel-bar" style="width: 15%">23</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-secondary" style="margin-top: 16px;">Редактировать книгу</button>
+            </div>
+        </div>
+        
+        <!-- ===== ADD BOOK STEP 1 ===== -->
+        <div class="screen" id="add-book-1-screen">
+            <header class="header">
+                <button class="back-btn" onclick="showScreen('dashboard')">← Отмена</button>
+            </header>
+            
+            <div style="padding: 20px;">
+                <div class="form-steps">
+                    <div class="form-step active"></div>
+                    <div class="form-step"></div>
+                    <div class="form-step"></div>
+                    <div class="form-step"></div>
+                    <div class="form-step"></div>
+                </div>
+                
+                <div class="step-title">Основная информация</div>
+                <div class="step-subtitle">Название и описание книги</div>
+                
+                <div class="input-group">
+                    <label class="input-label">Название</label>
+                    <input type="text" class="input" placeholder="Введите название книги">
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Аннотация</label>
+                    <textarea class="textarea" placeholder="Краткое описание книги для читателей..."></textarea>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Обложка</label>
+                    <div class="upload-area">
+                        <div class="upload-icon">🖼</div>
+                        <div class="upload-text">Перетащите файл или <span>выберите</span></div>
+                        <div class="upload-hint">JPG, PNG до 5 МБ</div>
+                    </div>
+                </div>
+                
+                <div class="form-nav">
+                    <button class="btn" onclick="showScreen('add-book-2')">Далее →</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ===== ADD BOOK STEP 2 ===== -->
+        <div class="screen" id="add-book-2-screen">
+            <header class="header">
+                <button class="back-btn" onclick="showScreen('add-book-1')">← Назад</button>
+            </header>
+            
+            <div style="padding: 20px;">
+                <div class="form-steps">
+                    <div class="form-step done"></div>
+                    <div class="form-step active"></div>
+                    <div class="form-step"></div>
+                    <div class="form-step"></div>
+                    <div class="form-step"></div>
+                </div>
+                
+                <div class="step-title">Текст книги</div>
+                <div class="step-subtitle">Загрузите файл с текстом</div>
+                
+                <div class="upload-area">
+                    <div class="upload-icon">📄</div>
+                    <div class="upload-text">Перетащите файл или <span>выберите</span></div>
+                    <div class="upload-hint">DOCX, FB2, TXT, EPUB до 50 МБ</div>
+                </div>
+                
+                <div class="file-uploaded" style="display: none;" id="file-uploaded">
+                    <span class="file-uploaded-icon">📄</span>
+                    <div class="file-uploaded-info">
+                        <div class="file-uploaded-name">колёсики.docx</div>
+                        <div class="file-uploaded-size">245 КБ • 18 000 знаков</div>
+                    </div>
+                    <span class="file-uploaded-remove">✕</span>
+                </div>
+                
+                <div class="form-nav">
+                    <button class="btn btn-secondary" onclick="showScreen('add-book-1')">← Назад</button>
+                    <button class="btn" onclick="uploadFile()">Далее →</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ===== ADD BOOK STEP 3 ===== -->
+        <div class="screen" id="add-book-3-screen">
+            <header class="header">
+                <button class="back-btn" onclick="showScreen('add-book-2')">← Назад</button>
+            </header>
+            
+            <div style="padding: 20px;">
+                <div class="form-steps">
+                    <div class="form-step done"></div>
+                    <div class="form-step done"></div>
+                    <div class="form-step active"></div>
+                    <div class="form-step"></div>
+                    <div class="form-step"></div>
+                </div>
+                
+                <div class="step-title">Жанр и теги</div>
+                <div class="step-subtitle">Помогите читателям найти вашу книгу</div>
+                
+                <div class="input-group">
+                    <label class="input-label">Основной жанр</label>
+                    <select class="select">
+                        <option>Выберите жанр</option>
+                        <option selected>Хоррор</option>
+                        <option>Мистика</option>
+                        <option>Триллер</option>
+                        <option>Фантастика</option>
+                        <option>Фэнтези</option>
+                        <option>Детектив</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Поджанры и теги</label>
+                    <div class="tags-container">
+                        <span class="tag selected">Криминальный хоррор</span>
+                        <span class="tag selected">90-е</span>
+                        <span class="tag selected">Фольклорный ужас</span>
+                        <span class="tag">Психологический</span>
+                        <span class="tag">Мистика</span>
+                        <span class="tag">Призраки</span>
+                        <span class="tag">Монстры</span>
+                        <span class="tag">Сверхъестественное</span>
+                        <span class="tag">Городской хоррор</span>
+                        <span class="tag">Космический хоррор</span>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Возрастное ограничение</label>
+                    <select class="select">
+                        <option>12+</option>
+                        <option selected>16+</option>
+                        <option>18+</option>
+                    </select>
+                </div>
+                
+                <div class="form-nav">
+                    <button class="btn btn-secondary" onclick="showScreen('add-book-2')">← Назад</button>
+                    <button class="btn" onclick="showScreen('add-book-4')">Далее →</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ===== ADD BOOK STEP 4 ===== -->
+        <div class="screen" id="add-book-4-screen">
+            <header class="header">
+                <button class="back-btn" onclick="showScreen('add-book-3')">← Назад</button>
+            </header>
+            
+            <div style="padding: 20px;">
+                <div class="form-steps">
+                    <div class="form-step done"></div>
+                    <div class="form-step done"></div>
+                    <div class="form-step done"></div>
+                    <div class="form-step active"></div>
+                    <div class="form-step"></div>
+                </div>
+                
+                <div class="step-title">Монетизация</div>
+                <div class="step-subtitle">Настройте условия продажи</div>
+                
+                <div class="range-group">
+                    <div class="range-header">
+                        <label class="input-label">Бесплатный фрагмент</label>
+                        <span class="range-value">20%</span>
+                    </div>
+                    <input type="range" class="range" min="10" max="50" value="20">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+                        Читатели смогут бесплатно прочитать 20% книги
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Цена за полную книгу</label>
+                    <input type="number" class="input" placeholder="149" value="149">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+                        Вы получите 80% (119 ₽), платформа — 20% (30 ₽)
+                    </div>
+                </div>
+                
+                <div style="padding: 16px; background: var(--bg-card); border-radius: 12px; margin-top: 16px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                        <input type="checkbox" id="free-book" style="width: 20px; height: 20px;">
+                        <label for="free-book" style="font-size: 14px;">Сделать книгу полностью бесплатной</label>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted); padding-left: 32px;">
+                        Книга будет доступна без оплаты для привлечения аудитории
+                    </div>
+                </div>
+                
+                <div class="form-nav">
+                    <button class="btn btn-secondary" onclick="showScreen('add-book-3')">← Назад</button>
+                    <button class="btn" onclick="showScreen('add-book-5')">Далее →</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ===== ADD BOOK STEP 5 ===== -->
+        <div class="screen" id="add-book-5-screen">
+            <header class="header">
+                <button class="back-btn" onclick="showScreen('add-book-4')">← Назад</button>
+            </header>
+            
+            <div style="padding: 20px;">
+                <div class="form-steps">
+                    <div class="form-step done"></div>
+                    <div class="form-step done"></div>
+                    <div class="form-step done"></div>
+                    <div class="form-step done"></div>
+                    <div class="form-step active"></div>
+                </div>
+                
+                <div class="step-title">Шортсы</div>
+                <div class="step-subtitle">ИИ подобрал цепляющие отрывки. Выберите 3 лучших.</div>
+                
+                <div class="shorts-list">
+                    <div class="short-preview selected" onclick="toggleShort(this)">
+                        <div class="short-preview-check">✓</div>
+                        <div class="short-preview-text">Фуру нашли под Лодейным Полем, на сороковом километре от поворота на Питер. Декабрь девяносто шестого. Четыре часа дня — уже темно...</div>
+                        <div class="short-preview-label">Начало • Экспозиция</div>
+                    </div>
+                    
+                    <div class="short-preview selected" onclick="toggleShort(this)">
+                        <div class="short-preview-check">✓</div>
+                        <div class="short-preview-text">Ящик был детский. Сразу понятно — по размеру. Метр двадцать в длину. Гроб. Детский гроб на колёсиках...</div>
+                        <div class="short-preview-label">Интрига • Артефакт</div>
+                    </div>
+                    
+                    <div class="short-preview selected" onclick="toggleShort(this)">
+                        <div class="short-preview-check">✓</div>
+                        <div class="short-preview-text">— Эту вещь нашли в тридцать восьмом, на Кольском полуострове. Саамы его использовали. Зимой, в голодные годы...</div>
+                        <div class="short-preview-label">Кульминация • Разгадка</div>
+                    </div>
+                    
+                    <div class="short-preview" onclick="toggleShort(this)">
+                        <div class="short-preview-check"></div>
+                        <div class="short-preview-text">Михалыча нашли в «газели». Сидел за рулём, двери заперты изнутри, глаза открыты. Мёртвый...</div>
+                        <div class="short-preview-label">Напряжение • Смерть</div>
+                    </div>
+                    
+                    <div class="short-preview" onclick="toggleShort(this)">
+                        <div class="short-preview-check"></div>
+                        <div class="short-preview-text">Гроб стоял не там, где они его оставили. Вчера — в дальнем углу. Сейчас — у самой машины...</div>
+                        <div class="short-preview-label">Хоррор • Движение</div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 16px;">
+                    <a href="#" style="color: var(--accent); font-size: 14px;">+ Написать свой шортс</a>
+                </div>
+                
+                <div class="form-nav">
+                    <button class="btn btn-secondary" onclick="showScreen('add-book-4')">← Назад</button>
+                    <button class="btn" onclick="showModal()">Отправить на модерацию</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ===== FINANCES ===== -->
+        <div class="screen" id="finances-screen">
+            <header class="header">
+                <div>
+                    <span class="logo">Стро<span>ка</span></span>
+                    <span class="logo-sub">автор</span>
+                </div>
+                <div class="header-avatar">АП</div>
+            </header>
+            
+            <div style="padding: 20px; padding-bottom: 100px;">
+                <div class="balance-card">
+                    <div class="balance-label">Доступно к выводу</div>
+                    <div class="balance-value">4 560 ₽</div>
+                    <button class="balance-btn">Вывести средства</button>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">7 230 ₽</div>
+                        <div class="stat-label">Заработано всего</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">2 670 ₽</div>
+                        <div class="stat-label">Выведено</div>
+                    </div>
+                </div>
+                
+                <div class="section-title">История операций</div>
+                
+                <div class="transaction-list">
+                    <div class="transaction">
+                        <div class="transaction-info">
+                            <div class="transaction-title">Покупка «Колёсики»</div>
+                            <div class="transaction-date">Сегодня, 14:32</div>
+                        </div>
+                        <div class="transaction-amount positive">+119 ₽</div>
+                    </div>
+                    <div class="transaction">
+                        <div class="transaction-info">
+                            <div class="transaction-title">Покупка «Колёсики»</div>
+                            <div class="transaction-date">Вчера, 21:15</div>
+                        </div>
+                        <div class="transaction-amount positive">+119 ₽</div>
+                    </div>
+                    <div class="transaction">
+                        <div class="transaction-info">
+                            <div class="transaction-title">Вывод на карту *4582</div>
+                            <div class="transaction-date">5 января, 10:00</div>
+                        </div>
+                        <div class="transaction-amount negative">−2 670 ₽</div>
+                    </div>
+                    <div class="transaction">
+                        <div class="transaction-info">
+                            <div class="transaction-title">Покупка «Колёсики»</div>
+                            <div class="transaction-date">4 января, 18:44</div>
+                        </div>
+                        <div class="transaction-amount positive">+119 ₽</div>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="bottom-nav">
+                <button class="nav-item" onclick="showScreen('dashboard')">
+                    <span class="nav-item-icon">📊</span>
+                    Главная
+                </button>
+                <button class="nav-item" onclick="showScreen('books')">
+                    <span class="nav-item-icon">📚</span>
+                    Книги
+                </button>
+                <button class="nav-item" onclick="showScreen('add-book-1')">
+                    <span class="nav-item-icon">➕</span>
+                    Добавить
+                </button>
+                <button class="nav-item active">
+                    <span class="nav-item-icon">💰</span>
+                    Финансы
+                </button>
+                <button class="nav-item" onclick="showScreen('profile')">
+                    <span class="nav-item-icon">👤</span>
+                    Профиль
+                </button>
+            </nav>
+        </div>
+        
+        <!-- ===== PROFILE ===== -->
+        <div class="screen" id="profile-screen">
+            <header class="header">
+                <div>
+                    <span class="logo">Стро<span>ка</span></span>
+                    <span class="logo-sub">автор</span>
+                </div>
+            </header>
+            
+            <div style="padding: 20px; padding-bottom: 100px;">
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <div class="header-avatar" style="width: 80px; height: 80px; font-size: 28px; margin: 0 auto 12px;">АП</div>
+                    <div style="font-size: 20px; font-weight: 500;">Андрей Петров</div>
+                    <div style="color: var(--text-muted); font-size: 14px;">author@example.com</div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Имя или псевдоним</label>
+                    <input type="text" class="input" value="Андрей Петров">
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">О себе</label>
+                    <textarea class="textarea" placeholder="Расскажите о себе...">Пишу хоррор и мистику. Автор повести "Не оборачивайся". Люблю Петербург, 90-е и страшные истории.</textarea>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Жанры</label>
+                    <div class="tags-container">
+                        <span class="tag selected">Хоррор</span>
+                        <span class="tag selected">Мистика</span>
+                        <span class="tag">Триллер</span>
+                        <span class="tag">Фантастика</span>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Telegram</label>
+                    <input type="text" class="input" placeholder="@username">
+                </div>
+                
+                <button class="btn" style="margin-top: 16px;">Сохранить изменения</button>
+                
+                <button class="btn btn-secondary" style="margin-top: 12px;" onclick="showScreen('auth')">Выйти из аккаунта</button>
+            </div>
+            
+            <nav class="bottom-nav">
+                <button class="nav-item" onclick="showScreen('dashboard')">
+                    <span class="nav-item-icon">📊</span>
+                    Главная
+                </button>
+                <button class="nav-item" onclick="showScreen('books')">
+                    <span class="nav-item-icon">📚</span>
+                    Книги
+                </button>
+                <button class="nav-item" onclick="showScreen('add-book-1')">
+                    <span class="nav-item-icon">➕</span>
+                    Добавить
+                </button>
+                <button class="nav-item" onclick="showScreen('finances')">
+                    <span class="nav-item-icon">💰</span>
+                    Финансы
+                </button>
+                <button class="nav-item active">
+                    <span class="nav-item-icon">👤</span>
+                    Профиль
+                </button>
+            </nav>
+        </div>
+        
+        <!-- ===== SUCCESS MODAL ===== -->
+        <div class="modal-overlay" id="modal">
+            <div class="modal">
+                <div style="text-align: center; font-size: 48px; margin-bottom: 16px;">🎉</div>
+                <div class="modal-title" style="text-align: center;">Книга отправлена!</div>
+                <div class="modal-text" style="text-align: center;">
+                    Мы проверим её в течение 24 часов и пришлём уведомление о публикации.
+                </div>
+                <div class="modal-actions">
+                    <button class="btn" onclick="hideModal(); showScreen('dashboard');">На главную</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const screen = document.getElementById(screenId + '-screen');
+            if (screen) {
+                screen.classList.add('active');
+            }
+            window.scrollTo(0, 0);
+        }
+        
+        function uploadFile() {
+            document.getElementById('file-uploaded').style.display = 'flex';
+            document.querySelector('#add-book-2-screen .upload-area').style.display = 'none';
+            showScreen('add-book-3');
+        }
+        
+        function toggleShort(element) {
+            element.classList.toggle('selected');
+        }
+        
+        function showModal() {
+            document.getElementById('modal').classList.add('active');
+        }
+        
+        function hideModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+        
+        // Tags selection
+        document.querySelectorAll('.tag').forEach(tag => {
+            tag.addEventListener('click', () => {
+                tag.classList.toggle('selected');
+            });
+        });
+        
+        // Range slider value display
+        document.querySelectorAll('.range').forEach(range => {
+            range.addEventListener('input', (e) => {
+                const value = e.target.value;
+                const display = e.target.parentElement.querySelector('.range-value');
+                if (display) {
+                    display.textContent = value + '%';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
