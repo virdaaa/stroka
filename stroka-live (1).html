@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Строка — короткая проза</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=Literata:opsz,wght@7..72,400;7..72,500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-card: #161618;
+            --text-primary: #e8e6e3;
+            --text-secondary: #8a8a8a;
+            --text-muted: #5a5a5a;
+            --accent: #c9a55c;
+            --accent-dim: #8a7340;
+            --border: #2a2a2c;
+            
+            --font-display: 'Cormorant Garamond', serif;
+            --font-body: 'Literata', serif;
+            --font-ui: 'IBM Plex Sans', sans-serif;
+            
+            --font-size: 18px;
+            --line-height: 1.7;
+            --reader-font: 'Literata', serif;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: var(--font-ui);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        
+        .app {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            max-width: 480px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        /* Header */
+        .header {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+        }
+        
+        .logo {
+            font-family: var(--font-display);
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+        
+        .logo span { color: var(--accent); }
+        
+        /* Navigation */
+        .nav {
+            display: flex;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .nav-btn {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-family: var(--font-ui);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .nav-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+        
+        /* Screens */
+        .screen {
+            display: none;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .screen.active { display: flex; flex-direction: column; }
+        
+        /* Feed */
+        .feed {
+            flex: 1;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+            padding: 0;
+        }
+        
+        .short-card {
+            min-height: calc(100vh - 130px);
+            scroll-snap-align: start;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .short-book-info { margin-bottom: 16px; }
+        
+        .short-book-title {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .short-book-author {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+        
+        .short-meta {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        
+        .short-meta-item {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .short-meta-item.genre {
+            color: var(--accent);
+            font-weight: 500;
+        }
+        
+        .short-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .short-tag {
+            font-size: 11px;
+            padding: 4px 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .short-content {
+            flex: 1;
+            position: relative;
+            margin: 16px 0;
+        }
+        
+        .short-text {
+            font-family: var(--font-body);
+            font-size: 16px;
+            line-height: 1.7;
+            color: var(--text-primary);
+        }
+        
+        .short-fade {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(transparent, var(--bg-primary));
+            pointer-events: none;
+        }
+        
+        .short-actions {
+            display: flex;
+            gap: 12px;
+            padding-top: 16px;
+        }
+        
+        .short-btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-family: var(--font-ui);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .short-btn.primary {
+            flex: 1;
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+        
+        .short-btn.short-like {
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            padding: 14px 18px;
+        }
+        
+        .short-btn.short-like.liked {
+            color: #e44;
+            border-color: #e44;
+        }
+        
+        /* Library */
+        .library {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .library-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        
+        .library-empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .library-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+        
+        .library-item-info { flex: 1; }
+        
+        .library-item-title {
+            font-family: var(--font-display);
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        
+        .library-item-author {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .library-item-progress {
+            font-size: 12px;
+            color: var(--accent);
+            margin-top: 8px;
+        }
+        
+        /* Reader */
+        .reader {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-primary);
+            z-index: 200;
+            display: none;
+            flex-direction: column;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        
+        .reader.active { display: flex; }
+        
+        .reader-header {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .reader-back, .reader-settings-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+        }
+        
+        .reader-title {
+            font-family: var(--font-display);
+            font-size: 16px;
+            text-align: center;
+            flex: 1;
+            padding: 0 16px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .reader-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 20px;
+        }
+        
+        .reader-text {
+            font-family: var(--reader-font);
+            font-size: var(--font-size);
+            line-height: var(--line-height);
+        }
+        
+        .reader-text p {
+            margin-bottom: 1em;
+            text-indent: 1.5em;
+        }
+        
+        .reader-text p:first-child { text-indent: 0; }
+        
+        .reader-progress {
+            padding: 12px 20px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .reader-progress-bar {
+            flex: 1;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .reader-progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+        
+        .reader-progress-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            min-width: 40px;
+            text-align: right;
+        }
+        
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+        }
+        
+        .loading::after {
+            content: '';
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 12px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Плейлисты */
+        .playlists {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .playlist-card {
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .playlist-card:hover {
+            transform: scale(1.02);
+        }
+        
+        .playlist-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        
+        .playlist-title {
+            font-family: var(--font-display);
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+        
+        .playlist-meta {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="logo">Стро<span>ка</span></div>
+        </header>
+        
+        <nav class="nav">
+            <button class="nav-btn active" data-screen="feed">Лента</button>
+            <button class="nav-btn" data-screen="playlists">Плейлисты</button>
+            <button class="nav-btn" data-screen="library">Библиотека</button>
+        </nav>
+        
+        <div class="screen active" id="feed-screen">
+            <div class="feed" id="feed">
+                <div class="loading">Загрузка</div>
+            </div>
+        </div>
+        
+        <div class="screen" id="playlists-screen">
+            <div class="playlists">
+                <div class="playlist-card" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+                    <div class="playlist-icon">🌙</div>
+                    <div class="playlist-title">Ночь ужасов</div>
+                    <div class="playlist-meta">5 рассказов • 3 часа чтения</div>
+                </div>
+                <div class="playlist-card" style="background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);">
+                    <div class="playlist-icon">🚇</div>
+                    <div class="playlist-title">30 минут страха</div>
+                    <div class="playlist-meta">2 рассказа • идеально для метро</div>
+                </div>
+                <div class="playlist-card" style="background: linear-gradient(135deg, #1a1a2e 0%, #2d132c 100%);">
+                    <div class="playlist-icon">🏛</div>
+                    <div class="playlist-title">Питерская мистика</div>
+                    <div class="playlist-meta">3 рассказа • дух города</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="screen" id="library-screen">
+            <div class="library" id="library">
+                <div class="library-empty" id="library-empty">
+                    <div class="library-empty-icon">📚</div>
+                    <p>Здесь появятся рассказы,<br>которые вы добавите из ленты</p>
+                </div>
+                <div id="library-list"></div>
+            </div>
+        </div>
+        
+        <div class="reader" id="reader">
+            <div class="reader-header">
+                <button class="reader-back" onclick="closeReader()">←</button>
+                <div class="reader-title" id="reader-title"></div>
+                <button class="reader-settings-btn">Aa</button>
+            </div>
+            <div class="reader-content" id="reader-content">
+                <div class="reader-text" id="reader-text"></div>
+            </div>
+            <div class="reader-progress">
+                <div class="reader-progress-bar">
+                    <div class="reader-progress-fill" id="reader-progress-fill"></div>
+                </div>
+                <div class="reader-progress-text" id="reader-progress-text">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== SUPABASE CONFIG =====
+        const SUPABASE_URL = 'https://xcnvejvkklypvkzkanwj.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbnZlanZra2x5cHZremthbndqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNjU4NzIsImV4cCI6MjA4MzY0MTg3Mn0.8ldNxEbzc8aNJYWtOgP0b5lOsPhl4zMeoht2rn0DeP8';
+        
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // ===== STATE =====
+        let stories = [];
+        let shorts = [];
+        let library = JSON.parse(localStorage.getItem('stroka_library') || '[]');
+        let currentStory = null;
+        
+        // ===== LOAD DATA =====
+        async function loadData() {
+            try {
+                // Загружаем рассказы с авторами
+                const { data: storiesData, error: storiesError } = await db
+                    .from('stories')
+                    .select(`
+                        *,
+                        authors (name, pen_name),
+                        shorts (id, text, position)
+                    `)
+                    .eq('status', 'published')
+                    .order('created_at', { ascending: false });
+                
+                if (storiesError) throw storiesError;
+                
+                stories = storiesData || [];
+                
+                // Собираем все шортсы в плоский список
+                shorts = [];
+                stories.forEach(story => {
+                    if (story.shorts) {
+                        story.shorts.forEach(short => {
+                            shorts.push({
+                                ...short,
+                                story_id: story.id,
+                                title: story.title,
+                                author: story.authors?.pen_name || story.authors?.name || 'Неизвестный автор',
+                                genre: story.genre,
+                                subgenres: story.subgenres || [],
+                                reading_time: story.reading_time_minutes,
+                                character_count: story.character_count
+                            });
+                        });
+                    }
+                });
+                
+                // Перемешиваем
+                shorts = shorts.sort(() => Math.random() - 0.5);
+                
+                renderFeed();
+                renderLibrary();
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                console.error('Error message:', error.message);
+                console.error('Error details:', JSON.stringify(error, null, 2));
+                document.getElementById('feed').innerHTML = `
+                    <div class="loading" style="flex-direction: column; gap: 12px; text-align: center; padding: 20px;">
+                        <span>Ошибка загрузки</span>
+                        <span style="font-size: 12px; color: var(--text-muted);">${error.message || error}</span>
+                        <button onclick="loadData()" style="padding: 8px 16px; background: var(--accent); border: none; border-radius: 6px; cursor: pointer;">Повторить</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // ===== RENDER =====
+        function renderFeed() {
+            const feed = document.getElementById('feed');
+            
+            if (shorts.length === 0) {
+                feed.innerHTML = '<div class="loading">Нет рассказов</div>';
+                return;
+            }
+            
+            feed.innerHTML = shorts.map((short, idx) => `
+                <div class="short-card">
+                    <div class="short-book-info">
+                        <div class="short-book-title">${short.title}</div>
+                        <div class="short-book-author">${short.author}</div>
+                        <div class="short-meta">
+                            <span class="short-meta-item genre">${short.genre || 'Проза'}</span>
+                            <span class="short-meta-item">⏱ ${short.reading_time || '?'} мин</span>
+                            <span class="short-meta-item">📄 ${(short.character_count || 0).toLocaleString()} зн.</span>
+                        </div>
+                        <div class="short-tags">
+                            ${(short.subgenres || []).slice(0, 4).map(tag => `<span class="short-tag">${tag}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="short-content">
+                        <div class="short-text">${short.text}</div>
+                        <div class="short-fade"></div>
+                    </div>
+                    <div class="short-actions">
+                        <button class="short-btn primary" onclick="openStory('${short.story_id}')">
+                            Читать →
+                        </button>
+                        <button class="short-btn short-like ${isInLibrary(short.story_id) ? 'liked' : ''}" onclick="toggleLibrary('${short.story_id}')">
+                            ${isInLibrary(short.story_id) ? '♥' : '♡'}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function renderLibrary() {
+            const list = document.getElementById('library-list');
+            const empty = document.getElementById('library-empty');
+            
+            const libraryStories = stories.filter(s => library.includes(s.id));
+            
+            if (libraryStories.length === 0) {
+                empty.style.display = 'block';
+                list.innerHTML = '';
+                return;
+            }
+            
+            empty.style.display = 'none';
+            list.innerHTML = libraryStories.map(story => `
+                <div class="library-item" onclick="openStory('${story.id}')">
+                    <div class="library-item-info">
+                        <div class="library-item-title">${story.title}</div>
+                        <div class="library-item-author">${story.authors?.pen_name || 'Автор'}</div>
+                        <div class="library-item-progress">${story.reading_time_minutes} мин</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // ===== ACTIONS =====
+        function isInLibrary(storyId) {
+            return library.includes(storyId);
+        }
+        
+        function toggleLibrary(storyId) {
+            if (isInLibrary(storyId)) {
+                library = library.filter(id => id !== storyId);
+            } else {
+                library.push(storyId);
+            }
+            localStorage.setItem('stroka_library', JSON.stringify(library));
+            renderFeed();
+            renderLibrary();
+        }
+        
+        function openStory(storyId) {
+            const story = stories.find(s => s.id === storyId);
+            if (!story) return;
+            
+            currentStory = story;
+            
+            // Добавляем в библиотеку
+            if (!isInLibrary(storyId)) {
+                library.push(storyId);
+                localStorage.setItem('stroka_library', JSON.stringify(library));
+            }
+            
+            document.getElementById('reader-title').textContent = story.title;
+            document.getElementById('reader-text').innerHTML = story.full_text
+                .split('\n\n')
+                .map(p => `<p>${p}</p>`)
+                .join('');
+            document.getElementById('reader').classList.add('active');
+            
+            const content = document.getElementById('reader-content');
+            content.scrollTop = 0;
+            updateProgress();
+            content.addEventListener('scroll', updateProgress);
+        }
+        
+        function closeReader() {
+            document.getElementById('reader').classList.remove('active');
+            currentStory = null;
+            renderFeed();
+        }
+        
+        function updateProgress() {
+            const content = document.getElementById('reader-content');
+            const progress = Math.round((content.scrollTop / (content.scrollHeight - content.clientHeight)) * 100) || 0;
+            document.getElementById('reader-progress-fill').style.width = progress + '%';
+            document.getElementById('reader-progress-text').textContent = progress + '%';
+        }
+        
+        // ===== NAVIGATION =====
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const screen = btn.dataset.screen;
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById(screen + '-screen').classList.add('active');
+            });
+        });
+        
+        // ===== INIT =====
+        loadData();
+    </script>
+</body>
+</html>
