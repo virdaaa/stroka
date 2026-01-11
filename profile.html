@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Строка — Мой кабинет</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-card: #161618;
+            --bg-input: #1a1a1c;
+            --text-primary: #e8e6e3;
+            --text-secondary: #8a8a8a;
+            --text-muted: #5a5a5a;
+            --accent: #c9a55c;
+            --accent-dim: #8a7340;
+            --border: #2a2a2c;
+            --danger: #c44;
+            --success: #4a8;
+            --like: #e74c3c;
+            --dislike: #7f8c8d;
+            
+            --font-display: 'Cormorant Garamond', serif;
+            --font-ui: 'IBM Plex Sans', sans-serif;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: var(--font-ui);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        
+        .app {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .header {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .logo {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 600;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+        
+        .logo span { color: var(--accent); }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .user-name {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .btn-logout {
+            padding: 8px 16px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        
+        .btn-logout:hover {
+            border-color: var(--accent);
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .tabs::-webkit-scrollbar { display: none; }
+        
+        .tab {
+            flex: 1;
+            min-width: max-content;
+            padding: 14px 16px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-family: var(--font-ui);
+            font-size: 13px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .tab:hover { color: var(--text-secondary); }
+        
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+        
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .tab-content.active { display: block; }
+        
+        /* Section Title */
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 22px;
+            margin-bottom: 16px;
+        }
+        
+        /* Story Cards */
+        .story-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .story-card:hover {
+            border: 1px solid var(--accent);
+            margin: -1px;
+            margin-bottom: 11px;
+        }
+        
+        .story-card-title {
+            font-family: var(--font-display);
+            font-size: 18px;
+            margin-bottom: 6px;
+        }
+        
+        .story-card-author {
+            font-size: 13px;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+        
+        .story-card-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            gap: 12px;
+        }
+        
+        .story-card-genre {
+            display: inline-block;
+            padding: 4px 8px;
+            background: var(--bg-input);
+            border-radius: 4px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+        
+        /* Author Cards */
+        .author-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .author-info {
+            flex: 1;
+        }
+        
+        .author-name {
+            font-family: var(--font-display);
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        
+        .author-stats {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .btn-unsubscribe {
+            padding: 8px 16px;
+            background: var(--bg-input);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        
+        .btn-unsubscribe:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px 16px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-family: var(--font-display);
+            font-size: 32px;
+            color: var(--accent);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        
+        /* Achievements */
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        
+        .achievement {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            opacity: 0.4;
+        }
+        
+        .achievement.unlocked {
+            opacity: 1;
+        }
+        
+        .achievement-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        
+        .achievement-name {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        
+        /* My Stories */
+        .my-story-item {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .my-story-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+        
+        .my-story-title {
+            font-family: var(--font-display);
+            font-size: 18px;
+        }
+        
+        .my-story-status {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: var(--success);
+            color: white;
+        }
+        
+        .my-story-status.draft {
+            background: var(--text-muted);
+        }
+        
+        .my-story-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .empty-state-text {
+            margin-bottom: 20px;
+        }
+        
+        /* CTA Button */
+        .btn {
+            padding: 14px 24px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            font-family: var(--font-ui);
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover { background: var(--accent-dim); }
+        
+        /* Auth Screen */
+        .auth-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .auth-title {
+            font-family: var(--font-display);
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .auth-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+        
+        .auth-form {
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: var(--font-ui);
+            font-size: 15px;
+            margin-bottom: 16px;
+        }
+        
+        .input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+        
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <a href="/" class="logo">Стро<span>ка</span></a>
+            <div class="user-info" id="user-info" style="display: none;">
+                <span class="user-name" id="user-name"></span>
+                <button class="btn-logout" onclick="logout()">Выйти</button>
+            </div>
+        </header>
+        
+        <!-- Auth Screen -->
+        <div id="auth-screen" class="auth-screen">
+            <div class="auth-title">Мой кабинет</div>
+            <div class="auth-subtitle">Войдите, чтобы сохранять избранное и получать персональные рекомендации</div>
+            
+            <!-- Telegram Login -->
+            <div style="margin-bottom: 24px;">
+                <script async src="https://telegram.org/js/telegram-widget.js?22" 
+                    data-telegram-login="stroka_auth_bot" 
+                    data-size="large" 
+                    data-radius="8"
+                    data-onauth="onTelegramAuth(user)"
+                    data-request-access="write">
+                </script>
+            </div>
+            
+            <div style="color: var(--text-muted); margin-bottom: 24px; font-size: 13px;">или</div>
+            
+            <!-- Email Login -->
+            <form class="auth-form" id="auth-form">
+                <input type="email" class="input" id="auth-email" placeholder="email@example.com" required>
+                <button type="submit" class="btn" style="width: 100%;">Войти через Email</button>
+            </form>
+            
+            <p style="margin-top: 24px; font-size: 12px; color: var(--text-muted);">
+                Входя на платформу, вы соглашаетесь с <a href="/privacy.html" style="color: var(--accent);">Политикой конфиденциальности</a>
+            </p>
+        </div>
+        
+        <!-- Main Content (hidden until auth) -->
+        <div id="main-content" style="display: none; flex: 1; display: flex; flex-direction: column;">
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" data-tab="feed">📖 Лента</button>
+                <button class="tab" data-tab="favorites">❤️ Избранное</button>
+                <button class="tab" data-tab="subscriptions">👥 Подписки</button>
+                <button class="tab" data-tab="stats">📊 Статистика</button>
+                <button class="tab" data-tab="my-stories">✍️ Мои рассказы</button>
+            </div>
+            
+            <!-- Feed Tab -->
+            <div class="tab-content active" id="feed-tab">
+                <div class="section-title">Рекомендации для вас</div>
+                <div id="feed-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Подбираем рассказы...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Favorites Tab -->
+            <div class="tab-content" id="favorites-tab">
+                <div class="section-title">Избранное</div>
+                <div id="favorites-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Загрузка...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Subscriptions Tab -->
+            <div class="tab-content" id="subscriptions-tab">
+                <div class="section-title">Мои подписки</div>
+                <div id="subscriptions-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Загрузка...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stats Tab -->
+            <div class="tab-content" id="stats-tab">
+                <div class="section-title">Моя статистика</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-read-count">0</div>
+                        <div class="stat-label">Прочитано</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-read-time">0</div>
+                        <div class="stat-label">Минут чтения</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-likes">0</div>
+                        <div class="stat-label">Лайков</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-subscriptions">0</div>
+                        <div class="stat-label">Подписок</div>
+                    </div>
+                </div>
+                
+                <div class="section-title" style="margin-top: 24px;">Достижения</div>
+                <div class="achievements-grid" id="achievements-grid">
+                    <!-- Achievements will be inserted here -->
+                </div>
+            </div>
+            
+            <!-- My Stories Tab -->
+            <div class="tab-content" id="my-stories-tab">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div class="section-title" style="margin-bottom: 0;">Мои рассказы</div>
+                    <a href="/author.html" class="btn" style="padding: 10px 16px; font-size: 13px; text-decoration: none;">+ Добавить</a>
+                </div>
+                <div id="my-stories-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Загрузка...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== CONFIG =====
+        const SUPABASE_URL = 'https://xcnvejvkklypvkzkanwj.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbnZlanZra2x5cHZremthbndqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNjU4NzIsImV4cCI6MjA4MzY0MTg3Mn0.8ldNxEbzc8aNJYWtOgP0b5lOsPhl4zMeoht2rn0DeP8';
+        
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // ===== STATE =====
+        let currentUser = null;
+        let currentAuthor = null; // если пользователь также автор
+        
+        // ===== ACHIEVEMENTS =====
+        const ACHIEVEMENTS = [
+            { id: 'first_read', icon: '📖', name: 'Первое чтение', condition: stats => stats.readCount >= 1 },
+            { id: 'reader_10', icon: '📚', name: '10 рассказов', condition: stats => stats.readCount >= 10 },
+            { id: 'reader_50', icon: '🏆', name: '50 рассказов', condition: stats => stats.readCount >= 50 },
+            { id: 'first_like', icon: '❤️', name: 'Первый лайк', condition: stats => stats.likes >= 1 },
+            { id: 'critic', icon: '⭐', name: 'Критик (50 лайков)', condition: stats => stats.likes >= 50 },
+            { id: 'hour_reader', icon: '⏱️', name: 'Час чтения', condition: stats => stats.readTime >= 60 },
+            { id: 'first_sub', icon: '👤', name: 'Первая подписка', condition: stats => stats.subscriptions >= 1 },
+            { id: 'fan', icon: '🌟', name: 'Фанат (10 подписок)', condition: stats => stats.subscriptions >= 10 },
+            { id: 'author', icon: '✍️', name: 'Автор', condition: stats => stats.isAuthor },
+        ];
+        
+        // ===== TELEGRAM AUTH =====
+        function onTelegramAuth(user) {
+            console.log('Telegram user:', user);
+            handleTelegramLogin(user);
+        }
+        
+        async function handleTelegramLogin(tgUser) {
+            try {
+                const email = tgUser.username 
+                    ? `${tgUser.username}@telegram.user` 
+                    : `tg_${tgUser.id}@telegram.user`;
+                const name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || tgUser.username || `User ${tgUser.id}`;
+                
+                // Вход через Supabase Auth (создаст пользователя если нет)
+                const { data: authData, error: authError } = await db.auth.signInWithPassword({
+                    email: email,
+                    password: `tg_${tgUser.id}_${tgUser.auth_date}`
+                }).catch(async () => {
+                    // Если пользователь не существует — создаём
+                    return await db.auth.signUp({
+                        email: email,
+                        password: `tg_${tgUser.id}_${tgUser.auth_date}`,
+                        options: { data: { name, telegram_id: tgUser.id } }
+                    });
+                });
+                
+                await checkAuthAndLoad();
+                
+            } catch (error) {
+                console.error('Telegram auth error:', error);
+                alert('Ошибка авторизации: ' + error.message);
+            }
+        }
+        
+        // ===== EMAIL AUTH =====
+        let pendingEmail = null;
+        
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            
+            try {
+                const { error } = await db.auth.signInWithOtp({
+                    email: email,
+                    options: { shouldCreateUser: true }
+                });
+                
+                if (error) throw error;
+                
+                pendingEmail = email;
+                showOtpForm(email);
+                
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        });
+        
+        function showOtpForm(email) {
+            document.getElementById('auth-form').innerHTML = `
+                <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">
+                    Код отправлен на<br><strong style="color: var(--text-primary);">${email}</strong>
+                </p>
+                <input type="text" class="input" id="otp-code" placeholder="Введите код" maxlength="6" 
+                    style="text-align: center; font-size: 24px;"
+                    oninput="this.style.letterSpacing = this.value ? '8px' : '0px'">
+                <button type="button" class="btn" style="width: 100%;" onclick="verifyOtp()">Подтвердить</button>
+                <button type="button" class="btn" style="width: 100%; margin-top: 12px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);" onclick="resetAuthForm()">Изменить email</button>
+            `;
+        }
+        
+        async function verifyOtp() {
+            const code = document.getElementById('otp-code').value;
+            
+            if (!code || code.length < 6) {
+                alert('Введите 6-значный код');
+                return;
+            }
+            
+            try {
+                const { error } = await db.auth.verifyOtp({
+                    email: pendingEmail,
+                    token: code,
+                    type: 'email'
+                });
+                
+                if (error) throw error;
+                
+                await checkAuthAndLoad();
+                
+            } catch (error) {
+                alert('Неверный код: ' + error.message);
+            }
+        }
+        
+        function resetAuthForm() {
+            pendingEmail = null;
+            document.getElementById('auth-form').innerHTML = `
+                <input type="email" class="input" id="auth-email" placeholder="email@example.com" required>
+                <button type="submit" class="btn" style="width: 100%;">Войти через Email</button>
+            `;
+        }
+        
+        function logout() {
+            db.auth.signOut();
+            currentUser = null;
+            currentAuthor = null;
+            document.getElementById('auth-screen').style.display = 'flex';
+            document.getElementById('main-content').style.display = 'none';
+            document.getElementById('user-info').style.display = 'none';
+            resetAuthForm();
+        }
+        
+        // ===== CHECK AUTH & LOAD =====
+        async function checkAuthAndLoad() {
+            const { data: { user } } = await db.auth.getUser();
+            
+            if (user) {
+                currentUser = user;
+                
+                // Проверяем, является ли автором
+                const { data: author } = await db
+                    .from('authors')
+                    .select('*')
+                    .eq('email', user.email)
+                    .single();
+                
+                currentAuthor = author;
+                
+                // Показываем интерфейс
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('main-content').style.display = 'flex';
+                document.getElementById('user-info').style.display = 'flex';
+                document.getElementById('user-name').textContent = user.user_metadata?.name || user.email.split('@')[0];
+                
+                // Загружаем данные
+                loadFeed();
+                loadFavorites();
+                loadSubscriptions();
+                loadStats();
+                loadMyStories();
+            }
+        }
+        
+        // ===== TABS =====
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab + '-tab').classList.add('active');
+            });
+        });
+        
+        // ===== LOAD FEED (Recommendations) =====
+        async function loadFeed() {
+            const container = document.getElementById('feed-list');
+            
+            try {
+                // Получаем лайкнутые жанры
+                const { data: likedStories } = await db
+                    .from('reactions')
+                    .select('story_id')
+                    .eq('user_id', currentUser.id)
+                    .eq('reaction', 'like');
+                
+                const likedIds = likedStories?.map(r => r.story_id) || [];
+                
+                // Получаем прочитанные
+                const { data: readStories } = await db
+                    .from('reading_history')
+                    .select('story_id')
+                    .eq('user_id', currentUser.id);
+                
+                const readIds = readStories?.map(r => r.story_id) || [];
+                
+                // Получаем рассказы, исключая прочитанные
+                let query = db
+                    .from('stories')
+                    .select('*, authors(pen_name)')
+                    .eq('status', 'published')
+                    .order('published_at', { ascending: false })
+                    .limit(20);
+                
+                if (readIds.length > 0) {
+                    query = query.not('id', 'in', `(${readIds.join(',')})`);
+                }
+                
+                const { data: stories, error } = await query;
+                
+                if (error) throw error;
+                
+                if (!stories || stories.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📚</div>
+                            <div class="empty-state-text">Вы прочитали все доступные рассказы! Загляните позже.</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = stories.map(story => `
+                    <div class="story-card" onclick="openStory('${story.id}')">
+                        <div class="story-card-title">${story.title}</div>
+                        <div class="story-card-author">${story.authors?.pen_name || 'Аноним'}</div>
+                        <div class="story-card-meta">
+                            <span>${story.reading_time_minutes || '?'} мин</span>
+                            <span>${story.character_count?.toLocaleString() || '?'} зн.</span>
+                        </div>
+                        ${story.genre ? `<span class="story-card-genre">${story.genre}</span>` : ''}
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Feed error:', error);
+                container.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
+            }
+        }
+        
+        // ===== LOAD FAVORITES =====
+        async function loadFavorites() {
+            const container = document.getElementById('favorites-list');
+            
+            try {
+                const { data: reactions, error } = await db
+                    .from('reactions')
+                    .select('story_id, stories(id, title, genre, reading_time_minutes, authors(pen_name))')
+                    .eq('user_id', currentUser.id)
+                    .eq('reaction', 'like');
+                
+                if (error) throw error;
+                
+                if (!reactions || reactions.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">❤️</div>
+                            <div class="empty-state-text">Вы ещё не лайкнули ни одного рассказа</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = reactions.map(r => `
+                    <div class="story-card" onclick="openStory('${r.stories.id}')">
+                        <div class="story-card-title">${r.stories.title}</div>
+                        <div class="story-card-author">${r.stories.authors?.pen_name || 'Аноним'}</div>
+                        <div class="story-card-meta">
+                            <span>${r.stories.reading_time_minutes || '?'} мин</span>
+                        </div>
+                        ${r.stories.genre ? `<span class="story-card-genre">${r.stories.genre}</span>` : ''}
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Favorites error:', error);
+                container.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
+            }
+        }
+        
+        // ===== LOAD SUBSCRIPTIONS =====
+        async function loadSubscriptions() {
+            const container = document.getElementById('subscriptions-list');
+            
+            try {
+                const { data: subs, error } = await db
+                    .from('subscriptions')
+                    .select('author_id, authors(id, pen_name, name)')
+                    .eq('user_id', currentUser.id);
+                
+                if (error) throw error;
+                
+                if (!subs || subs.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">👥</div>
+                            <div class="empty-state-text">Вы пока ни на кого не подписаны</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = subs.map(s => `
+                    <div class="author-card">
+                        <div class="author-info">
+                            <div class="author-name">${s.authors?.pen_name || s.authors?.name || 'Автор'}</div>
+                        </div>
+                        <button class="btn-unsubscribe" onclick="unsubscribe('${s.author_id}')">Отписаться</button>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Subscriptions error:', error);
+                container.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
+            }
+        }
+        
+        async function unsubscribe(authorId) {
+            if (!confirm('Отписаться от автора?')) return;
+            
+            await db
+                .from('subscriptions')
+                .delete()
+                .eq('user_id', currentUser.id)
+                .eq('author_id', authorId);
+            
+            loadSubscriptions();
+            loadStats();
+        }
+        
+        // ===== LOAD STATS =====
+        async function loadStats() {
+            try {
+                // Прочитано
+                const { data: history } = await db
+                    .from('reading_history')
+                    .select('read_time_seconds')
+                    .eq('user_id', currentUser.id);
+                
+                const readCount = history?.length || 0;
+                const readTime = Math.round((history?.reduce((sum, h) => sum + (h.read_time_seconds || 0), 0) || 0) / 60);
+                
+                // Лайки
+                const { data: reactions } = await db
+                    .from('reactions')
+                    .select('id')
+                    .eq('user_id', currentUser.id)
+                    .eq('reaction', 'like');
+                
+                const likes = reactions?.length || 0;
+                
+                // Подписки
+                const { data: subs } = await db
+                    .from('subscriptions')
+                    .select('id')
+                    .eq('user_id', currentUser.id);
+                
+                const subscriptions = subs?.length || 0;
+                
+                // Обновляем UI
+                document.getElementById('stat-read-count').textContent = readCount;
+                document.getElementById('stat-read-time').textContent = readTime;
+                document.getElementById('stat-likes').textContent = likes;
+                document.getElementById('stat-subscriptions').textContent = subscriptions;
+                
+                // Ачивки
+                const stats = {
+                    readCount,
+                    readTime,
+                    likes,
+                    subscriptions,
+                    isAuthor: !!currentAuthor
+                };
+                
+                renderAchievements(stats);
+                
+            } catch (error) {
+                console.error('Stats error:', error);
+            }
+        }
+        
+        function renderAchievements(stats) {
+            const container = document.getElementById('achievements-grid');
+            
+            container.innerHTML = ACHIEVEMENTS.map(a => `
+                <div class="achievement ${a.condition(stats) ? 'unlocked' : ''}">
+                    <div class="achievement-icon">${a.icon}</div>
+                    <div class="achievement-name">${a.name}</div>
+                </div>
+            `).join('');
+        }
+        
+        // ===== LOAD MY STORIES =====
+        async function loadMyStories() {
+            const container = document.getElementById('my-stories-list');
+            
+            if (!currentAuthor) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">✍️</div>
+                        <div class="empty-state-text">Вы ещё не публиковали рассказы</div>
+                        <a href="/author.html" class="btn" style="text-decoration: none; display: inline-block;">Опубликовать первый</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                const { data: stories, error } = await db
+                    .from('stories')
+                    .select('*')
+                    .eq('author_id', currentAuthor.id)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                if (!stories || stories.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">✍️</div>
+                            <div class="empty-state-text">Вы ещё не публиковали рассказы</div>
+                            <a href="/author.html" class="btn" style="text-decoration: none; display: inline-block;">Опубликовать первый</a>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = stories.map(s => `
+                    <div class="my-story-item">
+                        <div class="my-story-header">
+                            <div class="my-story-title">${s.title}</div>
+                            <span class="my-story-status ${s.status === 'draft' ? 'draft' : ''}">${s.status === 'published' ? 'Опубликован' : 'Черновик'}</span>
+                        </div>
+                        <div class="my-story-stats">
+                            <span>${s.character_count?.toLocaleString() || '?'} зн.</span>
+                            <span>${s.reading_time_minutes || '?'} мин</span>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('My stories error:', error);
+                container.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
+            }
+        }
+        
+        // ===== OPEN STORY =====
+        function openStory(storyId) {
+            window.location.href = `/read.html?id=${storyId}`;
+        }
+        
+        // ===== INIT =====
+        checkAuthAndLoad();
+    </script>
+</body>
+</html>
