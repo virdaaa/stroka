@@ -421,7 +421,7 @@
 <body>
     <div class="app">
         <header class="header">
-            <a href="/" class="logo">Стро<span>ка</span></a>
+            <a href="/" class="logo" style="text-decoration: none; color: var(--text-primary);">Стро<span>ка</span></a>
             <div class="user-info" id="user-info" style="display: none;">
                 <span class="user-name" id="user-name"></span>
                 <button class="btn-logout" onclick="logout()">Выйти</button>
@@ -461,7 +461,7 @@
         <div id="main-content" style="display: none; flex: 1; display: flex; flex-direction: column;">
             <!-- Tabs -->
             <div class="tabs">
-                <button class="tab active" data-tab="feed">📖 Лента</button>
+                <button class="tab active" data-tab="feed">📖 Для вас</button>
                 <button class="tab" data-tab="favorites">❤️ Избранное</button>
                 <button class="tab" data-tab="subscriptions">👥 Подписки</button>
                 <button class="tab" data-tab="stats">📊 Статистика</button>
@@ -580,20 +580,42 @@
                 const email = tgUser.username 
                     ? `${tgUser.username}@telegram.user` 
                     : `tg_${tgUser.id}@telegram.user`;
+                const password = `tg_${tgUser.id}_${tgUser.auth_date}_secret`;
                 const name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || tgUser.username || `User ${tgUser.id}`;
                 
-                // Вход через Supabase Auth (создаст пользователя если нет)
-                const { data: authData, error: authError } = await db.auth.signInWithPassword({
+                // Пробуем войти
+                let { data, error } = await db.auth.signInWithPassword({
                     email: email,
-                    password: `tg_${tgUser.id}_${tgUser.auth_date}`
-                }).catch(async () => {
-                    // Если пользователь не существует — создаём
-                    return await db.auth.signUp({
-                        email: email,
-                        password: `tg_${tgUser.id}_${tgUser.auth_date}`,
-                        options: { data: { name, telegram_id: tgUser.id } }
-                    });
+                    password: password
                 });
+                
+                // Если пользователь не существует — создаём
+                if (error && error.message.includes('Invalid login credentials')) {
+                    const { data: signUpData, error: signUpError } = await db.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: { 
+                            data: { 
+                                name: name, 
+                                telegram_id: tgUser.id.toString() 
+                            } 
+                        }
+                    });
+                    
+                    if (signUpError) throw signUpError;
+                    
+                    // После signUp сразу логинимся
+                    const { error: loginError } = await db.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+                    
+                    if (loginError) throw loginError;
+                }
+                
+                if (error && !error.message.includes('Invalid login credentials')) {
+                    throw error;
+                }
                 
                 await checkAuthAndLoad();
                 
