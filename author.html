@@ -457,6 +457,10 @@
                 <p style="margin-top: 24px; font-size: 13px; color: var(--text-muted);">
                     При входе через Email отправим код подтверждения
                 </p>
+                
+                <p style="margin-top: 16px; font-size: 12px; color: var(--text-muted);">
+                    Входя на платформу, вы соглашаетесь с <a href="/privacy.html" style="color: var(--accent);">Политикой конфиденциальности</a>
+                </p>
             </div>
         </div>
         
@@ -660,16 +664,84 @@
             }
         }
         
-        // ===== EMAIL AUTH =====
+        // ===== EMAIL AUTH WITH OTP =====
+        let pendingEmail = null;
+        
         document.getElementById('auth-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('auth-email').value;
             
-            showLoading('Проверяем...');
+            showLoading('Отправляем код...');
             
             try {
+                // Отправляем OTP код на email через Supabase Auth
+                const { error } = await db.auth.signInWithOtp({
+                    email: email,
+                    options: {
+                        shouldCreateUser: true
+                    }
+                });
+                
+                if (error) throw error;
+                
+                pendingEmail = email;
+                hideLoading();
+                
+                // Показываем форму ввода кода
+                showOtpForm(email);
+                
+            } catch (error) {
+                hideLoading();
+                showMessage('auth-message', 'Ошибка: ' + error.message, 'error');
+            }
+        });
+        
+        function showOtpForm(email) {
+            document.getElementById('auth-form').innerHTML = `
+                <div class="form-group">
+                    <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">
+                        Код отправлен на<br><strong style="color: var(--text-primary);">${email}</strong>
+                    </p>
+                    <input type="text" class="input" id="otp-code" placeholder="Введите код из письма" maxlength="6" style="text-align: center; font-size: 24px; letter-spacing: 8px;">
+                </div>
+                <button type="button" class="btn" onclick="verifyOtp()">Подтвердить</button>
+                <button type="button" class="btn btn-secondary" style="margin-top: 12px;" onclick="resetAuthForm()">Изменить email</button>
+            `;
+        }
+        
+        async function verifyOtp() {
+            const code = document.getElementById('otp-code').value;
+            
+            if (!code || code.length < 6) {
+                alert('Введите 6-значный код');
+                return;
+            }
+            
+            showLoading('Проверяем код...');
+            
+            try {
+                // Проверяем OTP код
+                const { data: authData, error } = await db.auth.verifyOtp({
+                    email: pendingEmail,
+                    token: code,
+                    type: 'email'
+                });
+                
+                if (error) throw error;
+                
+                // Успешная авторизация — создаём/находим автора в нашей таблице
+                await handleEmailAuthSuccess(pendingEmail);
+                
+            } catch (error) {
+                hideLoading();
+                alert('Неверный код: ' + error.message);
+            }
+        }
+        
+        async function handleEmailAuthSuccess(email) {
+            try {
                 // Проверяем есть ли автор
-                const { data: existingAuthor } = await db
+                let { data: existingAuthor } = await db
                     .from('authors')
                     .select('*')
                     .eq('email', email)
@@ -690,18 +762,32 @@
                 }
                 
                 localStorage.setItem('stroka_author', JSON.stringify(currentAuthor));
+                document.getElementById('logout-btn').style.display = 'block';
+                await loadDashboard();
+                showScreen('dashboard');
                 hideLoading();
-                showDashboard();
                 
             } catch (error) {
                 hideLoading();
-                showMessage('auth-message', 'Ошибка: ' + error.message, 'error');
+                alert('Ошибка создания профиля: ' + error.message);
             }
-        });
+        }
+        
+        function resetAuthForm() {
+            pendingEmail = null;
+            document.getElementById('auth-form').innerHTML = `
+                <div class="form-group">
+                    <input type="email" class="input" id="auth-email" placeholder="email@example.com" required>
+                </div>
+                <button type="submit" class="btn">Войти через Email</button>
+            `;
+        }
         
         function logout() {
             currentAuthor = null;
             localStorage.removeItem('stroka_author');
+            db.auth.signOut(); // Выход из Supabase Auth
+            resetAuthForm();
             showScreen('auth');
             document.getElementById('logout-btn').style.display = 'none';
         }
