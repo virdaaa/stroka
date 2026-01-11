@@ -13,15 +13,12 @@
             --bg-primary: #0a0a0b;
             --bg-secondary: #111113;
             --bg-card: #161618;
-            --bg-input: #1a1a1c;
             --text-primary: #e8e6e3;
             --text-secondary: #8a8a8a;
             --text-muted: #5a5a5a;
             --accent: #c9a55c;
             --accent-dim: #8a7340;
             --border: #2a2a2c;
-            --danger: #c44;
-            --success: #4a8;
             --like: #e74c3c;
             --dislike: #95a5a6;
             
@@ -75,14 +72,14 @@
             position: absolute;
             bottom: 0;
             left: 0;
-            height: 2px;
+            height: 3px;
             background: var(--accent);
             transition: width 0.3s;
         }
         
-        .header-actions {
-            display: flex;
-            gap: 8px;
+        .header-info {
+            font-size: 13px;
+            color: var(--text-muted);
         }
         
         /* Story Header */
@@ -140,11 +137,6 @@
             color: var(--text-primary);
         }
         
-        .author-meta {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-        
         .btn-subscribe {
             padding: 8px 16px;
             background: var(--accent);
@@ -184,7 +176,11 @@
         
         .story-content p {
             margin-bottom: 1.5em;
-            text-align: justify;
+            text-indent: 1.5em;
+        }
+        
+        .story-content p:first-child {
+            text-indent: 0;
         }
         
         /* Story Footer */
@@ -238,6 +234,7 @@
             background: rgba(149, 165, 166, 0.2);
         }
         
+        /* Share */
         .share-section {
             padding-top: 24px;
             border-top: 1px solid var(--border);
@@ -271,42 +268,35 @@
             color: var(--accent);
         }
         
-        /* Next Story */
-        .next-story {
-            padding: 24px 20px;
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border);
-        }
-        
-        .next-story-label {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-        }
-        
-        .next-story-card {
+        /* Auth prompt */
+        .auth-prompt {
             background: var(--bg-card);
             border-radius: 12px;
-            padding: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .auth-prompt p {
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            font-family: var(--font-ui);
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
         }
         
-        .next-story-card:hover {
-            border: 1px solid var(--accent);
-            margin: -1px;
-        }
-        
-        .next-story-title {
-            font-family: var(--font-display);
-            font-size: 18px;
-            margin-bottom: 4px;
-        }
-        
-        .next-story-author {
-            font-size: 13px;
-            color: var(--accent);
-        }
+        .btn:hover { background: var(--accent-dim); }
         
         /* Loading */
         .loading {
@@ -344,37 +334,66 @@
             margin-bottom: 16px;
         }
         
-        /* Auth prompt */
-        .auth-prompt {
+        /* Resume Banner */
+        .resume-banner {
             background: var(--bg-card);
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px;
-            text-align: center;
+            border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
-        .auth-prompt p {
-            margin-bottom: 12px;
+        .resume-text {
+            font-size: 13px;
             color: var(--text-secondary);
         }
         
-        .btn {
-            padding: 12px 24px;
+        .resume-btn {
+            padding: 6px 12px;
             background: var(--accent);
             color: var(--bg-primary);
             border: none;
-            border-radius: 8px;
-            font-family: var(--font-ui);
-            font-size: 14px;
-            font-weight: 500;
+            border-radius: 6px;
+            font-size: 12px;
             cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
         }
         
-        .btn:hover { background: var(--accent-dim); }
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            padding-bottom: max(8px, env(safe-area-inset-bottom));
+            z-index: 1000;
+            max-width: 680px;
+            margin: 0 auto;
+        }
         
-        /* Mobile adjustments */
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 11px;
+            padding: 4px 16px;
+        }
+        
+        .bottom-nav-item:hover { color: var(--text-secondary); }
+        
+        .bottom-nav-icon {
+            font-size: 22px;
+            margin-bottom: 2px;
+        }
+        
+        /* Mobile */
         @media (max-width: 480px) {
             .story-title { font-size: 26px; }
             .story-content { font-size: 17px; padding: 24px 16px; }
@@ -386,28 +405,32 @@
     <div class="app">
         <!-- Header -->
         <header class="header">
-            <a href="/profile.html" class="back-btn">← Назад</a>
-            <div class="header-actions">
-                <span id="read-time" style="font-size: 13px; color: var(--text-muted);"></span>
-            </div>
+            <a href="/" class="back-btn">← Назад</a>
+            <span class="header-info" id="header-info"></span>
             <div class="progress-bar" id="progress-bar" style="width: 0%;"></div>
         </header>
+        
+        <!-- Resume Banner (hidden by default) -->
+        <div class="resume-banner" id="resume-banner" style="display: none;">
+            <span class="resume-text">Продолжить с того места?</span>
+            <button class="resume-btn" onclick="resumeReading()">Продолжить</button>
+        </div>
         
         <!-- Loading State -->
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            Загрузка рассказа...
+            Загрузка...
         </div>
         
         <!-- Error State -->
         <div class="error" id="error" style="display: none;">
             <div class="error-icon">📖</div>
             <p>Рассказ не найден</p>
-            <a href="/profile.html" class="btn" style="margin-top: 16px;">Вернуться</a>
+            <a href="/" class="btn" style="margin-top: 16px;">На главную</a>
         </div>
         
         <!-- Story Content -->
-        <div id="story-container" style="display: none;">
+        <div id="story-container" style="display: none; padding-bottom: 80px;">
             <div class="story-header">
                 <span class="story-genre" id="story-genre"></span>
                 <h1 class="story-title" id="story-title"></h1>
@@ -415,10 +438,7 @@
                 <div class="story-author">
                     <div class="author-info">
                         <div class="author-avatar" id="author-avatar">А</div>
-                        <div>
-                            <div class="author-name" id="author-name">Автор</div>
-                            <div class="author-meta" id="author-stories-count"></div>
-                        </div>
+                        <div class="author-name" id="author-name">Автор</div>
                     </div>
                     <button class="btn-subscribe" id="subscribe-btn" onclick="toggleSubscribe()">Подписаться</button>
                 </div>
@@ -440,7 +460,7 @@
                 </div>
                 
                 <div id="auth-prompt" style="display: none;" class="auth-prompt">
-                    <p>Войдите, чтобы сохранять избранное и получать рекомендации</p>
+                    <p>Войдите, чтобы сохранять прогресс и получать рекомендации</p>
                     <a href="/profile.html" class="btn">Войти</a>
                 </div>
                 
@@ -453,15 +473,27 @@
                     </div>
                 </div>
             </div>
-            
-            <div class="next-story" id="next-story" style="display: none;">
-                <div class="next-story-label">Читать дальше</div>
-                <div class="next-story-card" id="next-story-card">
-                    <div class="next-story-title" id="next-story-title"></div>
-                    <div class="next-story-author" id="next-story-author"></div>
-                </div>
-            </div>
         </div>
+        
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="/" class="bottom-nav-item">
+                <span class="bottom-nav-icon">🏠</span>
+                <span>Главная</span>
+            </a>
+            <a href="/search.html" class="bottom-nav-item">
+                <span class="bottom-nav-icon">🔍</span>
+                <span>Поиск</span>
+            </a>
+            <a href="/moe.html" class="bottom-nav-item">
+                <span class="bottom-nav-icon">📚</span>
+                <span>Моё</span>
+            </a>
+            <a href="/profile.html" class="bottom-nav-item">
+                <span class="bottom-nav-icon">👤</span>
+                <span>Профиль</span>
+            </a>
+        </nav>
     </div>
 
     <script>
@@ -479,6 +511,10 @@
         let currentReaction = null;
         let readStartTime = Date.now();
         let maxScrollPercent = 0;
+        let savedScrollPercent = 0;
+        
+        // Local storage keys
+        const LOCAL_HISTORY_KEY = 'stroka_history';
         
         // ===== GET STORY ID =====
         const urlParams = new URLSearchParams(window.location.search);
@@ -498,12 +534,15 @@
             // Load story
             await loadStory();
             
-            // Setup scroll tracking
+            // Setup tracking
             setupScrollTracking();
             
-            // Track reading time
-            window.addEventListener('beforeunload', saveReadingProgress);
-            setInterval(updateReadTime, 10000); // Update every 10 sec
+            // Save progress periodically and on exit
+            window.addEventListener('beforeunload', saveProgress);
+            window.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') saveProgress();
+            });
+            setInterval(saveProgress, 30000); // Every 30 sec
         }
         
         // ===== LOAD STORY =====
@@ -526,19 +565,18 @@
                 // Render story
                 renderStory(story);
                 
+                // Load saved progress
+                await loadSavedProgress();
+                
                 // Check subscription & reaction
                 if (currentUser) {
                     await checkSubscription();
                     await checkReaction();
-                    await recordReading();
                 } else {
                     document.getElementById('reaction-buttons').style.display = 'none';
                     document.getElementById('auth-prompt').style.display = 'block';
                     document.getElementById('subscribe-btn').style.display = 'none';
                 }
-                
-                // Load next story
-                await loadNextStory();
                 
                 // Setup share links
                 setupShareLinks();
@@ -572,6 +610,106 @@
         function showError() {
             document.getElementById('loading').style.display = 'none';
             document.getElementById('error').style.display = 'block';
+        }
+        
+        // ===== SAVED PROGRESS =====
+        async function loadSavedProgress() {
+            let progress = null;
+            
+            if (currentUser) {
+                // Load from DB
+                const { data } = await db
+                    .from('reading_history')
+                    .select('read_percent, scroll_position')
+                    .eq('user_id', currentUser.id)
+                    .eq('story_id', storyId)
+                    .single();
+                
+                if (data && data.read_percent > 0 && data.read_percent < 95) {
+                    progress = data;
+                }
+            } else {
+                // Load from localStorage
+                const localHistory = JSON.parse(localStorage.getItem(LOCAL_HISTORY_KEY) || '{}');
+                if (localHistory[storyId] && localHistory[storyId].read_percent > 0 && localHistory[storyId].read_percent < 95) {
+                    progress = localHistory[storyId];
+                }
+            }
+            
+            if (progress && progress.read_percent > 5) {
+                savedScrollPercent = progress.read_percent;
+                document.getElementById('resume-banner').style.display = 'flex';
+                document.getElementById('header-info').textContent = `${progress.read_percent}% прочитано`;
+            }
+        }
+        
+        function resumeReading() {
+            document.getElementById('resume-banner').style.display = 'none';
+            
+            // Calculate scroll position from percentage
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollTo = (savedScrollPercent / 100) * docHeight;
+            
+            window.scrollTo({
+                top: scrollTo,
+                behavior: 'smooth'
+            });
+        }
+        
+        // ===== SCROLL TRACKING =====
+        function setupScrollTracking() {
+            window.addEventListener('scroll', () => {
+                const scrollTop = window.scrollY;
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                const scrollPercent = Math.min(100, Math.round((scrollTop / docHeight) * 100));
+                
+                maxScrollPercent = Math.max(maxScrollPercent, scrollPercent);
+                
+                // Update progress bar
+                document.getElementById('progress-bar').style.width = scrollPercent + '%';
+                
+                // Update header info
+                if (scrollPercent > 0) {
+                    document.getElementById('header-info').textContent = `${scrollPercent}%`;
+                }
+                
+                // Hide resume banner once user scrolls
+                if (scrollPercent > savedScrollPercent + 5) {
+                    document.getElementById('resume-banner').style.display = 'none';
+                }
+            });
+        }
+        
+        // ===== SAVE PROGRESS =====
+        async function saveProgress() {
+            const readTimeSeconds = Math.round((Date.now() - readStartTime) / 1000);
+            const isFinished = maxScrollPercent >= 90;
+            
+            if (currentUser) {
+                // Save to DB
+                await db
+                    .from('reading_history')
+                    .upsert({
+                        user_id: currentUser.id,
+                        story_id: storyId,
+                        read_percent: maxScrollPercent,
+                        read_time_seconds: readTimeSeconds,
+                        scroll_position: maxScrollPercent,
+                        started_at: new Date(readStartTime).toISOString(),
+                        finished_at: isFinished ? new Date().toISOString() : null
+                    }, { onConflict: 'user_id,story_id' });
+            } else {
+                // Save to localStorage
+                const localHistory = JSON.parse(localStorage.getItem(LOCAL_HISTORY_KEY) || '{}');
+                localHistory[storyId] = {
+                    read_percent: maxScrollPercent,
+                    read_time_seconds: readTimeSeconds,
+                    scroll_position: maxScrollPercent,
+                    title: currentStory?.title,
+                    updated_at: new Date().toISOString()
+                };
+                localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(localHistory));
+            }
         }
         
         // ===== SUBSCRIPTION =====
@@ -661,7 +799,6 @@
                 return;
             }
             
-            // Toggle off if same reaction
             if (currentReaction === type) {
                 await db
                     .from('reactions')
@@ -670,7 +807,6 @@
                     .eq('story_id', storyId);
                 currentReaction = null;
             } else {
-                // Upsert reaction
                 await db
                     .from('reactions')
                     .upsert({
@@ -682,90 +818,6 @@
             }
             
             updateReactionButtons();
-        }
-        
-        // ===== READING PROGRESS =====
-        async function recordReading() {
-            // Create or update reading history
-            await db
-                .from('reading_history')
-                .upsert({
-                    user_id: currentUser.id,
-                    story_id: storyId,
-                    started_at: new Date().toISOString()
-                }, { onConflict: 'user_id,story_id' });
-        }
-        
-        function setupScrollTracking() {
-            window.addEventListener('scroll', () => {
-                const scrollTop = window.scrollY;
-                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-                const scrollPercent = Math.min(100, Math.round((scrollTop / docHeight) * 100));
-                
-                maxScrollPercent = Math.max(maxScrollPercent, scrollPercent);
-                
-                // Update progress bar
-                document.getElementById('progress-bar').style.width = scrollPercent + '%';
-            });
-        }
-        
-        function updateReadTime() {
-            const elapsed = Math.round((Date.now() - readStartTime) / 1000);
-            const minutes = Math.floor(elapsed / 60);
-            const seconds = elapsed % 60;
-            
-            if (minutes > 0) {
-                document.getElementById('read-time').textContent = `${minutes} мин`;
-            }
-        }
-        
-        async function saveReadingProgress() {
-            if (!currentUser) return;
-            
-            const readTimeSeconds = Math.round((Date.now() - readStartTime) / 1000);
-            
-            await db
-                .from('reading_history')
-                .update({
-                    read_percent: maxScrollPercent,
-                    read_time_seconds: readTimeSeconds,
-                    finished_at: maxScrollPercent >= 90 ? new Date().toISOString() : null
-                })
-                .eq('user_id', currentUser.id)
-                .eq('story_id', storyId);
-        }
-        
-        // ===== NEXT STORY =====
-        async function loadNextStory() {
-            try {
-                // Get stories user hasn't read
-                let query = db
-                    .from('stories')
-                    .select('id, title, authors(pen_name)')
-                    .eq('status', 'published')
-                    .neq('id', storyId)
-                    .limit(1);
-                
-                // Prefer same genre
-                if (currentStory.genre) {
-                    query = query.eq('genre', currentStory.genre);
-                }
-                
-                const { data: stories } = await query;
-                
-                if (stories && stories.length > 0) {
-                    const next = stories[0];
-                    document.getElementById('next-story').style.display = 'block';
-                    document.getElementById('next-story-title').textContent = next.title;
-                    document.getElementById('next-story-author').textContent = next.authors?.pen_name || 'Аноним';
-                    document.getElementById('next-story-card').onclick = () => {
-                        saveReadingProgress();
-                        window.location.href = `/read.html?id=${next.id}`;
-                    };
-                }
-            } catch (error) {
-                console.error('Next story error:', error);
-            }
         }
         
         // ===== SHARE =====
