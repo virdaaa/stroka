@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Строка — Моё</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-card: #161618;
+            --text-primary: #e8e6e3;
+            --text-secondary: #8a8a8a;
+            --text-muted: #5a5a5a;
+            --accent: #c9a55c;
+            --accent-dim: #8a7340;
+            --border: #2a2a2c;
+            
+            --font-display: 'Cormorant Garamond', serif;
+            --font-ui: 'IBM Plex Sans', sans-serif;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: var(--font-ui);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        
+        .app {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 70px;
+        }
+        
+        /* Header */
+        .header {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .header-title {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-secondary);
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 14px 12px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-family: var(--font-ui);
+            font-size: 14px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .tab:hover { color: var(--text-secondary); }
+        
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+        
+        /* Content */
+        .tab-content {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .tab-content.active { display: block; }
+        
+        /* Story Card */
+        .story-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .story-card:hover {
+            border: 1px solid var(--accent);
+            margin: -1px;
+            margin-bottom: 11px;
+        }
+        
+        .story-card-title {
+            font-family: var(--font-display);
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        
+        .story-card-author {
+            font-size: 13px;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+        
+        .story-card-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            gap: 12px;
+        }
+        
+        .story-card-progress {
+            margin-top: 8px;
+            background: var(--border);
+            height: 4px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .story-card-progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+        
+        /* Author Card */
+        .author-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .author-info { flex: 1; }
+        
+        .author-name {
+            font-family: var(--font-display);
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        
+        .author-stats {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        
+        .btn-small:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .empty-state-text {
+            margin-bottom: 8px;
+        }
+        
+        .empty-state-subtext {
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+        
+        /* Auth Prompt */
+        .auth-prompt {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .auth-prompt-text {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            font-family: var(--font-ui);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover { background: var(--accent-dim); }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            padding-bottom: max(8px, env(safe-area-inset-bottom));
+            z-index: 1000;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 11px;
+            padding: 4px 16px;
+            transition: color 0.2s;
+        }
+        
+        .bottom-nav-item:hover { color: var(--text-secondary); }
+        .bottom-nav-item.active { color: var(--accent); }
+        
+        .bottom-nav-icon {
+            font-size: 22px;
+            margin-bottom: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="header-title">Моё</div>
+        </header>
+        
+        <div class="tabs">
+            <button class="tab active" data-tab="continue">Продолжить</button>
+            <button class="tab" data-tab="favorites">Избранное</button>
+            <button class="tab" data-tab="subscriptions">Подписки</button>
+        </div>
+        
+        <!-- Continue Tab -->
+        <div class="tab-content active" id="continue-tab">
+            <div id="continue-list"></div>
+        </div>
+        
+        <!-- Favorites Tab -->
+        <div class="tab-content" id="favorites-tab">
+            <div id="favorites-list"></div>
+        </div>
+        
+        <!-- Subscriptions Tab -->
+        <div class="tab-content" id="subscriptions-tab">
+            <div id="subscriptions-list"></div>
+        </div>
+        
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="/" class="bottom-nav-item">
+                <span class="bottom-nav-icon">🏠</span>
+                <span>Главная</span>
+            </a>
+            <a href="/search.html" class="bottom-nav-item">
+                <span class="bottom-nav-icon">🔍</span>
+                <span>Поиск</span>
+            </a>
+            <a href="/moe.html" class="bottom-nav-item active">
+                <span class="bottom-nav-icon">📚</span>
+                <span>Моё</span>
+            </a>
+            <a href="/profile.html" class="bottom-nav-item">
+                <span class="bottom-nav-icon">👤</span>
+                <span>Профиль</span>
+            </a>
+        </nav>
+    </div>
+
+    <script>
+        // ===== CONFIG =====
+        const SUPABASE_URL = 'https://xcnvejvkklypvkzkanwj.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbnZlanZra2x5cHZremthbndqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNjU4NzIsImV4cCI6MjA4MzY0MTg3Mn0.8ldNxEbzc8aNJYWtOgP0b5lOsPhl4zMeoht2rn0DeP8';
+        
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // ===== STATE =====
+        let currentUser = null;
+        
+        // Local storage
+        let localFavorites = JSON.parse(localStorage.getItem('stroka_favorites') || '[]');
+        let localHistory = JSON.parse(localStorage.getItem('stroka_history') || '[]');
+        
+        // ===== INIT =====
+        async function init() {
+            const { data: { user } } = await db.auth.getUser();
+            currentUser = user;
+            
+            setupTabs();
+            loadContinue();
+            loadFavorites();
+            loadSubscriptions();
+        }
+        
+        // ===== TABS =====
+        function setupTabs() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.tab + '-tab').classList.add('active');
+                });
+            });
+        }
+        
+        // ===== LOAD CONTINUE =====
+        async function loadContinue() {
+            const container = document.getElementById('continue-list');
+            
+            if (currentUser) {
+                // Load from DB
+                try {
+                    const { data: history, error } = await db
+                        .from('reading_history')
+                        .select('*, stories(id, title, genre, reading_time_minutes, authors(pen_name))')
+                        .eq('user_id', currentUser.id)
+                        .lt('read_percent', 100)
+                        .order('started_at', { ascending: false })
+                        .limit(20);
+                    
+                    if (error) throw error;
+                    
+                    if (!history || history.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📖</div>
+                                <div class="empty-state-text">Нет недочитанных рассказов</div>
+                                <div class="empty-state-subtext">Начните читать — рассказы появятся здесь</div>
+                                <a href="/" class="btn">К ленте</a>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    container.innerHTML = history.map(h => `
+                        <div class="story-card" onclick="openStory('${h.stories.id}')">
+                            <div class="story-card-title">${h.stories.title}</div>
+                            <div class="story-card-author">${h.stories.authors?.pen_name || 'Автор'}</div>
+                            <div class="story-card-meta">
+                                <span>${h.stories.reading_time_minutes || '?'} мин</span>
+                                <span>${h.stories.genre || 'Проза'}</span>
+                            </div>
+                            <div class="story-card-progress">
+                                <div class="story-card-progress-fill" style="width: ${h.read_percent || 0}%"></div>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                } catch (error) {
+                    console.error('Error loading continue:', error);
+                    container.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
+                }
+            } else {
+                // Local storage for anonymous
+                if (localHistory.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📖</div>
+                            <div class="empty-state-text">Нет недочитанных рассказов</div>
+                            <div class="empty-state-subtext">Начните читать — рассказы появятся здесь</div>
+                            <a href="/" class="btn">К ленте</a>
+                        </div>
+                        <div class="auth-prompt">
+                            <div class="auth-prompt-text">Войдите, чтобы не потерять историю</div>
+                            <a href="/profile.html" class="btn">Войти</a>
+                        </div>
+                    `;
+                } else {
+                    // TODO: Load stories by IDs from localHistory
+                    container.innerHTML = `
+                        <div class="auth-prompt">
+                            <div class="auth-prompt-text">Войдите, чтобы не потерять историю</div>
+                            <a href="/profile.html" class="btn">Войти</a>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // ===== LOAD FAVORITES =====
+        async function loadFavorites() {
+            const container = document.getElementById('favorites-list');
+            
+            if (currentUser) {
+                try {
+                    const { data: reactions, error } = await db
+                        .from('reactions')
+                        .select('story_id, stories(id, title, genre, reading_time_minutes, authors(pen_name))')
+                        .eq('user_id', currentUser.id)
+                        .eq('reaction', 'like');
+                    
+                    if (error) throw error;
+                    
+                    if (!reactions || reactions.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">❤️</div>
+                                <div class="empty-state-text">Нет избранных рассказов</div>
+                                <div class="empty-state-subtext">Нажмите ♡ чтобы сохранить понравившееся</div>
+                                <a href="/" class="btn">К ленте</a>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    container.innerHTML = reactions.map(r => `
+                        <div class="story-card" onclick="openStory('${r.stories.id}')">
+                            <div class="story-card-title">${r.stories.title}</div>
+                            <div class="story-card-author">${r.stories.authors?.pen_name || 'Автор'}</div>
+                            <div class="story-card-meta">
+                                <span>${r.stories.reading_time_minutes || '?'} мин</span>
+                                <span>${r.stories.genre || 'Проза'}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                } catch (error) {
+                    console.error('Error loading favorites:', error);
+                    container.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
+                }
+            } else {
+                // Local favorites
+                if (localFavorites.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">❤️</div>
+                            <div class="empty-state-text">Нет избранных рассказов</div>
+                            <div class="empty-state-subtext">Нажмите ♡ чтобы сохранить понравившееся</div>
+                            <a href="/" class="btn">К ленте</a>
+                        </div>
+                    `;
+                } else {
+                    // Load stories by IDs
+                    try {
+                        const { data: stories, error } = await db
+                            .from('stories')
+                            .select('id, title, genre, reading_time_minutes, authors(pen_name)')
+                            .in('id', localFavorites);
+                        
+                        if (error) throw error;
+                        
+                        container.innerHTML = stories.map(s => `
+                            <div class="story-card" onclick="openStory('${s.id}')">
+                                <div class="story-card-title">${s.title}</div>
+                                <div class="story-card-author">${s.authors?.pen_name || 'Автор'}</div>
+                                <div class="story-card-meta">
+                                    <span>${s.reading_time_minutes || '?'} мин</span>
+                                    <span>${s.genre || 'Проза'}</span>
+                                </div>
+                            </div>
+                        `).join('');
+                        
+                        container.innerHTML += `
+                            <div class="auth-prompt">
+                                <div class="auth-prompt-text">Войдите, чтобы не потерять избранное</div>
+                                <a href="/profile.html" class="btn">Войти</a>
+                            </div>
+                        `;
+                        
+                    } catch (error) {
+                        console.error('Error loading local favorites:', error);
+                    }
+                }
+            }
+        }
+        
+        // ===== LOAD SUBSCRIPTIONS =====
+        async function loadSubscriptions() {
+            const container = document.getElementById('subscriptions-list');
+            
+            if (!currentUser) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👥</div>
+                        <div class="empty-state-text">Подписки доступны после входа</div>
+                        <div class="empty-state-subtext">Войдите, чтобы подписываться на авторов и видеть их новинки</div>
+                        <a href="/profile.html" class="btn">Войти</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                const { data: subs, error } = await db
+                    .from('subscriptions')
+                    .select('author_id, authors(id, pen_name, name)')
+                    .eq('user_id', currentUser.id);
+                
+                if (error) throw error;
+                
+                if (!subs || subs.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">👥</div>
+                            <div class="empty-state-text">Вы ни на кого не подписаны</div>
+                            <div class="empty-state-subtext">Подпишитесь на авторов, чтобы видеть их новинки</div>
+                            <a href="/" class="btn">К ленте</a>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = subs.map(s => `
+                    <div class="author-card">
+                        <div class="author-info">
+                            <div class="author-name">${s.authors?.pen_name || s.authors?.name || 'Автор'}</div>
+                        </div>
+                        <button class="btn-small" onclick="unsubscribe('${s.author_id}')">Отписаться</button>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading subscriptions:', error);
+                container.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
+            }
+        }
+        
+        // ===== ACTIONS =====
+        function openStory(storyId) {
+            window.location.href = `/read.html?id=${storyId}`;
+        }
+        
+        async function unsubscribe(authorId) {
+            if (!confirm('Отписаться от автора?')) return;
+            
+            await db
+                .from('subscriptions')
+                .delete()
+                .eq('user_id', currentUser.id)
+                .eq('author_id', authorId);
+            
+            loadSubscriptions();
+        }
+        
+        // ===== START =====
+        init();
+    </script>
+</body>
+</html>
