@@ -210,6 +210,28 @@
             color: var(--text-secondary);
         }
         
+        .short-stats {
+            display: flex;
+            gap: 16px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        
+        .short-stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .short-stat-icon {
+            font-size: 14px;
+        }
+        
+        .short-stat.likes .short-stat-value {
+            color: var(--accent);
+        }
+        
         .short-content {
             flex: 1;
             position: relative;
@@ -436,6 +458,14 @@
         let currentGenre = '';
         let currentUser = null;
         
+        // ===== HELPERS =====
+        function formatNumber(num) {
+            if (!num || num === 0) return '0';
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+        
         // Local storage for anonymous users
         let localFavorites = JSON.parse(localStorage.getItem('stroka_favorites') || '[]');
         
@@ -451,6 +481,7 @@
         // ===== LOAD DATA =====
         async function loadData() {
             try {
+                // Загружаем рассказы
                 let query = db
                     .from('stories')
                     .select(`
@@ -476,8 +507,34 @@
                 
                 stories = storiesData || [];
                 
+                // Загружаем статистику для всех рассказов
+                const storyIds = stories.map(s => s.id);
+                
+                // Получаем реакции
+                const { data: reactionsData } = await db
+                    .from('reactions')
+                    .select('story_id, reaction')
+                    .in('story_id', storyIds);
+                
+                // Считаем статистику реакций
+                const statsMap = {};
+                stories.forEach(s => {
+                    statsMap[s.id] = { views: s.views || 0, likes: 0, dislikes: 0 };
+                });
+                
+                (reactionsData || []).forEach(r => {
+                    if (statsMap[r.story_id]) {
+                        if (r.reaction === 'like') statsMap[r.story_id].likes++;
+                        else if (r.reaction === 'dislike') statsMap[r.story_id].dislikes++;
+                    }
+                });
+                
                 shorts = [];
                 stories.forEach(story => {
+                    const stats = statsMap[story.id] || { views: 0, likes: 0, dislikes: 0 };
+                    const totalReactions = stats.likes + stats.dislikes;
+                    const likePercent = totalReactions > 0 ? Math.round(100 * stats.likes / totalReactions) : null;
+                    
                     if (story.shorts) {
                         story.shorts.forEach(short => {
                             shorts.push({
@@ -488,7 +545,9 @@
                                 genre: story.genre,
                                 subgenres: story.subgenres || [],
                                 reading_time: story.reading_time_minutes,
-                                character_count: story.character_count
+                                character_count: story.character_count,
+                                views: stats.views,
+                                like_percent: likePercent
                             });
                         });
                     }
@@ -541,6 +600,18 @@
                         </div>
                         <div class="short-tags">
                             ${(short.subgenres || []).slice(0, 4).map(tag => `<span class="short-tag">${tag}</span>`).join('')}
+                        </div>
+                        <div class="short-stats">
+                            <span class="short-stat views">
+                                <span class="short-stat-icon">👁</span>
+                                <span class="short-stat-value">${formatNumber(short.views)}</span>
+                            </span>
+                            ${short.like_percent !== null ? `
+                            <span class="short-stat likes">
+                                <span class="short-stat-icon">❤️</span>
+                                <span class="short-stat-value">${short.like_percent}%</span>
+                            </span>
+                            ` : ''}
                         </div>
                     </div>
                     <div class="short-content">
