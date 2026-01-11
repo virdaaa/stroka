@@ -863,7 +863,7 @@
             
             storyData.text = text;
             storyData.characterCount = text.length;
-            storyData.readingTime = Math.ceil(text.length / 1500); // ~1500 знаков в минуту
+            storyData.readingTime = Math.ceil(text.split(/\s+/).length / 200); // ~200 слов в минуту
             
             showLoading('ИИ анализирует текст и генерирует шортсы...');
             
