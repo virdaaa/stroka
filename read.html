@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Строка — Читать</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=Literata:opsz,wght@7..72,400;7..72,500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-card: #161618;
+            --bg-input: #1a1a1c;
+            --text-primary: #e8e6e3;
+            --text-secondary: #8a8a8a;
+            --text-muted: #5a5a5a;
+            --accent: #c9a55c;
+            --accent-dim: #8a7340;
+            --border: #2a2a2c;
+            --danger: #c44;
+            --success: #4a8;
+            --like: #e74c3c;
+            --dislike: #95a5a6;
+            
+            --font-display: 'Cormorant Garamond', serif;
+            --font-ui: 'IBM Plex Sans', sans-serif;
+            --font-reading: 'Literata', serif;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: var(--font-ui);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        
+        .app {
+            max-width: 680px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .header {
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg-primary);
+            z-index: 100;
+        }
+        
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .back-btn:hover { color: var(--accent); }
+        
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        /* Story Header */
+        .story-header {
+            padding: 32px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .story-genre {
+            display: inline-block;
+            padding: 4px 10px;
+            background: var(--bg-card);
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+        
+        .story-title {
+            font-family: var(--font-display);
+            font-size: 32px;
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 16px;
+        }
+        
+        .story-author {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        
+        .author-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .author-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 18px;
+            color: var(--bg-primary);
+        }
+        
+        .author-name {
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+        
+        .author-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .btn-subscribe {
+            padding: 8px 16px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 6px;
+            font-family: var(--font-ui);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .btn-subscribe:hover { background: var(--accent-dim); }
+        
+        .btn-subscribe.subscribed {
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+        
+        .story-meta {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        
+        /* Story Content */
+        .story-content {
+            padding: 32px 20px;
+            font-family: var(--font-reading);
+            font-size: 18px;
+            line-height: 1.8;
+            color: var(--text-primary);
+        }
+        
+        .story-content p {
+            margin-bottom: 1.5em;
+            text-align: justify;
+        }
+        
+        /* Story Footer */
+        .story-footer {
+            padding: 32px 20px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+        
+        .reaction-prompt {
+            font-family: var(--font-display);
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: var(--text-secondary);
+        }
+        
+        .reaction-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .reaction-btn {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            background: var(--bg-card);
+            font-size: 28px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .reaction-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .reaction-btn.like:hover,
+        .reaction-btn.like.active {
+            border-color: var(--like);
+            background: rgba(231, 76, 60, 0.2);
+        }
+        
+        .reaction-btn.dislike:hover,
+        .reaction-btn.dislike.active {
+            border-color: var(--dislike);
+            background: rgba(149, 165, 166, 0.2);
+        }
+        
+        .share-section {
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .share-title {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+        
+        .share-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .share-btn {
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        
+        .share-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        /* Next Story */
+        .next-story {
+            padding: 24px 20px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+        }
+        
+        .next-story-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        
+        .next-story-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .next-story-card:hover {
+            border: 1px solid var(--accent);
+            margin: -1px;
+        }
+        
+        .next-story-title {
+            font-family: var(--font-display);
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        
+        .next-story-author {
+            font-size: 13px;
+            color: var(--accent);
+        }
+        
+        /* Loading */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            color: var(--text-muted);
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Error */
+        .error {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        
+        .error-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        /* Auth prompt */
+        .auth-prompt {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px;
+            text-align: center;
+        }
+        
+        .auth-prompt p {
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            font-family: var(--font-ui);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover { background: var(--accent-dim); }
+        
+        /* Mobile adjustments */
+        @media (max-width: 480px) {
+            .story-title { font-size: 26px; }
+            .story-content { font-size: 17px; padding: 24px 16px; }
+            .story-header { padding: 24px 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <a href="/profile.html" class="back-btn">← Назад</a>
+            <div class="header-actions">
+                <span id="read-time" style="font-size: 13px; color: var(--text-muted);"></span>
+            </div>
+            <div class="progress-bar" id="progress-bar" style="width: 0%;"></div>
+        </header>
+        
+        <!-- Loading State -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            Загрузка рассказа...
+        </div>
+        
+        <!-- Error State -->
+        <div class="error" id="error" style="display: none;">
+            <div class="error-icon">📖</div>
+            <p>Рассказ не найден</p>
+            <a href="/profile.html" class="btn" style="margin-top: 16px;">Вернуться</a>
+        </div>
+        
+        <!-- Story Content -->
+        <div id="story-container" style="display: none;">
+            <div class="story-header">
+                <span class="story-genre" id="story-genre"></span>
+                <h1 class="story-title" id="story-title"></h1>
+                
+                <div class="story-author">
+                    <div class="author-info">
+                        <div class="author-avatar" id="author-avatar">А</div>
+                        <div>
+                            <div class="author-name" id="author-name">Автор</div>
+                            <div class="author-meta" id="author-stories-count"></div>
+                        </div>
+                    </div>
+                    <button class="btn-subscribe" id="subscribe-btn" onclick="toggleSubscribe()">Подписаться</button>
+                </div>
+                
+                <div class="story-meta">
+                    <span id="story-reading-time">? мин</span>
+                    <span id="story-char-count">? зн.</span>
+                </div>
+            </div>
+            
+            <div class="story-content" id="story-text"></div>
+            
+            <div class="story-footer">
+                <div class="reaction-prompt">Понравился рассказ?</div>
+                
+                <div class="reaction-buttons" id="reaction-buttons">
+                    <button class="reaction-btn like" onclick="react('like')" title="Нравится">👍</button>
+                    <button class="reaction-btn dislike" onclick="react('dislike')" title="Не нравится">👎</button>
+                </div>
+                
+                <div id="auth-prompt" style="display: none;" class="auth-prompt">
+                    <p>Войдите, чтобы сохранять избранное и получать рекомендации</p>
+                    <a href="/profile.html" class="btn">Войти</a>
+                </div>
+                
+                <div class="share-section">
+                    <div class="share-title">Поделиться</div>
+                    <div class="share-buttons">
+                        <a class="share-btn" id="share-tg" href="#" target="_blank">Telegram</a>
+                        <a class="share-btn" id="share-vk" href="#" target="_blank">VK</a>
+                        <button class="share-btn" onclick="copyLink()">Копировать</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="next-story" id="next-story" style="display: none;">
+                <div class="next-story-label">Читать дальше</div>
+                <div class="next-story-card" id="next-story-card">
+                    <div class="next-story-title" id="next-story-title"></div>
+                    <div class="next-story-author" id="next-story-author"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== CONFIG =====
+        const SUPABASE_URL = 'https://xcnvejvkklypvkzkanwj.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbnZlanZra2x5cHZremthbndqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNjU4NzIsImV4cCI6MjA4MzY0MTg3Mn0.8ldNxEbzc8aNJYWtOgP0b5lOsPhl4zMeoht2rn0DeP8';
+        
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // ===== STATE =====
+        let currentUser = null;
+        let currentStory = null;
+        let currentAuthor = null;
+        let isSubscribed = false;
+        let currentReaction = null;
+        let readStartTime = Date.now();
+        let maxScrollPercent = 0;
+        
+        // ===== GET STORY ID =====
+        const urlParams = new URLSearchParams(window.location.search);
+        const storyId = urlParams.get('id');
+        
+        // ===== INIT =====
+        async function init() {
+            if (!storyId) {
+                showError();
+                return;
+            }
+            
+            // Check auth
+            const { data: { user } } = await db.auth.getUser();
+            currentUser = user;
+            
+            // Load story
+            await loadStory();
+            
+            // Setup scroll tracking
+            setupScrollTracking();
+            
+            // Track reading time
+            window.addEventListener('beforeunload', saveReadingProgress);
+            setInterval(updateReadTime, 10000); // Update every 10 sec
+        }
+        
+        // ===== LOAD STORY =====
+        async function loadStory() {
+            try {
+                const { data: story, error } = await db
+                    .from('stories')
+                    .select('*, authors(id, pen_name, name)')
+                    .eq('id', storyId)
+                    .single();
+                
+                if (error || !story) {
+                    showError();
+                    return;
+                }
+                
+                currentStory = story;
+                currentAuthor = story.authors;
+                
+                // Render story
+                renderStory(story);
+                
+                // Check subscription & reaction
+                if (currentUser) {
+                    await checkSubscription();
+                    await checkReaction();
+                    await recordReading();
+                } else {
+                    document.getElementById('reaction-buttons').style.display = 'none';
+                    document.getElementById('auth-prompt').style.display = 'block';
+                    document.getElementById('subscribe-btn').style.display = 'none';
+                }
+                
+                // Load next story
+                await loadNextStory();
+                
+                // Setup share links
+                setupShareLinks();
+                
+                // Show content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('story-container').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Load error:', error);
+                showError();
+            }
+        }
+        
+        function renderStory(story) {
+            document.title = `${story.title} — Строка`;
+            
+            document.getElementById('story-genre').textContent = story.genre || 'Проза';
+            document.getElementById('story-title').textContent = story.title;
+            document.getElementById('author-name').textContent = story.authors?.pen_name || story.authors?.name || 'Аноним';
+            document.getElementById('author-avatar').textContent = (story.authors?.pen_name || story.authors?.name || 'А')[0].toUpperCase();
+            document.getElementById('story-reading-time').textContent = `${story.reading_time_minutes || '?'} мин`;
+            document.getElementById('story-char-count').textContent = `${story.character_count?.toLocaleString() || '?'} зн.`;
+            
+            // Format text with paragraphs
+            const text = story.full_text || '';
+            const paragraphs = text.split('\n').filter(p => p.trim());
+            document.getElementById('story-text').innerHTML = paragraphs.map(p => `<p>${p}</p>`).join('');
+        }
+        
+        function showError() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+        }
+        
+        // ===== SUBSCRIPTION =====
+        async function checkSubscription() {
+            if (!currentAuthor) return;
+            
+            const { data } = await db
+                .from('subscriptions')
+                .select('id')
+                .eq('user_id', currentUser.id)
+                .eq('author_id', currentAuthor.id)
+                .single();
+            
+            isSubscribed = !!data;
+            updateSubscribeButton();
+        }
+        
+        function updateSubscribeButton() {
+            const btn = document.getElementById('subscribe-btn');
+            if (isSubscribed) {
+                btn.textContent = 'Подписан';
+                btn.classList.add('subscribed');
+            } else {
+                btn.textContent = 'Подписаться';
+                btn.classList.remove('subscribed');
+            }
+        }
+        
+        async function toggleSubscribe() {
+            if (!currentUser) {
+                window.location.href = '/profile.html';
+                return;
+            }
+            
+            if (!currentAuthor) return;
+            
+            if (isSubscribed) {
+                await db
+                    .from('subscriptions')
+                    .delete()
+                    .eq('user_id', currentUser.id)
+                    .eq('author_id', currentAuthor.id);
+                isSubscribed = false;
+            } else {
+                await db
+                    .from('subscriptions')
+                    .insert({
+                        user_id: currentUser.id,
+                        author_id: currentAuthor.id
+                    });
+                isSubscribed = true;
+            }
+            
+            updateSubscribeButton();
+        }
+        
+        // ===== REACTIONS =====
+        async function checkReaction() {
+            const { data } = await db
+                .from('reactions')
+                .select('reaction')
+                .eq('user_id', currentUser.id)
+                .eq('story_id', storyId)
+                .single();
+            
+            if (data) {
+                currentReaction = data.reaction;
+                updateReactionButtons();
+            }
+        }
+        
+        function updateReactionButtons() {
+            document.querySelectorAll('.reaction-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            if (currentReaction === 'like') {
+                document.querySelector('.reaction-btn.like').classList.add('active');
+            } else if (currentReaction === 'dislike') {
+                document.querySelector('.reaction-btn.dislike').classList.add('active');
+            }
+        }
+        
+        async function react(type) {
+            if (!currentUser) {
+                window.location.href = '/profile.html';
+                return;
+            }
+            
+            // Toggle off if same reaction
+            if (currentReaction === type) {
+                await db
+                    .from('reactions')
+                    .delete()
+                    .eq('user_id', currentUser.id)
+                    .eq('story_id', storyId);
+                currentReaction = null;
+            } else {
+                // Upsert reaction
+                await db
+                    .from('reactions')
+                    .upsert({
+                        user_id: currentUser.id,
+                        story_id: storyId,
+                        reaction: type
+                    }, { onConflict: 'user_id,story_id' });
+                currentReaction = type;
+            }
+            
+            updateReactionButtons();
+        }
+        
+        // ===== READING PROGRESS =====
+        async function recordReading() {
+            // Create or update reading history
+            await db
+                .from('reading_history')
+                .upsert({
+                    user_id: currentUser.id,
+                    story_id: storyId,
+                    started_at: new Date().toISOString()
+                }, { onConflict: 'user_id,story_id' });
+        }
+        
+        function setupScrollTracking() {
+            window.addEventListener('scroll', () => {
+                const scrollTop = window.scrollY;
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                const scrollPercent = Math.min(100, Math.round((scrollTop / docHeight) * 100));
+                
+                maxScrollPercent = Math.max(maxScrollPercent, scrollPercent);
+                
+                // Update progress bar
+                document.getElementById('progress-bar').style.width = scrollPercent + '%';
+            });
+        }
+        
+        function updateReadTime() {
+            const elapsed = Math.round((Date.now() - readStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            
+            if (minutes > 0) {
+                document.getElementById('read-time').textContent = `${minutes} мин`;
+            }
+        }
+        
+        async function saveReadingProgress() {
+            if (!currentUser) return;
+            
+            const readTimeSeconds = Math.round((Date.now() - readStartTime) / 1000);
+            
+            await db
+                .from('reading_history')
+                .update({
+                    read_percent: maxScrollPercent,
+                    read_time_seconds: readTimeSeconds,
+                    finished_at: maxScrollPercent >= 90 ? new Date().toISOString() : null
+                })
+                .eq('user_id', currentUser.id)
+                .eq('story_id', storyId);
+        }
+        
+        // ===== NEXT STORY =====
+        async function loadNextStory() {
+            try {
+                // Get stories user hasn't read
+                let query = db
+                    .from('stories')
+                    .select('id, title, authors(pen_name)')
+                    .eq('status', 'published')
+                    .neq('id', storyId)
+                    .limit(1);
+                
+                // Prefer same genre
+                if (currentStory.genre) {
+                    query = query.eq('genre', currentStory.genre);
+                }
+                
+                const { data: stories } = await query;
+                
+                if (stories && stories.length > 0) {
+                    const next = stories[0];
+                    document.getElementById('next-story').style.display = 'block';
+                    document.getElementById('next-story-title').textContent = next.title;
+                    document.getElementById('next-story-author').textContent = next.authors?.pen_name || 'Аноним';
+                    document.getElementById('next-story-card').onclick = () => {
+                        saveReadingProgress();
+                        window.location.href = `/read.html?id=${next.id}`;
+                    };
+                }
+            } catch (error) {
+                console.error('Next story error:', error);
+            }
+        }
+        
+        // ===== SHARE =====
+        function setupShareLinks() {
+            const url = encodeURIComponent(window.location.href);
+            const title = encodeURIComponent(currentStory.title + ' — читать на Строке');
+            
+            document.getElementById('share-tg').href = `https://t.me/share/url?url=${url}&text=${title}`;
+            document.getElementById('share-vk').href = `https://vk.com/share.php?url=${url}&title=${title}`;
+        }
+        
+        function copyLink() {
+            navigator.clipboard.writeText(window.location.href);
+            alert('Ссылка скопирована!');
+        }
+        
+        // ===== START =====
+        init();
+    </script>
+</body>
+</html>
