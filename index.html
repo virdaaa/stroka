@@ -23,10 +23,6 @@
             --font-display: 'Cormorant Garamond', serif;
             --font-body: 'Literata', serif;
             --font-ui: 'IBM Plex Sans', sans-serif;
-            
-            --font-size: 18px;
-            --line-height: 1.7;
-            --reader-font: 'Literata', serif;
         }
         
         * {
@@ -75,6 +71,28 @@
         }
         
         .logo span { color: var(--accent); }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .profile-btn {
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .profile-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
         
         /* Navigation */
         .nav {
@@ -279,99 +297,6 @@
             margin-top: 8px;
         }
         
-        /* Reader */
-        .reader {
-            position: fixed;
-            inset: 0;
-            background: var(--bg-primary);
-            z-index: 200;
-            display: none;
-            flex-direction: column;
-            max-width: 480px;
-            margin: 0 auto;
-        }
-        
-        .reader.active { display: flex; }
-        
-        .reader-header {
-            padding: 16px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--bg-primary);
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .reader-back, .reader-settings-btn {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 24px;
-            cursor: pointer;
-            padding: 8px;
-        }
-        
-        .reader-title {
-            font-family: var(--font-display);
-            font-size: 16px;
-            text-align: center;
-            flex: 1;
-            padding: 0 16px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .reader-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 24px 20px;
-        }
-        
-        .reader-text {
-            font-family: var(--reader-font);
-            font-size: var(--font-size);
-            line-height: var(--line-height);
-        }
-        
-        .reader-text p {
-            margin-bottom: 1em;
-            text-indent: 1.5em;
-        }
-        
-        .reader-text p:first-child { text-indent: 0; }
-        
-        .reader-progress {
-            padding: 12px 20px;
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .reader-progress-bar {
-            flex: 1;
-            height: 4px;
-            background: var(--border);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        
-        .reader-progress-fill {
-            height: 100%;
-            background: var(--accent);
-            border-radius: 2px;
-            transition: width 0.3s;
-        }
-        
-        .reader-progress-text {
-            font-size: 12px;
-            color: var(--text-muted);
-            min-width: 40px;
-            text-align: right;
-        }
-        
         /* Loading */
         .loading {
             display: flex;
@@ -436,6 +361,9 @@
     <div class="app">
         <header class="header">
             <div class="logo">Стро<span>ка</span></div>
+            <div class="header-actions">
+                <a href="/profile.html" class="profile-btn">Войти</a>
+            </div>
         </header>
         
         <nav class="nav">
@@ -479,23 +407,6 @@
                 <div id="library-list"></div>
             </div>
         </div>
-        
-        <div class="reader" id="reader">
-            <div class="reader-header">
-                <button class="reader-back" onclick="closeReader()">←</button>
-                <div class="reader-title" id="reader-title"></div>
-                <button class="reader-settings-btn">Aa</button>
-            </div>
-            <div class="reader-content" id="reader-content">
-                <div class="reader-text" id="reader-text"></div>
-            </div>
-            <div class="reader-progress">
-                <div class="reader-progress-bar">
-                    <div class="reader-progress-fill" id="reader-progress-fill"></div>
-                </div>
-                <div class="reader-progress-text" id="reader-progress-text">0%</div>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -509,7 +420,6 @@
         let stories = [];
         let shorts = [];
         let library = JSON.parse(localStorage.getItem('stroka_library') || '[]');
-        let currentStory = null;
         
         // ===== LOAD DATA =====
         async function loadData() {
@@ -556,8 +466,6 @@
                 
             } catch (error) {
                 console.error('Error loading data:', error);
-                console.error('Error message:', error.message);
-                console.error('Error details:', JSON.stringify(error, null, 2));
                 document.getElementById('feed').innerHTML = `
                     <div class="loading" style="flex-direction: column; gap: 12px; text-align: center; padding: 20px;">
                         <span>Ошибка загрузки</span>
@@ -573,7 +481,14 @@
             const feed = document.getElementById('feed');
             
             if (shorts.length === 0) {
-                feed.innerHTML = '<div class="loading">Нет рассказов</div>';
+                feed.innerHTML = `
+                    <div class="loading" style="flex-direction: column; text-align: center;">
+                        <span style="font-size: 48px; margin-bottom: 16px;">📖</span>
+                        <span>Пока нет рассказов</span>
+                        <span style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">Станьте первым автором!</span>
+                        <a href="/author.html" style="margin-top: 16px; padding: 12px 24px; background: var(--accent); color: var(--bg-primary); border-radius: 8px; text-decoration: none; font-weight: 500;">Опубликовать</a>
+                    </div>
+                `;
                 return;
             }
             
@@ -648,41 +563,7 @@
         }
         
         function openStory(storyId) {
-            const story = stories.find(s => s.id === storyId);
-            if (!story) return;
-            
-            currentStory = story;
-            
-            // Добавляем в библиотеку
-            if (!isInLibrary(storyId)) {
-                library.push(storyId);
-                localStorage.setItem('stroka_library', JSON.stringify(library));
-            }
-            
-            document.getElementById('reader-title').textContent = story.title;
-            document.getElementById('reader-text').innerHTML = story.full_text
-                .split('\n\n')
-                .map(p => `<p>${p}</p>`)
-                .join('');
-            document.getElementById('reader').classList.add('active');
-            
-            const content = document.getElementById('reader-content');
-            content.scrollTop = 0;
-            updateProgress();
-            content.addEventListener('scroll', updateProgress);
-        }
-        
-        function closeReader() {
-            document.getElementById('reader').classList.remove('active');
-            currentStory = null;
-            renderFeed();
-        }
-        
-        function updateProgress() {
-            const content = document.getElementById('reader-content');
-            const progress = Math.round((content.scrollTop / (content.scrollHeight - content.clientHeight)) * 100) || 0;
-            document.getElementById('reader-progress-fill').style.width = progress + '%';
-            document.getElementById('reader-progress-text').textContent = progress + '%';
+            window.location.href = `/read.html?id=${storyId}`;
         }
         
         // ===== NAVIGATION =====
@@ -696,8 +577,17 @@
             });
         });
         
+        // ===== CHECK AUTH & UPDATE HEADER =====
+        async function checkAuth() {
+            const { data: { user } } = await db.auth.getUser();
+            if (user) {
+                document.querySelector('.profile-btn').textContent = 'Кабинет';
+            }
+        }
+        
         // ===== INIT =====
         loadData();
+        checkAuth();
     </script>
 </body>
 </html>
