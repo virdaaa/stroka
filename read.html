@@ -446,6 +446,8 @@
                 <div class="story-meta">
                     <span id="story-reading-time">? мин</span>
                     <span id="story-char-count">? зн.</span>
+                    <span id="story-views">👁 0</span>
+                    <span id="story-likes">❤️ —</span>
                 </div>
             </div>
             
@@ -562,8 +564,22 @@
                 currentStory = story;
                 currentAuthor = story.authors;
                 
-                // Render story
-                renderStory(story);
+                // Increment views
+                await db.rpc('increment_views', { story_uuid: storyId });
+                
+                // Load reactions stats
+                const { data: reactions } = await db
+                    .from('reactions')
+                    .select('reaction')
+                    .eq('story_id', storyId);
+                
+                const likes = (reactions || []).filter(r => r.reaction === 'like').length;
+                const dislikes = (reactions || []).filter(r => r.reaction === 'dislike').length;
+                const totalReactions = likes + dislikes;
+                const likePercent = totalReactions > 0 ? Math.round(100 * likes / totalReactions) : null;
+                
+                // Render story with stats
+                renderStory(story, { views: (story.views || 0) + 1, likePercent });
                 
                 // Load saved progress
                 await loadSavedProgress();
@@ -591,7 +607,14 @@
             }
         }
         
-        function renderStory(story) {
+        function formatNumber(num) {
+            if (!num || num === 0) return '0';
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+        
+        function renderStory(story, stats = {}) {
             document.title = `${story.title} — Строка`;
             
             document.getElementById('story-genre').textContent = story.genre || 'Проза';
@@ -600,6 +623,8 @@
             document.getElementById('author-avatar').textContent = (story.authors?.pen_name || story.authors?.name || 'А')[0].toUpperCase();
             document.getElementById('story-reading-time').textContent = `${story.reading_time_minutes || '?'} мин`;
             document.getElementById('story-char-count').textContent = `${story.character_count?.toLocaleString() || '?'} зн.`;
+            document.getElementById('story-views').textContent = `👁 ${formatNumber(stats.views || story.views || 0)}`;
+            document.getElementById('story-likes').textContent = stats.likePercent !== null ? `❤️ ${stats.likePercent}%` : '❤️ —';
             
             // Format text with paragraphs
             const text = story.full_text || '';
