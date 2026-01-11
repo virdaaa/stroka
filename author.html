@@ -653,7 +653,7 @@
                 
                 localStorage.setItem('stroka_author', JSON.stringify(currentAuthor));
                 document.getElementById('logout-btn').style.display = 'block';
-                await loadDashboard();
+                await showDashboard();
                 showScreen('dashboard');
                 hideLoading();
                 
@@ -702,7 +702,9 @@
                     <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">
                         Код отправлен на<br><strong style="color: var(--text-primary);">${email}</strong>
                     </p>
-                    <input type="text" class="input" id="otp-code" placeholder="Введите код из письма" maxlength="6" style="text-align: center; font-size: 24px; letter-spacing: 8px;">
+                    <input type="text" class="input" id="otp-code" placeholder="Введите код" maxlength="6" 
+                        style="text-align: center; font-size: 24px;"
+                        oninput="this.style.letterSpacing = this.value ? '8px' : '0px'">
                 </div>
                 <button type="button" class="btn" onclick="verifyOtp()">Подтвердить</button>
                 <button type="button" class="btn btn-secondary" style="margin-top: 12px;" onclick="resetAuthForm()">Изменить email</button>
@@ -763,7 +765,7 @@
                 
                 localStorage.setItem('stroka_author', JSON.stringify(currentAuthor));
                 document.getElementById('logout-btn').style.display = 'block';
-                await loadDashboard();
+                await showDashboard();
                 showScreen('dashboard');
                 hideLoading();
                 
