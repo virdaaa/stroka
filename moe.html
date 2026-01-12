@@ -137,6 +137,12 @@
             overflow: hidden;
         }
         
+        .story-card-badge {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #27ae60;
+        }
+        
         .story-card-progress-fill {
             height: 100%;
             background: var(--accent);
@@ -279,6 +285,7 @@
         
         <div class="tabs">
             <button class="tab active" data-tab="continue">Продолжить</button>
+            <button class="tab" data-tab="finished">Прочитано</button>
             <button class="tab" data-tab="favorites">Избранное</button>
             <button class="tab" data-tab="subscriptions">Подписки</button>
         </div>
@@ -286,6 +293,11 @@
         <!-- Continue Tab -->
         <div class="tab-content active" id="continue-tab">
             <div id="continue-list"></div>
+        </div>
+        
+        <!-- Finished Tab -->
+        <div class="tab-content" id="finished-tab">
+            <div id="finished-list"></div>
         </div>
         
         <!-- Favorites Tab -->
@@ -347,6 +359,7 @@
             
             setupTabs();
             loadContinue();
+            loadFinished();
             loadFavorites();
             loadSubscriptions();
         }
@@ -435,6 +448,62 @@
                         </div>
                     `;
                 }
+            }
+        }
+        
+        // ===== LOAD FINISHED =====
+        async function loadFinished() {
+            const container = document.getElementById('finished-list');
+            
+            if (currentUser) {
+                try {
+                    const { data: history, error } = await db
+                        .from('reading_history')
+                        .select('*, stories(id, title, genre, reading_time_minutes, authors(pen_name))')
+                        .eq('user_id', currentUser.id)
+                        .gte('read_percent', 90)
+                        .order('finished_at', { ascending: false })
+                        .limit(50);
+                    
+                    if (error) throw error;
+                    
+                    if (!history || history.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">✅</div>
+                                <div class="empty-state-text">Нет прочитанных рассказов</div>
+                                <div class="empty-state-subtext">Дочитайте рассказ до конца — он появится здесь</div>
+                                <a href="/" class="btn">К ленте</a>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    container.innerHTML = history.map(h => `
+                        <div class="story-card" onclick="openStory('${h.stories.id}')">
+                            <div class="story-card-title">${h.stories.title}</div>
+                            <div class="story-card-author">${h.stories.authors?.pen_name || 'Автор'}</div>
+                            <div class="story-card-meta">
+                                <span>${h.stories.reading_time_minutes || '?'} мин</span>
+                                <span>${h.stories.genre || 'Проза'}</span>
+                            </div>
+                            <div class="story-card-badge">✓ Прочитано</div>
+                        </div>
+                    `).join('');
+                    
+                } catch (error) {
+                    console.error('Error loading finished:', error);
+                    container.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
+                }
+            } else {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">✅</div>
+                        <div class="empty-state-text">Нет прочитанных рассказов</div>
+                        <div class="empty-state-subtext">Войдите, чтобы отслеживать прогресс</div>
+                        <a href="/profile.html" class="btn">Войти</a>
+                    </div>
+                `;
             }
         }
         
