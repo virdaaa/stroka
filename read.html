@@ -708,11 +708,6 @@
                 if (scrollPercent > 0) {
                     document.getElementById('header-info').textContent = `${scrollPercent}%`;
                 }
-                
-                // Hide resume banner once user scrolls
-                if (scrollPercent > savedScrollPercent + 5) {
-                    document.getElementById('resume-banner').style.display = 'none';
-                }
             });
         }
         
