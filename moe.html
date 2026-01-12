@@ -335,8 +335,15 @@
         
         // ===== INIT =====
         async function init() {
-            const { data: { user } } = await db.auth.getUser();
-            currentUser = user;
+            // Сначала проверяем localStorage (Telegram авторизация)
+            const savedUser = localStorage.getItem('stroka_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+            } else {
+                // Потом проверяем Supabase Auth (Email авторизация)
+                const { data: { user } } = await db.auth.getUser();
+                currentUser = user;
+            }
             
             setupTabs();
             loadContinue();
