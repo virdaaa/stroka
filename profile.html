@@ -291,6 +291,90 @@
             color: var(--text-secondary);
         }
         
+        /* Author Profile */
+        .author-profile-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            position: relative;
+        }
+        
+        .author-avatar-large {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .author-profile-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .author-profile-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .author-profile-bio {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+        
+        .btn-edit {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        
+        .btn-edit:hover {
+            opacity: 1;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        
+        .textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        
+        .btn-secondary:hover {
+            border-color: var(--text-muted);
+        }
+        
         /* Bottom Navigation */
         .bottom-nav {
             position: fixed;
@@ -696,6 +780,36 @@
                     .order('created_at', { ascending: false });
                 
                 container.innerHTML = `
+                    <!-- Профиль автора -->
+                    <div class="profile-section">
+                        <div class="section-title">Профиль автора</div>
+                        <div class="author-profile-card">
+                            <div class="author-avatar-large" id="author-avatar">${(currentAuthor.pen_name || currentAuthor.name || 'A').charAt(0).toUpperCase()}</div>
+                            <div class="author-profile-info">
+                                <div class="author-profile-name">${currentAuthor.pen_name || currentAuthor.name}</div>
+                                <div class="author-profile-bio">${currentAuthor.bio || 'Нет описания'}</div>
+                            </div>
+                            <button class="btn-edit" onclick="showEditProfile()">✏️</button>
+                        </div>
+                        
+                        <!-- Форма редактирования (скрыта) -->
+                        <div id="edit-profile-form" style="display: none; margin-top: 16px;">
+                            <div class="form-group">
+                                <label class="form-label">Псевдоним</label>
+                                <input type="text" class="input" id="edit-pen-name" value="${currentAuthor.pen_name || ''}" placeholder="Как подписывать рассказы">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">О себе</label>
+                                <textarea class="input textarea" id="edit-bio" placeholder="Расскажите о себе читателям">${currentAuthor.bio || ''}</textarea>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn" onclick="saveProfile()">Сохранить</button>
+                                <button class="btn btn-secondary" onclick="hideEditProfile()">Отмена</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Мои рассказы -->
                     <div class="profile-section">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                             <div class="section-title" style="margin-bottom: 0;">Мои рассказы</div>
@@ -764,6 +878,49 @@
                     <div class="achievement-name">${a.name}</div>
                 </div>
             `).join('');
+        }
+        
+        // ===== EDIT PROFILE =====
+        function showEditProfile() {
+            document.getElementById('edit-profile-form').style.display = 'block';
+        }
+        
+        function hideEditProfile() {
+            document.getElementById('edit-profile-form').style.display = 'none';
+        }
+        
+        async function saveProfile() {
+            const penName = document.getElementById('edit-pen-name').value.trim();
+            const bio = document.getElementById('edit-bio').value.trim();
+            
+            if (!penName) {
+                alert('Введите псевдоним');
+                return;
+            }
+            
+            try {
+                const { error } = await db
+                    .from('authors')
+                    .update({ pen_name: penName, bio: bio })
+                    .eq('id', currentAuthor.id);
+                
+                if (error) throw error;
+                
+                // Обновляем локальные данные
+                currentAuthor.pen_name = penName;
+                currentAuthor.bio = bio;
+                
+                // Обновляем localStorage
+                const savedUser = JSON.parse(localStorage.getItem('stroka_user') || '{}');
+                savedUser.pen_name = penName;
+                localStorage.setItem('stroka_user', JSON.stringify(savedUser));
+                
+                // Перезагружаем секцию
+                await loadAuthorSection();
+                
+            } catch (error) {
+                alert('Ошибка сохранения: ' + error.message);
+            }
         }
         
         // ===== INIT =====
