@@ -422,12 +422,6 @@
             <div class="progress-bar" id="progress-bar" style="width: 0%;"></div>
         </header>
         
-        <!-- Resume Banner (hidden by default) -->
-        <div class="resume-banner" id="resume-banner" style="display: none;">
-            <span class="resume-text">Продолжить с того места?</span>
-            <button class="resume-btn" onclick="resumeReading()">Продолжить</button>
-        </div>
-        
         <!-- Loading State -->
         <div class="loading" id="loading">
             <div class="spinner"></div>
@@ -558,6 +552,9 @@
             // Load story
             await loadStory();
             
+            // Load saved progress
+            await loadSavedProgress();
+            
             // Setup tracking
             setupScrollTracking();
             
@@ -685,22 +682,14 @@
             
             if (progress && progress.read_percent > 5) {
                 savedScrollPercent = progress.read_percent;
-                document.getElementById('resume-banner').style.display = 'flex';
-                document.getElementById('header-info').textContent = `${progress.read_percent}% прочитано`;
+                
+                // Автоматически прокручиваем к сохранённой позиции
+                setTimeout(() => {
+                    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                    const scrollTo = (savedScrollPercent / 100) * docHeight;
+                    window.scrollTo({ top: scrollTo, behavior: 'auto' });
+                }, 100);
             }
-        }
-        
-        function resumeReading() {
-            document.getElementById('resume-banner').style.display = 'none';
-            
-            // Calculate scroll position from percentage
-            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-            const scrollTo = (savedScrollPercent / 100) * docHeight;
-            
-            window.scrollTo({
-                top: scrollTo,
-                behavior: 'smooth'
-            });
         }
         
         // ===== SCROLL TRACKING =====
@@ -770,7 +759,7 @@
                 .select('id')
                 .eq('user_id', currentUser.id)
                 .eq('author_id', currentAuthor.id)
-                .single();
+                .maybeSingle();
             
             isSubscribed = !!data;
             updateSubscribeButton();
@@ -822,7 +811,7 @@
                 .select('reaction')
                 .eq('user_id', currentUser.id)
                 .eq('story_id', storyId)
-                .single();
+                .maybeSingle();
             
             if (data) {
                 currentReaction = data.reaction;
