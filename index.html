@@ -81,8 +81,11 @@
             padding: 12px 16px;
             background: var(--bg-secondary);
             border-bottom: 1px solid var(--border);
-            overflow-x: auto;
+            overflow-x: visible;
+            overflow-y: visible;
             -webkit-overflow-scrolling: touch;
+            position: relative;
+            z-index: 100;
         }
         
         .top-tabs::-webkit-scrollbar { display: none; }
