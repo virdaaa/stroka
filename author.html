@@ -181,8 +181,16 @@
         
         let currentAuthor = null;
         let storyData = { title: '', description: '', text: '', genre: '', subgenres: [], shorts: [], moderation: null, literacy: null };
+        let justLoggedOut = false;
         
-        function onTelegramAuth(user) { handleTelegramLogin(user); }
+        function onTelegramAuth(user) { 
+            // Игнорируем автоматическую авторизацию сразу после logout
+            if (justLoggedOut) {
+                justLoggedOut = false;
+                return;
+            }
+            handleTelegramLogin(user); 
+        }
         
         async function handleTelegramLogin(tgUser) {
             showLoading('Авторизация...');
@@ -232,7 +240,17 @@
         }
         
         function resetAuthForm() { pendingEmail = null; document.getElementById('auth-form').innerHTML = `<div class="form-group"><input type="email" class="input" id="auth-email" placeholder="email@example.com" required></div><button type="submit" class="btn">Войти через Email</button>`; }
-        function logout() { currentAuthor = null; localStorage.removeItem('stroka_author'); db.auth.signOut(); resetAuthForm(); showScreen('auth'); document.getElementById('logout-btn').style.display = 'none'; }
+        function logout() { 
+            justLoggedOut = true;
+            currentAuthor = null; 
+            localStorage.removeItem('stroka_author'); 
+            db.auth.signOut(); 
+            resetAuthForm(); 
+            showScreen('auth'); 
+            document.getElementById('logout-btn').style.display = 'none';
+            // Сбрасываем флаг через 3 секунды
+            setTimeout(() => { justLoggedOut = false; }, 3000);
+        }
         
         async function showDashboard() {
             showScreen('dashboard');
@@ -244,8 +262,41 @@
             list.innerHTML = stories.map(s => {
                 let sc = '', st = '';
                 switch(s.status) { case 'published': sc=''; st='Опубликован'; break; case 'pending_review': sc='pending'; st='На проверке'; break; case 'rejected': sc='rejected'; st='Отклонён'; break; default: sc='draft'; st='Черновик'; }
-                return `<div class="story-item"><div class="story-item-header"><div class="story-item-title">${s.title}</div><span class="story-item-status ${sc}">${st}</span></div><div class="story-item-meta">${s.character_count?.toLocaleString()||'?'} зн. • ${s.reading_time_minutes||'?'} мин</div></div>`;
+                return `<div class="story-item">
+                    <div class="story-item-header">
+                        <div class="story-item-title">${s.title}</div>
+                        <span class="story-item-status ${sc}">${st}</span>
+                    </div>
+                    <div class="story-item-meta">${s.character_count?.toLocaleString()||'?'} зн. • ${s.reading_time_minutes||'?'} мин</div>
+                    <div style="margin-top: 12px; display: flex; gap: 8px;">
+                        <a href="/read.html?id=${s.id}" style="flex: 1; padding: 8px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: var(--text-secondary); text-decoration: none; text-align: center; font-size: 13px;">Открыть</a>
+                        <button onclick="deleteStory('${s.id}', '${s.title.replace(/'/g, "\\'")}')" style="padding: 8px 12px; background: none; border: 1px solid var(--danger); border-radius: 6px; color: var(--danger); cursor: pointer; font-size: 13px;">Удалить</button>
+                    </div>
+                </div>`;
             }).join('');
+        }
+        
+        async function deleteStory(storyId, title) {
+            if (!confirm(`Удалить рассказ "${title}"? Это действие нельзя отменить.`)) return;
+            
+            showLoading('Удаляем...');
+            try {
+                // Удаляем шортсы
+                await db.from('shorts').delete().eq('story_id', storyId);
+                // Удаляем из очереди модерации
+                await db.from('moderation_queue').delete().eq('story_id', storyId);
+                // Удаляем реакции
+                await db.from('reactions').delete().eq('story_id', storyId);
+                // Удаляем сам рассказ
+                const { error } = await db.from('stories').delete().eq('id', storyId).eq('author_id', currentAuthor.id);
+                if (error) throw error;
+                
+                hideLoading();
+                await showDashboard();
+            } catch (error) {
+                hideLoading();
+                alert('Ошибка удаления: ' + error.message);
+            }
         }
         
         function goToStep2() { const t = document.getElementById('story-title').value.trim(); if (!t) { alert('Введите название'); return; } storyData.title = t; storyData.description = document.getElementById('story-description').value.trim(); showScreen('add-story-2'); }
