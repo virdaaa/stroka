@@ -441,6 +441,7 @@
         let currentUser = null;
         let currentAuthor = null;
         let pendingEmail = null;
+        let justLoggedOut = false;
         
         // ===== ACHIEVEMENTS =====
         const ACHIEVEMENTS = [
@@ -457,6 +458,10 @@
         
         // ===== TELEGRAM AUTH =====
         function onTelegramAuth(user) {
+            if (justLoggedOut) {
+                justLoggedOut = false;
+                return;
+            }
             handleTelegramLogin(user);
         }
         
@@ -597,10 +602,18 @@
         }
         
         function logout() {
+            justLoggedOut = true;
             localStorage.removeItem('stroka_user');
             localStorage.removeItem('stroka_author');
             db.auth.signOut();
-            location.reload();
+            currentUser = null;
+            currentAuthor = null;
+            document.getElementById('auth-screen').style.display = 'flex';
+            document.getElementById('profile-content').style.display = 'none';
+            document.getElementById('logout-btn').style.display = 'none';
+            resetAuthForm();
+            // Сбрасываем флаг через 3 секунды
+            setTimeout(() => { justLoggedOut = false; }, 3000);
         }
         
         // ===== CHECK AUTH & LOAD =====
