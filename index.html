@@ -471,8 +471,14 @@
         
         // ===== INIT =====
         async function init() {
-            const { data: { user } } = await db.auth.getUser();
-            currentUser = user;
+            // Check auth - сначала localStorage (Telegram), потом Supabase Auth (Email)
+            const savedUser = localStorage.getItem('stroka_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+            } else {
+                const { data: { user } } = await db.auth.getUser();
+                currentUser = user;
+            }
             
             await loadData();
             setupEventListeners();
@@ -590,7 +596,7 @@
             
             feed.innerHTML = shorts.map(short => `
                 <div class="short-card">
-                    <div class="short-book-info">
+                    <div class="short-book-info" onclick="openStory('${short.story_id}')" style="cursor: pointer;">
                         <div class="short-book-title">${short.title}</div>
                         <div class="short-book-author">${short.author}</div>
                         <div class="short-meta">
@@ -614,15 +620,12 @@
                             ` : ''}
                         </div>
                     </div>
-                    <div class="short-content">
+                    <div class="short-content" onclick="openStory('${short.story_id}')" style="cursor: pointer;">
                         <div class="short-text">${short.text}</div>
                         <div class="short-fade"></div>
                     </div>
                     <div class="short-actions">
-                        <button class="short-btn primary" onclick="openStory('${short.story_id}')">
-                            Читать →
-                        </button>
-                        <button class="short-btn secondary ${isFavorite(short.story_id) ? 'liked' : ''}" onclick="toggleFavorite('${short.story_id}')">
+                        <button class="short-btn secondary ${isFavorite(short.story_id) ? 'liked' : ''}" onclick="event.stopPropagation(); toggleFavorite('${short.story_id}')">
                             ${isFavorite(short.story_id) ? '♥' : '♡'}
                         </button>
                     </div>
