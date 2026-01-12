@@ -899,7 +899,7 @@
         }
         
         async function deleteStory(storyId, title) {
-            if (!confirm(\`Удалить рассказ "\${title}"? Это действие нельзя отменить.\`)) return;
+            if (!confirm(`Удалить рассказ "${title}"? Это действие нельзя отменить.`)) return;
             
             try {
                 await db.from('shorts').delete().eq('story_id', storyId);
