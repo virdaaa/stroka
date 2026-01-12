@@ -667,10 +667,10 @@
                 // Load from DB
                 const { data } = await db
                     .from('reading_history')
-                    .select('read_percent, scroll_position')
+                    .select('read_percent')
                     .eq('user_id', currentUser.id)
                     .eq('story_id', storyId)
-                    .single();
+                    .maybeSingle();
                 
                 if (data && data.read_percent > 0 && data.read_percent < 95) {
                     progress = data;
@@ -734,24 +734,26 @@
             
             if (currentUser) {
                 // Save to DB
-                await db
-                    .from('reading_history')
-                    .upsert({
-                        user_id: currentUser.id,
-                        story_id: storyId,
-                        read_percent: maxScrollPercent,
-                        read_time_seconds: readTimeSeconds,
-                        scroll_position: maxScrollPercent,
-                        started_at: new Date(readStartTime).toISOString(),
-                        finished_at: isFinished ? new Date().toISOString() : null
-                    }, { onConflict: 'user_id,story_id' });
+                try {
+                    await db
+                        .from('reading_history')
+                        .upsert({
+                            user_id: currentUser.id,
+                            story_id: storyId,
+                            read_percent: maxScrollPercent,
+                            read_time_seconds: readTimeSeconds,
+                            started_at: new Date(readStartTime).toISOString(),
+                            finished_at: isFinished ? new Date().toISOString() : null
+                        }, { onConflict: 'user_id,story_id' });
+                } catch (e) {
+                    console.error('Error saving progress:', e);
+                }
             } else {
                 // Save to localStorage
                 const localHistory = JSON.parse(localStorage.getItem(LOCAL_HISTORY_KEY) || '{}');
                 localHistory[storyId] = {
                     read_percent: maxScrollPercent,
                     read_time_seconds: readTimeSeconds,
-                    scroll_position: maxScrollPercent,
                     title: currentStory?.title,
                     updated_at: new Date().toISOString()
                 };
