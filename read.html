@@ -268,6 +268,18 @@
             color: var(--accent);
         }
         
+        /* Thanks for reaction */
+        .reaction-thanks {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .thanks-message {
+            font-size: 18px;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+        
         /* Auth prompt */
         .auth-prompt {
             background: var(--bg-card);
@@ -454,11 +466,16 @@
             <div class="story-content" id="story-text"></div>
             
             <div class="story-footer">
-                <div class="reaction-prompt">Понравился рассказ?</div>
+                <div class="reaction-prompt" id="reaction-prompt">Понравился рассказ?</div>
                 
                 <div class="reaction-buttons" id="reaction-buttons">
                     <button class="reaction-btn like" onclick="react('like')" title="Нравится">👍</button>
                     <button class="reaction-btn dislike" onclick="react('dislike')" title="Не нравится">👎</button>
+                </div>
+                
+                <div id="reaction-thanks" style="display: none;" class="reaction-thanks">
+                    <div class="thanks-message">Спасибо за оценку!</div>
+                    <a href="/" class="btn" style="margin-top: 16px;">← К ленте</a>
                 </div>
                 
                 <div id="auth-prompt" style="display: none;" class="auth-prompt">
@@ -845,6 +862,11 @@
                         reaction: type
                     }, { onConflict: 'user_id,story_id' });
                 currentReaction = type;
+                
+                // Показываем благодарность
+                document.getElementById('reaction-prompt').style.display = 'none';
+                document.getElementById('reaction-buttons').style.display = 'none';
+                document.getElementById('reaction-thanks').style.display = 'block';
             }
             
             updateReactionButtons();
