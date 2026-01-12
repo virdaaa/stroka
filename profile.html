@@ -465,24 +465,65 @@
                 const email = tgUser.username 
                     ? `${tgUser.username}@telegram.user` 
                     : `tg_${tgUser.id}@telegram.user`;
-                const password = `tg_${tgUser.id}_${tgUser.auth_date}_secret`;
                 const name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || tgUser.username || `User ${tgUser.id}`;
                 
-                let { error } = await db.auth.signInWithPassword({ email, password });
+                // Ищем существующего автора по telegram_id
+                let { data: existingAuthor } = await db
+                    .from('authors')
+                    .select('*')
+                    .eq('telegram_id', tgUser.id.toString())
+                    .single();
                 
-                if (error && error.message.includes('Invalid login credentials')) {
-                    const { error: signUpError } = await db.auth.signUp({
-                        email,
-                        password,
-                        options: { data: { name, telegram_id: tgUser.id.toString() } }
-                    });
-                    
-                    if (signUpError) throw signUpError;
-                    
-                    await db.auth.signInWithPassword({ email, password });
+                // Если не нашли по telegram_id, ищем по email
+                if (!existingAuthor) {
+                    const { data: byEmail } = await db
+                        .from('authors')
+                        .select('*')
+                        .eq('email', email)
+                        .single();
+                    existingAuthor = byEmail;
                 }
                 
-                await checkAuthAndLoad();
+                if (existingAuthor) {
+                    // Обновляем telegram_id если его не было
+                    if (!existingAuthor.telegram_id) {
+                        await db.from('authors')
+                            .update({ telegram_id: tgUser.id.toString() })
+                            .eq('id', existingAuthor.id);
+                    }
+                    currentAuthor = existingAuthor;
+                } else {
+                    // Создаём нового автора
+                    const { data: newAuthor, error } = await db
+                        .from('authors')
+                        .insert({ 
+                            email, 
+                            name, 
+                            pen_name: tgUser.username || name,
+                            telegram_id: tgUser.id.toString()
+                        })
+                        .select()
+                        .single();
+                    
+                    if (error) throw error;
+                    currentAuthor = newAuthor;
+                }
+                
+                // Сохраняем в localStorage и показываем профиль
+                localStorage.setItem('stroka_user', JSON.stringify({
+                    id: currentAuthor.id,
+                    email: currentAuthor.email,
+                    telegram_id: tgUser.id.toString()
+                }));
+                
+                currentUser = { id: currentAuthor.id, email: currentAuthor.email };
+                
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('profile-content').style.display = 'block';
+                document.getElementById('logout-btn').style.display = 'block';
+                
+                loadAuthorSection();
+                loadStats();
                 
             } catch (error) {
                 console.error('Telegram auth error:', error);
@@ -556,12 +597,41 @@
         }
         
         function logout() {
+            localStorage.removeItem('stroka_user');
+            localStorage.removeItem('stroka_author');
             db.auth.signOut();
             location.reload();
         }
         
         // ===== CHECK AUTH & LOAD =====
         async function checkAuthAndLoad() {
+            // Сначала проверяем localStorage (для Telegram авторизации)
+            const savedUser = localStorage.getItem('stroka_user');
+            if (savedUser) {
+                const userData = JSON.parse(savedUser);
+                currentUser = userData;
+                
+                // Загружаем автора
+                const { data: author } = await db
+                    .from('authors')
+                    .select('*')
+                    .eq('id', userData.id)
+                    .single();
+                
+                if (author) {
+                    currentAuthor = author;
+                    
+                    document.getElementById('auth-screen').style.display = 'none';
+                    document.getElementById('profile-content').style.display = 'block';
+                    document.getElementById('logout-btn').style.display = 'block';
+                    
+                    loadAuthorSection();
+                    loadStats();
+                    return;
+                }
+            }
+            
+            // Проверяем Supabase Auth (для email авторизации)
             const { data: { user } } = await db.auth.getUser();
             
             if (user) {
@@ -574,6 +644,14 @@
                     .single();
                 
                 currentAuthor = author;
+                
+                // Сохраняем в localStorage для консистентности
+                if (author) {
+                    localStorage.setItem('stroka_user', JSON.stringify({
+                        id: author.id,
+                        email: author.email
+                    }));
+                }
                 
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('profile-content').style.display = 'block';
