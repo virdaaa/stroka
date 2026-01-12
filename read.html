@@ -529,9 +529,14 @@
                 return;
             }
             
-            // Check auth
-            const { data: { user } } = await db.auth.getUser();
-            currentUser = user;
+            // Check auth - сначала localStorage (Telegram), потом Supabase Auth (Email)
+            const savedUser = localStorage.getItem('stroka_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+            } else {
+                const { data: { user } } = await db.auth.getUser();
+                currentUser = user;
+            }
             
             // Load story
             await loadStory();
