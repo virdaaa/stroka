@@ -165,6 +165,7 @@
             <div id="literacy-section"></div>
             <div id="genre-section" style="display: none;">
                 <div class="form-group"><label class="form-label">Жанры</label><div class="genre-display" id="genre-display"></div></div>
+                <div class="form-group"><label class="form-label">Возрастной рейтинг</label><div id="age-rating-display"></div></div>
                 <div class="form-group"><label class="form-label">Теги</label><div class="tags-container" id="subgenre-tags"></div></div>
                 <div class="form-group"><label class="form-label">Шортсы</label><div class="shorts-list" id="shorts-preview"></div></div>
             </div>
@@ -188,7 +189,7 @@
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
         let currentAuthor = null;
-        let storyData = { title: '', description: '', text: '', genres: [], subgenres: [], shorts: [], similar_to: null, moderation: null, literacy: null };
+        let storyData = { title: '', description: '', text: '', genres: [], subgenres: [], shorts: [], similar_to: null, age_rating: '16+', moderation: null, literacy: null };
         let justLoggedOut = false;
         
         function onTelegramAuth(user) { 
@@ -332,7 +333,8 @@
                 if (result.genre && !result.genres) {
                     result.genres = [{ name: result.genre, percent: 100 }];
                 }
-                storyData.genres = result.genres || []; 
+                storyData.genres = result.genres || [];
+                storyData.age_rating = result.age_rating || '16+'; 
                 storyData.subgenres = result.subgenres || []; 
                 storyData.shorts = result.shorts || [];
                 storyData.moderation = result.moderation || { status: 'ok', reason: null };
@@ -388,6 +390,11 @@
             }
             document.getElementById('genre-display').innerHTML = genresHtml;
             
+            // Отображаем возрастной рейтинг
+            const ageColors = {'0+': '#4a8', '6+': '#8bc34a', '12+': '#ffc107', '16+': '#ff9800', '18+': '#f44336'};
+            const ageColor = ageColors[storyData.age_rating] || ageColors['16+'];
+            document.getElementById('age-rating-display').innerHTML = `<span style="display: inline-flex; align-items: center; justify-content: center; min-width: 36px; padding: 4px 8px; background: ${ageColor}22; border: 2px solid ${ageColor}; border-radius: 6px; color: ${ageColor}; font-weight: 600; font-size: 14px;">${storyData.age_rating}</span>`;
+            
             document.getElementById('subgenre-tags').innerHTML = storyData.subgenres.map(t => `<span class="tag selected">${t}</span>`).join('');
             document.getElementById('shorts-preview').innerHTML = storyData.shorts.map((s, i) => `<div class="short-preview"><span class="short-preview-label">Шортс ${i + 1}</span><div class="short-preview-text">${s}</div></div>`).join('');
         }
@@ -400,7 +407,7 @@
                 const { data: story, error } = await db.from('stories').insert({
                     author_id: currentAuthor.id, title: storyData.title, description: storyData.description,
                     full_text: storyData.text, genres: storyData.genres, subgenres: storyData.subgenres,
-                    similar_to: storyData.similar_to,
+                    similar_to: storyData.similar_to, age_rating: storyData.age_rating,
                     character_count: storyData.characterCount, reading_time_minutes: storyData.readingTime,
                     literacy_score: storyData.literacy?.score, literacy_note: storyData.literacy?.note,
                     status: status, published_at: status === 'published' ? new Date().toISOString() : null
@@ -421,7 +428,7 @@
                 
                 hideLoading();
                 alert(isPending ? 'Отправлено на модерацию. Уведомим о результате.' : 'Рассказ опубликован!');
-                storyData = { title: '', description: '', text: '', genres: [], subgenres: [], shorts: [], similar_to: null, moderation: null, literacy: null };
+                storyData = { title: '', description: '', text: '', genres: [], subgenres: [], shorts: [], similar_to: null, age_rating: '16+', moderation: null, literacy: null };
                 document.getElementById('story-title').value = '';
                 document.getElementById('story-description').value = '';
                 document.getElementById('story-text').value = '';
