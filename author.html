@@ -322,6 +322,7 @@
                     result = JSON.parse(rawText);
                 } catch (parseErr) {
                     console.error('Parse error:', parseErr, 'Raw:', rawText);
+                    alert('Ошибка парсинга. Смотри консоль. Первые 500 символов: ' + rawText.substring(0, 500));
                     throw new Error('Ошибка парсинга ответа');
                 }
                 if (!response.ok) { throw new Error(result.error || 'Ошибка API'); }
