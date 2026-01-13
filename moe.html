@@ -342,8 +342,10 @@
         let currentUser = null;
         
         // Local storage
-        let localFavorites = JSON.parse(localStorage.getItem('stroka_favorites') || '[]');
-        let localHistory = JSON.parse(localStorage.getItem('stroka_history') || '[]');
+        const LOCAL_BOOKMARKS_KEY = 'stroka_bookmarks';
+        const LOCAL_HISTORY_KEY = 'stroka_history';
+        let localBookmarks = JSON.parse(localStorage.getItem(LOCAL_BOOKMARKS_KEY) || '[]');
+        let localHistory = JSON.parse(localStorage.getItem(LOCAL_HISTORY_KEY) || '{}');
         
         // ===== INIT =====
         async function init() {
@@ -407,7 +409,7 @@
                     }
                     
                     container.innerHTML = history.map(h => `
-                        <div class="story-card" onclick="openStory('${h.stories.id}')">
+                        <div class="story-card" onclick="openStory('${h.stories.id}', ${h.read_percent || 0})">
                             <div class="story-card-title">${h.stories.title}</div>
                             <div class="story-card-author">${h.stories.authors?.pen_name || 'Автор'}</div>
                             <div class="story-card-meta">
@@ -507,90 +509,58 @@
             }
         }
         
-        // ===== LOAD FAVORITES =====
+        // ===== LOAD FAVORITES (BOOKMARKS) =====
         async function loadFavorites() {
             const container = document.getElementById('favorites-list');
             
-            if (currentUser) {
-                try {
-                    const { data: reactions, error } = await db
-                        .from('reactions')
-                        .select('story_id, stories(id, title, genre, reading_time_minutes, authors(pen_name))')
-                        .eq('user_id', currentUser.id)
-                        .eq('reaction', 'like');
-                    
-                    if (error) throw error;
-                    
-                    if (!reactions || reactions.length === 0) {
-                        container.innerHTML = `
-                            <div class="empty-state">
-                                <div class="empty-state-icon">❤️</div>
-                                <div class="empty-state-text">Нет избранных рассказов</div>
-                                <div class="empty-state-subtext">Нажмите ♡ чтобы сохранить понравившееся</div>
-                                <a href="/" class="btn">К ленте</a>
-                            </div>
-                        `;
-                        return;
-                    }
-                    
-                    container.innerHTML = reactions.map(r => `
-                        <div class="story-card" onclick="openStory('${r.stories.id}')">
-                            <div class="story-card-title">${r.stories.title}</div>
-                            <div class="story-card-author">${r.stories.authors?.pen_name || 'Автор'}</div>
-                            <div class="story-card-meta">
-                                <span>${r.stories.reading_time_minutes || '?'} мин</span>
-                                <span>${r.stories.genre || 'Проза'}</span>
-                            </div>
-                        </div>
-                    `).join('');
-                    
-                } catch (error) {
-                    console.error('Error loading favorites:', error);
-                    container.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
-                }
-            } else {
-                // Local favorites
-                if (localFavorites.length === 0) {
+            // Избранное теперь на основе закладок (stroka_bookmarks), не лайков
+            if (localBookmarks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔖</div>
+                        <div class="empty-state-text">Нет избранных рассказов</div>
+                        <div class="empty-state-subtext">Нажмите 🔖 на странице рассказа, чтобы добавить в избранное</div>
+                        <a href="/" class="btn">К ленте</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                const { data: stories, error } = await db
+                    .from('stories')
+                    .select('id, title, genres, genre, reading_time_minutes, authors(pen_name)')
+                    .in('id', localBookmarks);
+                
+                if (error) throw error;
+                
+                if (!stories || stories.length === 0) {
                     container.innerHTML = `
                         <div class="empty-state">
-                            <div class="empty-state-icon">❤️</div>
-                            <div class="empty-state-text">Нет избранных рассказов</div>
-                            <div class="empty-state-subtext">Нажмите ♡ чтобы сохранить понравившееся</div>
+                            <div class="empty-state-icon">🔖</div>
+                            <div class="empty-state-text">Рассказы не найдены</div>
                             <a href="/" class="btn">К ленте</a>
                         </div>
                     `;
-                } else {
-                    // Load stories by IDs
-                    try {
-                        const { data: stories, error } = await db
-                            .from('stories')
-                            .select('id, title, genre, reading_time_minutes, authors(pen_name)')
-                            .in('id', localFavorites);
-                        
-                        if (error) throw error;
-                        
-                        container.innerHTML = stories.map(s => `
-                            <div class="story-card" onclick="openStory('${s.id}')">
-                                <div class="story-card-title">${s.title}</div>
-                                <div class="story-card-author">${s.authors?.pen_name || 'Автор'}</div>
-                                <div class="story-card-meta">
-                                    <span>${s.reading_time_minutes || '?'} мин</span>
-                                    <span>${s.genre || 'Проза'}</span>
-                                </div>
-                            </div>
-                        `).join('');
-                        
-                        container.innerHTML += `
-                            <div class="auth-prompt">
-                                <div class="auth-prompt-text">Войдите, чтобы не потерять избранное</div>
-                                <a href="/profile.html" class="btn">Войти</a>
-                            </div>
-                        `;
-                        
-                    } catch (error) {
-                        console.error('Error loading local favorites:', error);
-                    }
+                    return;
                 }
+                
+                container.innerHTML = stories.map(s => {
+                    const genreText = s.genres?.length ? s.genres.map(g => g.name).join(', ') : (s.genre || 'Проза');
+                    return `
+                    <div class="story-card" onclick="openStory('${s.id}')">
+                        <div class="story-card-title">${s.title}</div>
+                        <div class="story-card-author">${s.authors?.pen_name || 'Автор'}</div>
+                        <div class="story-card-meta">
+                            <span>${s.reading_time_minutes || '?'} мин</span>
+                            <span>${genreText}</span>
+                        </div>
+                    </div>
+                `}).join('');
+                
+            } catch (error) {
+                console.error('Error loading bookmarks:', error);
+                container.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
             }
         }
         
@@ -646,8 +616,12 @@
         }
         
         // ===== ACTIONS =====
-        function openStory(storyId) {
-            window.location.href = `/read.html?id=${storyId}`;
+        function openStory(storyId, scrollPercent) {
+            let url = `/read.html?id=${storyId}`;
+            if (scrollPercent && scrollPercent > 0 && scrollPercent < 95) {
+                url += `&scroll=${scrollPercent}`;
+            }
+            window.location.href = url;
         }
         
         async function unsubscribe(authorId) {
