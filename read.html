@@ -130,6 +130,22 @@
             opacity: 0.4;
             transition: opacity 0.2s, transform 0.2s;
             flex-shrink: 0;
+            position: relative;
+        }
+        .bookmark-title-btn::after {
+            content: 'В избранное';
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            font-family: var(--font-ui);
+        }
+        .bookmark-title-btn.active::after {
+            content: 'В избранном';
+            color: var(--accent);
         }
         .bookmark-title-btn:hover {
             transform: scale(1.1);
@@ -436,6 +452,7 @@
         
         const urlParams = new URLSearchParams(window.location.search);
         const storyId = urlParams.get('id');
+        const scrollFromUrl = urlParams.get('scroll');
         
         async function init() {
             if (!storyId) { showError(); return; }
@@ -588,7 +605,10 @@
         async function loadSavedProgress() {
             let progress = null;
             
-            if (currentUser) {
+            // Приоритет: параметр из URL > сохранённый прогресс
+            if (scrollFromUrl) {
+                progress = { read_percent: parseInt(scrollFromUrl) };
+            } else if (currentUser) {
                 const { data } = await db
                     .from('reading_history')
                     .select('read_percent')
