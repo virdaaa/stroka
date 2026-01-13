@@ -318,9 +318,9 @@
                 if (!response.ok) { const err = await response.json(); throw new Error(err.error || 'Ошибка API'); }
                 const result = await response.json();
                 storyData.genres = result.genres || []; storyData.subgenres = result.subgenres || []; storyData.shorts = result.shorts || [];
-                storyData.similar_to = result.similar_to || null;
                 storyData.moderation = result.moderation || { status: 'ok', reason: null };
-                storyData.literacy = result.literacy || { score: 7, note: '', errors: [] };
+                storyData.literacy = result.literacy || { score: 7, note: '', errors: [], similar_to: null };
+                storyData.similar_to = result.literacy?.similar_to || null;
                 hideLoading(); showStep3();
             } catch (error) { hideLoading(); alert('Ошибка: ' + error.message); }
         }
