@@ -588,6 +588,9 @@
                         <div class="short-tags">
                             ${(short.subgenres || []).slice(0, 4).map(tag => `<span class="short-tag">${tag}</span>`).join('')}
                         </div>
+                            ${short.similar_to?.length ? `
+                            <div class="similar-to">Если нравится: ${short.similar_to.join(', ')}</div>
+                            ` : ''}
                         <div class="short-stats">
                             <span class="short-stat views">
                                 <span class="short-stat-icon">👁</span>
