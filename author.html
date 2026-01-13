@@ -66,6 +66,7 @@
         .short-preview-label { font-size: 12px; color: var(--accent); margin-bottom: 8px; display: block; }
         .short-preview-text { font-size: 14px; line-height: 1.6; color: var(--text-secondary); }
         .tags-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .genre-display { margin-top: 12px; }
         .tag { padding: 6px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 16px; font-size: 13px; cursor: pointer; }
         .tag.selected { background: var(--accent); color: var(--bg-primary); border-color: var(--accent); }
         .alert { padding: 16px; border-radius: 12px; margin-bottom: 20px; }
@@ -152,11 +153,11 @@
         <div class="screen" id="add-story-3-screen">
             <div class="step-indicator"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div></div>
             <div class="step-title">Результат проверки</div>
-            <div class="step-subtitle" id="step3-subtitle">ИИ проанализировал текст</div>
+            <div class="step-subtitle" id="step3-subtitle">Строка проанализировала текст</div>
             <div id="moderation-alert"></div>
             <div id="literacy-section"></div>
             <div id="genre-section" style="display: none;">
-                <div class="form-group"><label class="form-label">Жанр</label><div class="tags-container" id="genre-tags"></div></div>
+                <div class="form-group"><label class="form-label">Жанр</label><div class="genre-display" id="genre-display"></div></div>
                 <div class="form-group"><label class="form-label">Теги</label><div class="tags-container" id="subgenre-tags"></div></div>
                 <div class="form-group"><label class="form-label">Шортсы</label><div class="shorts-list" id="shorts-preview"></div></div>
             </div>
@@ -307,7 +308,7 @@
             if (!text || text.length < 500) { alert('Минимум 500 знаков'); return; }
             if (text.length > 60000) { alert('Максимум 60 000 знаков'); return; }
             storyData.text = text; storyData.characterCount = text.length; storyData.readingTime = Math.ceil(text.length / 1500);
-            showLoading('ИИ анализирует текст...<br>Проверка грамотности и модерация');
+            showLoading('Строка анализирует текст...<br>Проверка грамотности и модерация');
             try {
                 const response = await fetch(AI_WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, title: storyData.title }) });
                 if (!response.ok) { const err = await response.json(); throw new Error(err.error || 'Ошибка API'); }
@@ -354,16 +355,12 @@
             
             document.getElementById('genre-section').style.display = 'block';
             document.getElementById('publish-btn').style.display = 'block';
-            document.getElementById('step3-subtitle').textContent = 'ИИ подобрал шортсы и теги';
+            document.getElementById('step3-subtitle').textContent = 'Строка подобрала шортсы и теги';
             
-            const allGenres = ['Хоррор', 'Мистика', 'Фантастика', 'Триллер', 'Драма', 'Детектив', 'Романтика', 'Фэнтези', 'Реализм', 'Комедия'];
-            if (storyData.genre && !allGenres.includes(storyData.genre)) allGenres.unshift(storyData.genre);
-            document.getElementById('genre-tags').innerHTML = allGenres.map(g => `<span class="tag ${g === storyData.genre ? 'selected' : ''}" onclick="selectGenre('${g}')">${g}</span>`).join('');
+            document.getElementById('genre-display').innerHTML = `<span class="tag selected">${storyData.genre || 'Проза'}</span>`;
             document.getElementById('subgenre-tags').innerHTML = storyData.subgenres.map(t => `<span class="tag selected">${t}</span>`).join('');
             document.getElementById('shorts-preview').innerHTML = storyData.shorts.map((s, i) => `<div class="short-preview"><span class="short-preview-label">Шортс ${i + 1}</span><div class="short-preview-text">${s}</div></div>`).join('');
         }
-        
-        function selectGenre(g) { storyData.genre = g; document.querySelectorAll('#genre-tags .tag').forEach(t => t.classList.toggle('selected', t.textContent === g)); }
         
         async function publishStory() {
             const isPending = storyData.moderation?.status === 'review';
