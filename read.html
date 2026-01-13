@@ -627,11 +627,14 @@
             }
             
             if (progress && progress.read_percent > 5) {
-                setTimeout(() => {
-                    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-                    const scrollTo = (progress.read_percent / 100) * docHeight;
-                    window.scrollTo({ top: scrollTo, behavior: 'auto' });
-                }, 100);
+                // Ждём полной загрузки контента
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                        const scrollTo = (progress.read_percent / 100) * docHeight;
+                        window.scrollTo({ top: scrollTo, behavior: 'auto' });
+                    });
+                });
             }
         }
         
