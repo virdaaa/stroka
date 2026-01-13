@@ -264,6 +264,13 @@
             border-color: #e57373;
         }
         
+        .similar-to {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            font-style: italic;
+        }
+        
         .short-content {
             flex: 1;
             position: relative;
@@ -534,7 +541,8 @@
                                 character_count: story.character_count,
                                 views: stats.views,
                                 like_percent: likePercent,
-                                literacy_score: story.literacy_score
+                                literacy_score: story.literacy_score,
+                                similar_to: story.similar_to
                             });
                         });
                     }
@@ -588,9 +596,9 @@
                         <div class="short-tags">
                             ${(short.subgenres || []).slice(0, 4).map(tag => `<span class="short-tag">${tag}</span>`).join('')}
                         </div>
-                            ${short.similar_to?.length ? `
-                            <div class="similar-to">Если нравится: ${short.similar_to.join(', ')}</div>
-                            ` : ''}
+                        ${short.similar_to?.length ? `
+                        <div class="similar-to">Если нравится: ${short.similar_to.join(', ')}</div>
+                        ` : ''}
                         <div class="short-stats">
                             <span class="short-stat views">
                                 <span class="short-stat-icon">👁</span>
@@ -603,7 +611,7 @@
                             </span>
                             ` : ''}
                             ${short.literacy_score ? `
-                            <span class="ai-score-badge ${short.literacy_score < 5 ? 'low' : short.literacy_score < 7 ? 'medium' : ''}" title="Оценка ИИ: ${short.literacy_score}/10">
+                            <span class="ai-score-badge ${short.literacy_score < 5 ? 'low' : short.literacy_score < 7 ? 'medium' : ''}" title="Оценка Строки: ${short.literacy_score}/10">
                                 ${short.literacy_score}
                             </span>
                             ` : ''}
