@@ -270,6 +270,24 @@
             border-color: #e57373;
         }
         
+        .age-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 28px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .age-badge.age-0 { background: #4a822; color: #4a8; border: 1px solid #4a8; }
+        .age-badge.age-6 { background: #8bc34a22; color: #8bc34a; border: 1px solid #8bc34a; }
+        .age-badge.age-12 { background: #ffc10722; color: #ffc107; border: 1px solid #ffc107; }
+        .age-badge.age-16 { background: #ff980022; color: #ff9800; border: 1px solid #ff9800; }
+        .age-badge.age-18 { background: #f4433622; color: #f44336; border: 1px solid #f44336; }
+        
         .similar-to {
             font-size: 12px;
             color: var(--text-muted);
@@ -543,6 +561,7 @@
                                 author: story.authors?.pen_name || story.authors?.name || 'Неизвестный автор',
                                 genres: story.genres || [],
                                 subgenres: story.subgenres || [],
+                                age_rating: story.age_rating || '16+',
                                 reading_time: story.reading_time_minutes,
                                 character_count: story.character_count,
                                 views: stats.views,
@@ -592,7 +611,7 @@
             feed.innerHTML = shorts.map(short => `
                 <div class="short-card" onclick="openStory('${short.story_id}')">
                     <div class="short-book-info">
-                        <div class="short-book-title">${short.title}</div>
+                        <div class="short-book-title">${short.title}<span class="age-badge age-${short.age_rating?.replace('+','')}">${short.age_rating || '16+'}</span></div>
                         <div class="short-book-author">${short.author}</div>
                         <div class="short-meta">
                             ${short.genres?.length ? short.genres.map(g => `<span class="short-meta-item genre">${g.name} <span class="genre-pct">${g.percent}%</span></span>`).join('') : '<span class="short-meta-item genre">Проза</span>'}
