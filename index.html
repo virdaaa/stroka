@@ -228,6 +228,7 @@
             margin-top: 12px;
             font-size: 13px;
             color: var(--text-muted);
+            align-items: center;
         }
         
         .short-stat {
@@ -240,34 +241,72 @@
             font-size: 14px;
         }
         
-        .short-stat.likes .short-stat-value {
+        .rating-block {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 12px;
+        }
+        
+        .rating-thumbs {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .rating-thumb {
+            font-size: 18px;
+        }
+        
+        .rating-thumb.up { color: #c9a55c; }
+        .rating-thumb.down { color: var(--text-muted); opacity: 0.5; }
+        
+        .rating-percent {
+            font-size: 16px;
+            font-weight: 600;
             color: var(--accent);
         }
         
-        .ai-score-badge {
+        .rating-divider {
+            width: 1px;
+            height: 20px;
+            background: var(--border);
+        }
+        
+        .rating-votes {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        
+        .literacy-badge {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 6px;
             font-size: 11px;
             font-weight: 600;
+        }
+        
+        .literacy-badge.high {
             background: rgba(124, 179, 66, 0.15);
             color: #7cb342;
-            border: 1.5px solid #7cb342;
+            border: 1px solid #7cb342;
         }
         
-        .ai-score-badge.medium {
+        .literacy-badge.medium {
             background: rgba(255, 183, 77, 0.15);
             color: #ffb74d;
-            border-color: #ffb74d;
+            border: 1px solid #ffb74d;
         }
         
-        .ai-score-badge.low {
+        .literacy-badge.low {
             background: rgba(229, 115, 115, 0.15);
             color: #e57373;
-            border-color: #e57373;
+            border: 1px solid #e57373;
         }
         
         .age-badge {
@@ -560,6 +599,7 @@
                                 character_count: story.character_count,
                                 views: stats.views,
                                 like_percent: likePercent,
+                                total_votes: totalReactions,
                                 literacy_score: story.literacy_score,
                                 similar_to: story.similar_to
                             });
@@ -623,14 +663,19 @@
                                 <span class="short-stat-value">${formatNumber(short.views)}</span>
                             </span>
                             ${short.like_percent !== null ? `
-                            <span class="short-stat likes">
-                                <span class="short-stat-icon">👍</span>
-                                <span class="short-stat-value">${short.like_percent}%</span>
-                            </span>
+                            <div class="rating-block">
+                                <div class="rating-thumbs">
+                                    <span class="rating-thumb up">👍</span>
+                                    <span class="rating-thumb down">👎</span>
+                                </div>
+                                <span class="rating-percent">${short.like_percent}%</span>
+                                <div class="rating-divider"></div>
+                                <span class="rating-votes">Голосов: ${short.total_votes || 0}</span>
+                            </div>
                             ` : ''}
                             ${short.literacy_score ? `
-                            <span class="ai-score-badge ${short.literacy_score < 5 ? 'low' : short.literacy_score < 7 ? 'medium' : ''}" title="Оценка Строки: ${short.literacy_score}/10">
-                                ${short.literacy_score}
+                            <span class="literacy-badge ${short.literacy_score < 5 ? 'low' : short.literacy_score < 7 ? 'medium' : 'high'}" title="Грамотность текста">
+                                ✎ ${short.literacy_score}
                             </span>
                             ` : ''}
                         </div>
