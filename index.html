@@ -509,6 +509,8 @@
         let currentFilter = 'foryou';
         let currentGenre = '';
         let currentUser = null;
+        let userPreferences = {}; // { genre: weight }
+        let readStoryIds = new Set(); // Уже прочитанные
         
         // ===== HELPERS =====
         function formatNumber(num) {
@@ -528,8 +530,45 @@
                 currentUser = user;
             }
             
+            // Загружаем предпочтения пользователя
+            if (currentUser) {
+                await loadUserPreferences();
+                await loadReadHistory();
+            }
+            
             await loadData();
             setupEventListeners();
+        }
+        
+        // ===== LOAD USER PREFERENCES =====
+        async function loadUserPreferences() {
+            try {
+                const { data } = await db
+                    .from('user_preferences')
+                    .select('genre, weight')
+                    .eq('user_id', currentUser.id);
+                
+                userPreferences = {};
+                (data || []).forEach(p => {
+                    userPreferences[p.genre] = p.weight;
+                });
+            } catch (e) {
+                console.error('Error loading preferences:', e);
+            }
+        }
+        
+        // ===== LOAD READ HISTORY =====
+        async function loadReadHistory() {
+            try {
+                const { data } = await db
+                    .from('reading_history')
+                    .select('story_id')
+                    .eq('user_id', currentUser.id);
+                
+                readStoryIds = new Set((data || []).map(h => h.story_id));
+            } catch (e) {
+                console.error('Error loading history:', e);
+            }
         }
         
         // ===== LOAD DATA =====
@@ -601,14 +640,16 @@
                                 like_percent: likePercent,
                                 total_votes: totalReactions,
                                 literacy_score: story.literacy_score,
-                                similar_to: story.similar_to
+                                similar_to: story.similar_to,
+                                published_at: story.published_at,
+                                created_at: story.created_at
                             });
                         });
                     }
                 });
                 
                 if (currentFilter === 'foryou') {
-                    shorts = shorts.sort(() => Math.random() - 0.5);
+                    shorts = smartSort(shorts);
                 }
                 
                 renderFeed();
@@ -624,6 +665,78 @@
                     </div>
                 `;
             }
+        }
+        
+        // ===== SMART SORT (For You Algorithm) =====
+        function smartSort(items) {
+            const now = Date.now();
+            const hour48 = 48 * 60 * 60 * 1000;
+            
+            // Группируем по story_id чтобы не показывать дубли
+            const seenStories = new Set();
+            const uniqueItems = items.filter(item => {
+                if (seenStories.has(item.story_id)) return false;
+                seenStories.add(item.story_id);
+                return true;
+            });
+            
+            // Фильтруем уже прочитанные (но оставляем если мало контента)
+            let filtered = uniqueItems;
+            if (readStoryIds.size > 0 && uniqueItems.length > 5) {
+                const unread = uniqueItems.filter(item => !readStoryIds.has(item.story_id));
+                if (unread.length >= 3) {
+                    filtered = unread;
+                }
+            }
+            
+            // Считаем score для каждого шортса
+            const scored = filtered.map(item => {
+                let score = Math.random() * 2; // Базовый рандом 0-2
+                
+                // Бонус за новизну (< 48ч)
+                const storyDate = new Date(item.published_at || item.created_at).getTime();
+                if (now - storyDate < hour48) {
+                    score += 3; // Новые рассказы получают буст
+                }
+                
+                // Бонус за предпочтения жанров
+                if (item.genres && item.genres.length > 0) {
+                    item.genres.forEach(g => {
+                        const genreName = g.name || g;
+                        const weight = userPreferences[genreName] || 0;
+                        score += weight * 0.5; // Вес жанра влияет на score
+                    });
+                }
+                
+                // Небольшой бонус за популярность (но не решающий)
+                if (item.like_percent && item.like_percent > 70) {
+                    score += 0.5;
+                }
+                
+                return { ...item, score };
+            });
+            
+            // Сортируем по score
+            scored.sort((a, b) => b.score - a.score);
+            
+            // Антибуст: не больше 2 рассказов одного автора подряд
+            const result = [];
+            const authorCount = {};
+            
+            for (const item of scored) {
+                const author = item.author;
+                const count = authorCount[author] || 0;
+                
+                if (count < 2) {
+                    result.push(item);
+                    authorCount[author] = count + 1;
+                } else {
+                    // Добавляем в конец
+                    result.push(item);
+                }
+            }
+            
+            return result;
         }
         
         // ===== RENDER =====
