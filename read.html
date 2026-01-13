@@ -659,6 +659,16 @@
             
             if (currentUser) {
                 try {
+                    // Проверяем, было ли уже отмечено как прочитанное
+                    const { data: existing } = await db
+                        .from('reading_history')
+                        .select('finished_at')
+                        .eq('user_id', currentUser.id)
+                        .eq('story_id', storyId)
+                        .single();
+                    
+                    const wasFinished = existing?.finished_at != null;
+                    
                     await db.from('reading_history').upsert({
                         user_id: currentUser.id,
                         story_id: storyId,
@@ -667,6 +677,11 @@
                         started_at: new Date(readStartTime).toISOString(),
                         finished_at: isFinished ? new Date().toISOString() : null
                     }, { onConflict: 'user_id,story_id' });
+                    
+                    // Если только что дочитал (и раньше не дочитывал) — добавляем вес жанрам
+                    if (isFinished && !wasFinished && currentStory?.genres) {
+                        await updateGenrePreferences(currentStory.genres, 1); // Дочитал = +1
+                    }
                 } catch (e) { console.error('Error saving progress:', e); }
             } else {
                 const localHistory = JSON.parse(localStorage.getItem(LOCAL_HISTORY_KEY) || '{}');
@@ -723,6 +738,45 @@
             updateSubscribeButton();
         }
         
+        // ===== USER PREFERENCES =====
+        async function updateGenrePreferences(genres, delta) {
+            if (!currentUser || !genres || genres.length === 0) return;
+            
+            for (const genre of genres) {
+                const genreName = genre.name || genre;
+                try {
+                    // Пробуем обновить существующую запись
+                    const { data: existing } = await db
+                        .from('user_preferences')
+                        .select('weight')
+                        .eq('user_id', currentUser.id)
+                        .eq('genre', genreName)
+                        .single();
+                    
+                    if (existing) {
+                        await db
+                            .from('user_preferences')
+                            .update({ 
+                                weight: Math.max(-10, Math.min(10, existing.weight + delta)),
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('user_id', currentUser.id)
+                            .eq('genre', genreName);
+                    } else {
+                        await db
+                            .from('user_preferences')
+                            .insert({
+                                user_id: currentUser.id,
+                                genre: genreName,
+                                weight: delta
+                            });
+                    }
+                } catch (e) {
+                    console.error('Error updating preferences:', e);
+                }
+            }
+        }
+        
         // ===== REACTIONS =====
         async function checkReaction() {
             const { data } = await db
@@ -749,17 +803,41 @@
         async function react(type) {
             if (!currentUser) { window.location.href = '/profile.html'; return; }
             
+            const genres = currentStory?.genres || [];
+            
             if (currentReaction === type) {
                 await db.from('reactions').delete()
                     .eq('user_id', currentUser.id)
                     .eq('story_id', storyId);
+                
+                // Откатываем предпочтения
+                if (type === 'like') {
+                    await updateGenrePreferences(genres, -2);
+                } else if (type === 'dislike') {
+                    await updateGenrePreferences(genres, 1);
+                }
                 currentReaction = null;
             } else {
+                // Если меняем реакцию — сначала откатываем старую
+                if (currentReaction === 'like') {
+                    await updateGenrePreferences(genres, -2);
+                } else if (currentReaction === 'dislike') {
+                    await updateGenrePreferences(genres, 1);
+                }
+                
                 await db.from('reactions').upsert({
                     user_id: currentUser.id,
                     story_id: storyId,
                     reaction: type
                 }, { onConflict: 'user_id,story_id' });
+                
+                // Обновляем предпочтения
+                if (type === 'like') {
+                    await updateGenrePreferences(genres, 2); // Лайк = +2
+                } else if (type === 'dislike') {
+                    await updateGenrePreferences(genres, -1); // Дизлайк = -1
+                }
+                
                 currentReaction = type;
                 document.getElementById('reaction-prompt').style.display = 'none';
                 document.getElementById('reaction-buttons').style.display = 'none';
