@@ -102,6 +102,24 @@
         .story-title-text {
             flex: 1;
         }
+        .age-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: var(--font-ui);
+            margin-left: 8px;
+            flex-shrink: 0;
+        }
+        .age-badge.age-0 { background: #4a822; color: #4a8; border: 2px solid #4a8; }
+        .age-badge.age-6 { background: #8bc34a22; color: #8bc34a; border: 2px solid #8bc34a; }
+        .age-badge.age-12 { background: #ffc10722; color: #ffc107; border: 2px solid #ffc107; }
+        .age-badge.age-16 { background: #ff980022; color: #ff9800; border: 2px solid #ff9800; }
+        .age-badge.age-18 { background: #f4433622; color: #f44336; border: 2px solid #f44336; }
         .bookmark-title-btn {
             background: none;
             border: none;
@@ -334,6 +352,7 @@
                 <span class="story-genre" id="story-genre"></span>
                 <h1 class="story-title">
                     <span class="story-title-text" id="story-title"></span>
+                    <span class="age-badge" id="age-badge"></span>
                     <button class="bookmark-title-btn" id="bookmark-btn" onclick="toggleBookmark()" title="В избранное">🔖</button>
                 </h1>
                 <div class="story-author">
@@ -497,6 +516,23 @@
             document.title = `${story.title} — Строка`;
             document.getElementById('story-genre').textContent = story.genre || 'Проза';
             document.getElementById('story-title').textContent = story.title;
+            
+            // Жанры с процентами
+            const genreEl = document.getElementById('story-genre');
+            if (story.genres && story.genres.length > 0) {
+                genreEl.innerHTML = story.genres.map(g => `${g.name} <span style="opacity:0.6">${g.percent}%</span>`).join(' • ');
+            } else if (story.genre) {
+                genreEl.textContent = story.genre;
+            } else {
+                genreEl.textContent = 'Проза';
+            }
+            
+            // Возрастной рейтинг
+            const ageRating = story.age_rating || '16+';
+            const ageBadge = document.getElementById('age-badge');
+            ageBadge.textContent = ageRating;
+            ageBadge.className = 'age-badge age-' + ageRating.replace('+', '');
+            
             document.getElementById('author-name').textContent = story.authors?.pen_name || story.authors?.name || 'Аноним';
             document.getElementById('author-avatar').textContent = (story.authors?.pen_name || story.authors?.name || 'А')[0].toUpperCase();
             document.getElementById('story-reading-time').textContent = `${story.reading_time_minutes || '?'} мин`;
