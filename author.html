@@ -315,14 +315,22 @@
             showLoading('Строка анализирует текст...<br>Проверка грамотности и модерация');
             try {
                 const response = await fetch(AI_WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, title: storyData.title }) });
-                if (!response.ok) { const err = await response.json(); throw new Error(err.error || 'Ошибка API'); }
-                const result = await response.json();
+                const rawText = await response.text();
+                console.log('Raw response:', rawText);
+                let result;
+                try {
+                    result = JSON.parse(rawText);
+                } catch (parseErr) {
+                    console.error('Parse error:', parseErr, 'Raw:', rawText);
+                    throw new Error('Ошибка парсинга ответа');
+                }
+                if (!response.ok) { throw new Error(result.error || 'Ошибка API'); }
                 storyData.genres = result.genres || []; storyData.subgenres = result.subgenres || []; storyData.shorts = result.shorts || [];
                 storyData.moderation = result.moderation || { status: 'ok', reason: null };
                 storyData.literacy = result.literacy || { score: 7, note: '', errors: [], similar_to: null };
                 storyData.similar_to = result.literacy?.similar_to || null;
                 hideLoading(); showStep3();
-            } catch (error) { hideLoading(); alert('Ошибка: ' + error.message); }
+            } catch (error) { hideLoading(); alert('Ошибка: ' + error.message); console.error(error); }
         }
         
         function showStep3() {
