@@ -627,14 +627,18 @@
             }
             
             if (progress && progress.read_percent > 5) {
-                // Ждём полной загрузки контента
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-                        const scrollTo = (progress.read_percent / 100) * docHeight;
-                        window.scrollTo({ top: scrollTo, behavior: 'auto' });
-                    });
-                });
+                // Ждём полной загрузки страницы
+                const doScroll = () => {
+                    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                    const scrollTo = (progress.read_percent / 100) * docHeight;
+                    window.scrollTo({ top: scrollTo, behavior: 'auto' });
+                };
+                
+                if (document.readyState === 'complete') {
+                    setTimeout(doScroll, 150);
+                } else {
+                    window.addEventListener('load', () => setTimeout(doScroll, 150));
+                }
             }
         }
         
