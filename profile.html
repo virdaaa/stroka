@@ -465,8 +465,14 @@
         </header>
         
         <div class="content">
+            <!-- Loading -->
+            <div id="loading-screen" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh;">
+                <div class="spinner"></div>
+                <span style="color: var(--text-muted);">Загрузка...</span>
+            </div>
+            
             <!-- Auth Screen -->
-            <div id="auth-screen" class="auth-screen">
+            <div id="auth-screen" class="auth-screen" style="display: none;">
                 <div class="auth-title">Добро пожаловать</div>
                 <div class="auth-subtitle">Войдите, чтобы сохранять прогресс и публиковать рассказы</div>
                 
@@ -733,6 +739,11 @@
         
         // ===== CHECK AUTH & LOAD =====
         async function checkAuthAndLoad() {
+            const loadingScreen = document.getElementById('loading-screen');
+            const authScreen = document.getElementById('auth-screen');
+            const profileContent = document.getElementById('profile-content');
+            const logoutBtn = document.getElementById('logout-btn');
+            
             // Сначала проверяем localStorage (для Telegram авторизации)
             const savedUser = localStorage.getItem('stroka_user');
             if (savedUser) {
@@ -749,9 +760,10 @@
                 if (author) {
                     currentAuthor = author;
                     
-                    document.getElementById('auth-screen').style.display = 'none';
-                    document.getElementById('profile-content').style.display = 'block';
-                    document.getElementById('logout-btn').style.display = 'block';
+                    loadingScreen.style.display = 'none';
+                    authScreen.style.display = 'none';
+                    profileContent.style.display = 'block';
+                    logoutBtn.style.display = 'block';
                     
                     loadAuthorSection();
                     loadStats();
@@ -781,12 +793,17 @@
                     }));
                 }
                 
-                document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('profile-content').style.display = 'block';
-                document.getElementById('logout-btn').style.display = 'block';
+                loadingScreen.style.display = 'none';
+                authScreen.style.display = 'none';
+                profileContent.style.display = 'block';
+                logoutBtn.style.display = 'block';
                 
                 loadAuthorSection();
                 loadStats();
+            } else {
+                // Не авторизован — показываем форму входа
+                loadingScreen.style.display = 'none';
+                authScreen.style.display = 'flex';
             }
         }
         
