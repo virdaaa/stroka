@@ -201,6 +201,12 @@
             font-weight: 500;
         }
         
+        .genre-pct {
+            opacity: 0.6;
+            font-weight: 400;
+            font-size: 11px;
+        }
+        
         .short-tags {
             display: flex;
             gap: 8px;
@@ -535,7 +541,7 @@
                                 story_id: story.id,
                                 title: story.title,
                                 author: story.authors?.pen_name || story.authors?.name || 'Неизвестный автор',
-                                genre: story.genre,
+                                genres: story.genres || [],
                                 subgenres: story.subgenres || [],
                                 reading_time: story.reading_time_minutes,
                                 character_count: story.character_count,
@@ -589,9 +595,8 @@
                         <div class="short-book-title">${short.title}</div>
                         <div class="short-book-author">${short.author}</div>
                         <div class="short-meta">
-                            <span class="short-meta-item genre">${short.genre || 'Проза'}</span>
+                            ${short.genres?.length ? short.genres.map(g => `<span class="short-meta-item genre">${g.name} <span class="genre-pct">${g.percent}%</span></span>`).join('') : '<span class="short-meta-item genre">Проза</span>'}
                             <span class="short-meta-item">⏱ ${short.reading_time || '?'} мин</span>
-                            <span class="short-meta-item">📄 ${(short.character_count || 0).toLocaleString()} зн.</span>
                         </div>
                         <div class="short-tags">
                             ${(short.subgenres || []).slice(0, 4).map(tag => `<span class="short-tag">${tag}</span>`).join('')}
