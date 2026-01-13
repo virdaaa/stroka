@@ -153,17 +153,20 @@
         .feed {
             flex: 1;
             overflow-y: auto;
-            scroll-snap-type: y mandatory;
             padding: 0;
         }
         
         .short-card {
-            min-height: calc(100vh - 200px);
-            scroll-snap-align: start;
-            padding: 24px 20px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .short-card:active {
+            background: var(--bg-secondary);
         }
         
         .short-book-info { margin-bottom: 16px; }
@@ -256,50 +259,6 @@
             height: 60px;
             background: linear-gradient(transparent, var(--bg-primary));
             pointer-events: none;
-        }
-        
-        .short-actions {
-            display: flex;
-            gap: 12px;
-            padding-top: 16px;
-        }
-        
-        .short-btn {
-            padding: 14px 24px;
-            border: none;
-            border-radius: 8px;
-            font-family: var(--font-ui);
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .short-btn.primary {
-            flex: 1;
-            background: var(--accent);
-            color: var(--bg-primary);
-        }
-        
-        .short-btn.primary:hover {
-            background: var(--accent-dim);
-        }
-        
-        .short-btn.secondary {
-            background: var(--bg-card);
-            color: var(--text-secondary);
-            border: 1px solid var(--border);
-            padding: 14px 18px;
-        }
-        
-        .short-btn.secondary:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-        
-        .short-btn.secondary.liked {
-            color: #e44;
-            border-color: #e44;
         }
         
         /* Loading */
@@ -469,12 +428,8 @@
             return num.toString();
         }
         
-        // Local storage for anonymous users
-        let localFavorites = JSON.parse(localStorage.getItem('stroka_favorites') || '[]');
-        
         // ===== INIT =====
         async function init() {
-            // Check auth - сначала localStorage (Telegram), потом Supabase Auth (Email)
             const savedUser = localStorage.getItem('stroka_user');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
@@ -490,7 +445,6 @@
         // ===== LOAD DATA =====
         async function loadData() {
             try {
-                // Загружаем рассказы
                 let query = db
                     .from('stories')
                     .select(`
@@ -516,16 +470,13 @@
                 
                 stories = storiesData || [];
                 
-                // Загружаем статистику для всех рассказов
                 const storyIds = stories.map(s => s.id);
                 
-                // Получаем реакции
                 const { data: reactionsData } = await db
                     .from('reactions')
                     .select('story_id, reaction')
                     .in('story_id', storyIds);
                 
-                // Считаем статистику реакций
                 const statsMap = {};
                 stories.forEach(s => {
                     statsMap[s.id] = { views: s.views || 0, likes: 0, dislikes: 0 };
@@ -598,8 +549,8 @@
             }
             
             feed.innerHTML = shorts.map(short => `
-                <div class="short-card">
-                    <div class="short-book-info" onclick="openStory('${short.story_id}')" style="cursor: pointer;">
+                <div class="short-card" onclick="openStory('${short.story_id}')">
+                    <div class="short-book-info">
                         <div class="short-book-title">${short.title}</div>
                         <div class="short-book-author">${short.author}</div>
                         <div class="short-meta">
@@ -617,20 +568,15 @@
                             </span>
                             ${short.like_percent !== null ? `
                             <span class="short-stat likes">
-                                <span class="short-stat-icon">❤️</span>
+                                <span class="short-stat-icon">👍</span>
                                 <span class="short-stat-value">${short.like_percent}%</span>
                             </span>
                             ` : ''}
                         </div>
                     </div>
-                    <div class="short-content" onclick="openStory('${short.story_id}')" style="cursor: pointer;">
+                    <div class="short-content">
                         <div class="short-text">${short.text}</div>
                         <div class="short-fade"></div>
-                    </div>
-                    <div class="short-actions">
-                        <button class="short-btn secondary ${isFavorite(short.story_id) ? 'liked' : ''}" onclick="event.stopPropagation(); toggleFavorite('${short.story_id}')">
-                            ${isFavorite(short.story_id) ? '♥' : '♡'}
-                        </button>
                     </div>
                 </div>
             `).join('');
@@ -681,39 +627,6 @@
         // ===== ACTIONS =====
         function openStory(storyId) {
             window.location.href = `/read.html?id=${storyId}`;
-        }
-        
-        function isFavorite(storyId) {
-            return localFavorites.includes(storyId);
-        }
-        
-        function toggleFavorite(storyId) {
-            if (isFavorite(storyId)) {
-                localFavorites = localFavorites.filter(id => id !== storyId);
-            } else {
-                localFavorites.push(storyId);
-            }
-            localStorage.setItem('stroka_favorites', JSON.stringify(localFavorites));
-            
-            if (currentUser) {
-                saveFavoriteToDb(storyId, isFavorite(storyId));
-            }
-            
-            renderFeed();
-        }
-        
-        async function saveFavoriteToDb(storyId, isLiked) {
-            if (isLiked) {
-                await db.from('reactions').upsert({
-                    user_id: currentUser.id,
-                    story_id: storyId,
-                    reaction: 'like'
-                }, { onConflict: 'user_id,story_id' });
-            } else {
-                await db.from('reactions').delete()
-                    .eq('user_id', currentUser.id)
-                    .eq('story_id', storyId);
-            }
         }
         
         // ===== START =====
