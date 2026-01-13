@@ -328,6 +328,10 @@
                 if (!response.ok) { const err = await response.json(); throw new Error(err.error || 'Ошибка API'); }
                 const result = await response.json();
                 console.log('AI Response:', result); // Для отладки
+                // Если AI вернул старый формат genre вместо genres
+                if (result.genre && !result.genres) {
+                    result.genres = [{ name: result.genre, percent: 100 }];
+                }
                 storyData.genres = result.genres || []; 
                 storyData.subgenres = result.subgenres || []; 
                 storyData.shorts = result.shorts || [];
