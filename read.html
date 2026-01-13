@@ -627,11 +627,15 @@
             }
             
             if (progress && progress.read_percent > 5) {
+                console.log('Scrolling to:', progress.read_percent + '%');
                 setTimeout(() => {
                     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
                     const scrollTo = (progress.read_percent / 100) * docHeight;
+                    console.log('DocHeight:', docHeight, 'ScrollTo:', scrollTo);
                     window.scrollTo({ top: scrollTo, behavior: 'auto' });
                 }, 100);
+            } else {
+                console.log('No scroll needed, progress:', progress);
             }
         }
         
