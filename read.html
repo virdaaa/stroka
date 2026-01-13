@@ -21,21 +21,17 @@
             --border: #2a2a2c;
             --like: #e74c3c;
             --dislike: #95a5a6;
-            
             --font-display: 'Cormorant Garamond', serif;
             --font-ui: 'IBM Plex Sans', sans-serif;
             --font-reading: 'Literata', serif;
         }
-        
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         body {
             font-family: var(--font-ui);
             background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
         }
-        
         .app {
             max-width: 680px;
             margin: 0 auto;
@@ -43,8 +39,6 @@
             display: flex;
             flex-direction: column;
         }
-        
-        /* Header */
         .header {
             padding: 12px 20px;
             display: flex;
@@ -56,7 +50,6 @@
             background: var(--bg-primary);
             z-index: 100;
         }
-        
         .back-btn {
             display: flex;
             align-items: center;
@@ -65,9 +58,26 @@
             text-decoration: none;
             font-size: 14px;
         }
-        
         .back-btn:hover { color: var(--accent); }
-        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .header-info {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .bookmark-btn {
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            padding: 4px;
+            transition: transform 0.2s;
+        }
+        .bookmark-btn:hover { transform: scale(1.1); }
+        .bookmark-btn.active { color: var(--accent); }
         .progress-bar {
             position: absolute;
             bottom: 0;
@@ -76,18 +86,10 @@
             background: var(--accent);
             transition: width 0.3s;
         }
-        
-        .header-info {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-        
-        /* Story Header */
         .story-header {
             padding: 32px 20px;
             border-bottom: 1px solid var(--border);
         }
-        
         .story-genre {
             display: inline-block;
             padding: 4px 10px;
@@ -97,7 +99,6 @@
             color: var(--accent);
             margin-bottom: 12px;
         }
-        
         .story-title {
             font-family: var(--font-display);
             font-size: 32px;
@@ -105,20 +106,17 @@
             line-height: 1.2;
             margin-bottom: 16px;
         }
-        
         .story-author {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
         }
-        
         .author-info {
             display: flex;
             align-items: center;
             gap: 12px;
         }
-        
         .author-avatar {
             width: 40px;
             height: 40px;
@@ -131,12 +129,7 @@
             font-size: 18px;
             color: var(--bg-primary);
         }
-        
-        .author-name {
-            font-size: 15px;
-            color: var(--text-primary);
-        }
-        
+        .author-name { font-size: 15px; color: var(--text-primary); }
         .btn-subscribe {
             padding: 8px 16px;
             background: var(--accent);
@@ -148,15 +141,12 @@
             font-weight: 500;
             cursor: pointer;
         }
-        
         .btn-subscribe:hover { background: var(--accent-dim); }
-        
         .btn-subscribe.subscribed {
             background: var(--bg-card);
             color: var(--text-secondary);
             border: 1px solid var(--border);
         }
-        
         .story-meta {
             display: flex;
             gap: 16px;
@@ -164,8 +154,6 @@
             font-size: 13px;
             color: var(--text-muted);
         }
-        
-        /* Story Content */
         .story-content {
             padding: 32px 20px;
             font-family: var(--font-reading);
@@ -173,37 +161,28 @@
             line-height: 1.8;
             color: var(--text-primary);
         }
-        
         .story-content p {
             margin-bottom: 1.5em;
             text-indent: 1.5em;
         }
-        
-        .story-content p:first-child {
-            text-indent: 0;
-        }
-        
-        /* Story Footer */
+        .story-content p:first-child { text-indent: 0; }
         .story-footer {
             padding: 32px 20px;
             border-top: 1px solid var(--border);
             text-align: center;
         }
-        
         .reaction-prompt {
             font-family: var(--font-display);
             font-size: 22px;
             margin-bottom: 20px;
             color: var(--text-secondary);
         }
-        
         .reaction-buttons {
             display: flex;
             justify-content: center;
             gap: 24px;
             margin-bottom: 32px;
         }
-        
         .reaction-btn {
             width: 64px;
             height: 64px;
@@ -217,41 +196,18 @@
             align-items: center;
             justify-content: center;
         }
-        
-        .reaction-btn:hover {
-            transform: scale(1.1);
-        }
-        
-        .reaction-btn.like:hover,
-        .reaction-btn.like.active {
+        .reaction-btn:hover { transform: scale(1.1); }
+        .reaction-btn.like:hover, .reaction-btn.like.active {
             border-color: var(--like);
             background: rgba(231, 76, 60, 0.2);
         }
-        
-        .reaction-btn.dislike:hover,
-        .reaction-btn.dislike.active {
+        .reaction-btn.dislike:hover, .reaction-btn.dislike.active {
             border-color: var(--dislike);
             background: rgba(149, 165, 166, 0.2);
         }
-        
-        /* Share */
-        .share-section {
-            padding-top: 24px;
-            border-top: 1px solid var(--border);
-        }
-        
-        .share-title {
-            font-size: 14px;
-            color: var(--text-muted);
-            margin-bottom: 12px;
-        }
-        
-        .share-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-        }
-        
+        .share-section { padding-top: 24px; border-top: 1px solid var(--border); }
+        .share-title { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; }
+        .share-buttons { display: flex; justify-content: center; gap: 12px; }
         .share-btn {
             padding: 10px 20px;
             background: var(--bg-card);
@@ -262,38 +218,16 @@
             cursor: pointer;
             text-decoration: none;
         }
-        
-        .share-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-        
-        /* Thanks for reaction */
-        .reaction-thanks {
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .thanks-message {
-            font-size: 18px;
-            color: var(--accent);
-            margin-bottom: 8px;
-        }
-        
-        /* Auth prompt */
+        .share-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .reaction-thanks { text-align: center; padding: 20px; }
+        .thanks-message { font-size: 18px; color: var(--accent); margin-bottom: 8px; }
         .auth-prompt {
             background: var(--bg-card);
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 24px;
         }
-        
-        .auth-prompt p {
-            margin-bottom: 12px;
-            color: var(--text-secondary);
-            font-size: 14px;
-        }
-        
+        .auth-prompt p { margin-bottom: 12px; color: var(--text-secondary); font-size: 14px; }
         .btn {
             padding: 12px 24px;
             background: var(--accent);
@@ -307,10 +241,7 @@
             text-decoration: none;
             display: inline-block;
         }
-        
         .btn:hover { background: var(--accent-dim); }
-        
-        /* Loading */
         .loading {
             display: flex;
             flex-direction: column;
@@ -319,7 +250,6 @@
             min-height: 60vh;
             color: var(--text-muted);
         }
-        
         .spinner {
             width: 40px;
             height: 40px;
@@ -329,49 +259,9 @@
             animation: spin 1s linear infinite;
             margin-bottom: 16px;
         }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Error */
-        .error {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
-        }
-        
-        .error-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-        
-        /* Resume Banner */
-        .resume-banner {
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border);
-            padding: 12px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .resume-text {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-        
-        .resume-btn {
-            padding: 6px 12px;
-            background: var(--accent);
-            color: var(--bg-primary);
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
-            cursor: pointer;
-        }
-        
-        /* Bottom Navigation */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+        .error-icon { font-size: 48px; margin-bottom: 16px; }
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -387,7 +277,6 @@
             max-width: 680px;
             margin: 0 auto;
         }
-        
         .bottom-nav-item {
             display: flex;
             flex-direction: column;
@@ -397,15 +286,8 @@
             font-size: 11px;
             padding: 4px 16px;
         }
-        
         .bottom-nav-item:hover { color: var(--text-secondary); }
-        
-        .bottom-nav-icon {
-            font-size: 22px;
-            margin-bottom: 2px;
-        }
-        
-        /* Mobile */
+        .bottom-nav-icon { font-size: 22px; margin-bottom: 2px; }
         @media (max-width: 480px) {
             .story-title { font-size: 26px; }
             .story-content { font-size: 17px; padding: 24px 16px; }
@@ -415,32 +297,30 @@
 </head>
 <body>
     <div class="app">
-        <!-- Header -->
         <header class="header">
             <a href="/" class="back-btn">← Назад</a>
-            <span class="header-info" id="header-info"></span>
+            <div class="header-right">
+                <span class="header-info" id="header-info"></span>
+                <button class="bookmark-btn" id="bookmark-btn" onclick="toggleBookmark()" title="В избранное">🔖</button>
+            </div>
             <div class="progress-bar" id="progress-bar" style="width: 0%;"></div>
         </header>
         
-        <!-- Loading State -->
         <div class="loading" id="loading">
             <div class="spinner"></div>
             Загрузка...
         </div>
         
-        <!-- Error State -->
         <div class="error" id="error" style="display: none;">
             <div class="error-icon">📖</div>
             <p>Рассказ не найден</p>
             <a href="/" class="btn" style="margin-top: 16px;">На главную</a>
         </div>
         
-        <!-- Story Content -->
         <div id="story-container" style="display: none; padding-bottom: 80px;">
             <div class="story-header">
                 <span class="story-genre" id="story-genre"></span>
                 <h1 class="story-title" id="story-title"></h1>
-                
                 <div class="story-author">
                     <div class="author-info">
                         <div class="author-avatar" id="author-avatar">А</div>
@@ -448,12 +328,11 @@
                     </div>
                     <button class="btn-subscribe" id="subscribe-btn" onclick="toggleSubscribe()">Подписаться</button>
                 </div>
-                
                 <div class="story-meta">
                     <span id="story-reading-time">? мин</span>
                     <span id="story-char-count">? зн.</span>
                     <span id="story-views">👁 0</span>
-                    <span id="story-likes">❤️ —</span>
+                    <span id="story-likes">👍 —</span>
                 </div>
             </div>
             
@@ -461,22 +340,18 @@
             
             <div class="story-footer">
                 <div class="reaction-prompt" id="reaction-prompt">Понравился рассказ?</div>
-                
                 <div class="reaction-buttons" id="reaction-buttons">
                     <button class="reaction-btn like" onclick="react('like')" title="Нравится">👍</button>
                     <button class="reaction-btn dislike" onclick="react('dislike')" title="Не нравится">👎</button>
                 </div>
-                
                 <div id="reaction-thanks" style="display: none;" class="reaction-thanks">
                     <div class="thanks-message">Спасибо за оценку!</div>
                     <a href="/" class="btn" style="margin-top: 16px;">← К ленте</a>
                 </div>
-                
                 <div id="auth-prompt" style="display: none;" class="auth-prompt">
                     <p>Войдите, чтобы сохранять прогресс и получать рекомендации</p>
                     <a href="/profile.html" class="btn">Войти</a>
                 </div>
-                
                 <div class="share-section">
                     <div class="share-title">Поделиться</div>
                     <div class="share-buttons">
@@ -488,7 +363,6 @@
             </div>
         </div>
         
-        <!-- Bottom Navigation -->
         <nav class="bottom-nav">
             <a href="/" class="bottom-nav-item">
                 <span class="bottom-nav-icon">🏠</span>
@@ -510,37 +384,28 @@
     </div>
 
     <script>
-        // ===== CONFIG =====
         const SUPABASE_URL = 'https://xcnvejvkklypvkzkanwj.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbnZlanZra2x5cHZremthbndqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNjU4NzIsImV4cCI6MjA4MzY0MTg3Mn0.8ldNxEbzc8aNJYWtOgP0b5lOsPhl4zMeoht2rn0DeP8';
-        
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
-        // ===== STATE =====
         let currentUser = null;
         let currentStory = null;
         let currentAuthor = null;
         let isSubscribed = false;
+        let isBookmarked = false;
         let currentReaction = null;
         let readStartTime = Date.now();
         let maxScrollPercent = 0;
-        let savedScrollPercent = 0;
         
-        // Local storage keys
         const LOCAL_HISTORY_KEY = 'stroka_history';
+        const LOCAL_BOOKMARKS_KEY = 'stroka_bookmarks';
         
-        // ===== GET STORY ID =====
         const urlParams = new URLSearchParams(window.location.search);
         const storyId = urlParams.get('id');
         
-        // ===== INIT =====
         async function init() {
-            if (!storyId) {
-                showError();
-                return;
-            }
+            if (!storyId) { showError(); return; }
             
-            // Check auth - сначала localStorage (Telegram), потом Supabase Auth (Email)
             const savedUser = localStorage.getItem('stroka_user');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
@@ -549,24 +414,17 @@
                 currentUser = user;
             }
             
-            // Load story
             await loadStory();
-            
-            // Load saved progress
-            await loadSavedProgress();
-            
-            // Setup tracking
+            checkBookmarkStatus();
             setupScrollTracking();
             
-            // Save progress periodically and on exit
             window.addEventListener('beforeunload', saveProgress);
             window.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'hidden') saveProgress();
             });
-            setInterval(saveProgress, 30000); // Every 30 sec
+            setInterval(saveProgress, 30000);
         }
         
-        // ===== LOAD STORY =====
         async function loadStory() {
             try {
                 const { data: story, error } = await db
@@ -575,18 +433,13 @@
                     .eq('id', storyId)
                     .single();
                 
-                if (error || !story) {
-                    showError();
-                    return;
-                }
+                if (error || !story) { showError(); return; }
                 
                 currentStory = story;
                 currentAuthor = story.authors;
                 
-                // Increment views
                 await db.rpc('increment_views', { story_uuid: storyId });
                 
-                // Load reactions stats
                 const { data: reactions } = await db
                     .from('reactions')
                     .select('reaction')
@@ -597,13 +450,9 @@
                 const totalReactions = likes + dislikes;
                 const likePercent = totalReactions > 0 ? Math.round(100 * likes / totalReactions) : null;
                 
-                // Render story with stats
                 renderStory(story, { views: (story.views || 0) + 1, likePercent });
-                
-                // Load saved progress
                 await loadSavedProgress();
                 
-                // Check subscription & reaction
                 if (currentUser) {
                     await checkSubscription();
                     await checkReaction();
@@ -613,13 +462,9 @@
                     document.getElementById('subscribe-btn').style.display = 'none';
                 }
                 
-                // Setup share links
                 setupShareLinks();
-                
-                // Show content
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('story-container').style.display = 'block';
-                
             } catch (error) {
                 console.error('Load error:', error);
                 showError();
@@ -635,7 +480,6 @@
         
         function renderStory(story, stats = {}) {
             document.title = `${story.title} — Строка`;
-            
             document.getElementById('story-genre').textContent = story.genre || 'Проза';
             document.getElementById('story-title').textContent = story.title;
             document.getElementById('author-name').textContent = story.authors?.pen_name || story.authors?.name || 'Аноним';
@@ -643,9 +487,8 @@
             document.getElementById('story-reading-time').textContent = `${story.reading_time_minutes || '?'} мин`;
             document.getElementById('story-char-count').textContent = `${story.character_count?.toLocaleString() || '?'} зн.`;
             document.getElementById('story-views').textContent = `👁 ${formatNumber(stats.views || story.views || 0)}`;
-            document.getElementById('story-likes').textContent = stats.likePercent !== null ? `❤️ ${stats.likePercent}%` : '❤️ —';
+            document.getElementById('story-likes').textContent = stats.likePercent !== null ? `👍 ${stats.likePercent}%` : '👍 —';
             
-            // Format text with paragraphs
             const text = story.full_text || '';
             const paragraphs = text.split('\n').filter(p => p.trim());
             document.getElementById('story-text').innerHTML = paragraphs.map(p => `<p>${p}</p>`).join('');
@@ -656,12 +499,44 @@
             document.getElementById('error').style.display = 'block';
         }
         
+        // ===== BOOKMARK =====
+        function checkBookmarkStatus() {
+            const bookmarks = JSON.parse(localStorage.getItem(LOCAL_BOOKMARKS_KEY) || '[]');
+            isBookmarked = bookmarks.includes(storyId);
+            updateBookmarkButton();
+        }
+        
+        function updateBookmarkButton() {
+            const btn = document.getElementById('bookmark-btn');
+            if (isBookmarked) {
+                btn.classList.add('active');
+                btn.title = 'Убрать из избранного';
+            } else {
+                btn.classList.remove('active');
+                btn.title = 'В избранное';
+            }
+        }
+        
+        async function toggleBookmark() {
+            let bookmarks = JSON.parse(localStorage.getItem(LOCAL_BOOKMARKS_KEY) || '[]');
+            
+            if (isBookmarked) {
+                bookmarks = bookmarks.filter(id => id !== storyId);
+                isBookmarked = false;
+            } else {
+                bookmarks.push(storyId);
+                isBookmarked = true;
+            }
+            
+            localStorage.setItem(LOCAL_BOOKMARKS_KEY, JSON.stringify(bookmarks));
+            updateBookmarkButton();
+        }
+        
         // ===== SAVED PROGRESS =====
         async function loadSavedProgress() {
             let progress = null;
             
             if (currentUser) {
-                // Load from DB
                 const { data } = await db
                     .from('reading_history')
                     .select('read_percent')
@@ -673,7 +548,6 @@
                     progress = data;
                 }
             } else {
-                // Load from localStorage
                 const localHistory = JSON.parse(localStorage.getItem(LOCAL_HISTORY_KEY) || '{}');
                 if (localHistory[storyId] && localHistory[storyId].read_percent > 0 && localHistory[storyId].read_percent < 95) {
                     progress = localHistory[storyId];
@@ -681,59 +555,43 @@
             }
             
             if (progress && progress.read_percent > 5) {
-                savedScrollPercent = progress.read_percent;
-                
-                // Автоматически прокручиваем к сохранённой позиции
                 setTimeout(() => {
                     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-                    const scrollTo = (savedScrollPercent / 100) * docHeight;
+                    const scrollTo = (progress.read_percent / 100) * docHeight;
                     window.scrollTo({ top: scrollTo, behavior: 'auto' });
                 }, 100);
             }
         }
         
-        // ===== SCROLL TRACKING =====
         function setupScrollTracking() {
             window.addEventListener('scroll', () => {
                 const scrollTop = window.scrollY;
                 const docHeight = document.documentElement.scrollHeight - window.innerHeight;
                 const scrollPercent = Math.min(100, Math.round((scrollTop / docHeight) * 100));
-                
                 maxScrollPercent = Math.max(maxScrollPercent, scrollPercent);
-                
-                // Update progress bar
                 document.getElementById('progress-bar').style.width = scrollPercent + '%';
-                
-                // Update header info
                 if (scrollPercent > 0) {
                     document.getElementById('header-info').textContent = `${scrollPercent}%`;
                 }
             });
         }
         
-        // ===== SAVE PROGRESS =====
         async function saveProgress() {
             const readTimeSeconds = Math.round((Date.now() - readStartTime) / 1000);
             const isFinished = maxScrollPercent >= 90;
             
             if (currentUser) {
-                // Save to DB
                 try {
-                    await db
-                        .from('reading_history')
-                        .upsert({
-                            user_id: currentUser.id,
-                            story_id: storyId,
-                            read_percent: maxScrollPercent,
-                            read_time_seconds: readTimeSeconds,
-                            started_at: new Date(readStartTime).toISOString(),
-                            finished_at: isFinished ? new Date().toISOString() : null
-                        }, { onConflict: 'user_id,story_id' });
-                } catch (e) {
-                    console.error('Error saving progress:', e);
-                }
+                    await db.from('reading_history').upsert({
+                        user_id: currentUser.id,
+                        story_id: storyId,
+                        read_percent: maxScrollPercent,
+                        read_time_seconds: readTimeSeconds,
+                        started_at: new Date(readStartTime).toISOString(),
+                        finished_at: isFinished ? new Date().toISOString() : null
+                    }, { onConflict: 'user_id,story_id' });
+                } catch (e) { console.error('Error saving progress:', e); }
             } else {
-                // Save to localStorage
                 const localHistory = JSON.parse(localStorage.getItem(LOCAL_HISTORY_KEY) || '{}');
                 localHistory[storyId] = {
                     read_percent: maxScrollPercent,
@@ -748,14 +606,12 @@
         // ===== SUBSCRIPTION =====
         async function checkSubscription() {
             if (!currentAuthor) return;
-            
             const { data } = await db
                 .from('subscriptions')
                 .select('id')
                 .eq('user_id', currentUser.id)
                 .eq('author_id', currentAuthor.id)
                 .maybeSingle();
-            
             isSubscribed = !!data;
             updateSubscribeButton();
         }
@@ -772,30 +628,21 @@
         }
         
         async function toggleSubscribe() {
-            if (!currentUser) {
-                window.location.href = '/profile.html';
-                return;
-            }
-            
+            if (!currentUser) { window.location.href = '/profile.html'; return; }
             if (!currentAuthor) return;
             
             if (isSubscribed) {
-                await db
-                    .from('subscriptions')
-                    .delete()
+                await db.from('subscriptions').delete()
                     .eq('user_id', currentUser.id)
                     .eq('author_id', currentAuthor.id);
                 isSubscribed = false;
             } else {
-                await db
-                    .from('subscriptions')
-                    .insert({
-                        user_id: currentUser.id,
-                        author_id: currentAuthor.id
-                    });
+                await db.from('subscriptions').insert({
+                    user_id: currentUser.id,
+                    author_id: currentAuthor.id
+                });
                 isSubscribed = true;
             }
-            
             updateSubscribeButton();
         }
         
@@ -807,7 +654,6 @@
                 .eq('user_id', currentUser.id)
                 .eq('story_id', storyId)
                 .maybeSingle();
-            
             if (data) {
                 currentReaction = data.reaction;
                 updateReactionButtons();
@@ -815,10 +661,7 @@
         }
         
         function updateReactionButtons() {
-            document.querySelectorAll('.reaction-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
+            document.querySelectorAll('.reaction-btn').forEach(btn => btn.classList.remove('active'));
             if (currentReaction === 'like') {
                 document.querySelector('.reaction-btn.like').classList.add('active');
             } else if (currentReaction === 'dislike') {
@@ -827,34 +670,24 @@
         }
         
         async function react(type) {
-            if (!currentUser) {
-                window.location.href = '/profile.html';
-                return;
-            }
+            if (!currentUser) { window.location.href = '/profile.html'; return; }
             
             if (currentReaction === type) {
-                await db
-                    .from('reactions')
-                    .delete()
+                await db.from('reactions').delete()
                     .eq('user_id', currentUser.id)
                     .eq('story_id', storyId);
                 currentReaction = null;
             } else {
-                await db
-                    .from('reactions')
-                    .upsert({
-                        user_id: currentUser.id,
-                        story_id: storyId,
-                        reaction: type
-                    }, { onConflict: 'user_id,story_id' });
+                await db.from('reactions').upsert({
+                    user_id: currentUser.id,
+                    story_id: storyId,
+                    reaction: type
+                }, { onConflict: 'user_id,story_id' });
                 currentReaction = type;
-                
-                // Показываем благодарность
                 document.getElementById('reaction-prompt').style.display = 'none';
                 document.getElementById('reaction-buttons').style.display = 'none';
                 document.getElementById('reaction-thanks').style.display = 'block';
             }
-            
             updateReactionButtons();
         }
         
@@ -862,7 +695,6 @@
         function setupShareLinks() {
             const url = encodeURIComponent(window.location.href);
             const title = encodeURIComponent(currentStory.title + ' — читать на Строке');
-            
             document.getElementById('share-tg').href = `https://t.me/share/url?url=${url}&text=${title}`;
             document.getElementById('share-vk').href = `https://vk.com/share.php?url=${url}&title=${title}`;
         }
@@ -872,7 +704,6 @@
             alert('Ссылка скопирована!');
         }
         
-        // ===== START =====
         init();
     </script>
 </body>
