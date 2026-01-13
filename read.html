@@ -627,18 +627,11 @@
             }
             
             if (progress && progress.read_percent > 5) {
-                // Ждём полной загрузки страницы
-                const doScroll = () => {
+                setTimeout(() => {
                     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
                     const scrollTo = (progress.read_percent / 100) * docHeight;
                     window.scrollTo({ top: scrollTo, behavior: 'auto' });
-                };
-                
-                if (document.readyState === 'complete') {
-                    setTimeout(doScroll, 150);
-                } else {
-                    window.addEventListener('load', () => setTimeout(doScroll, 150));
-                }
+                }, 100);
             }
         }
         
