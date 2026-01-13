@@ -66,7 +66,11 @@
         .short-preview-label { font-size: 12px; color: var(--accent); margin-bottom: 8px; display: block; }
         .short-preview-text { font-size: 14px; line-height: 1.6; color: var(--text-secondary); }
         .tags-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-        .genre-display { margin-top: 12px; }
+        .genre-display { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .genre-tag { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; }
+        .genre-name { color: var(--text-primary); font-size: 14px; }
+        .genre-percent { color: var(--accent); font-size: 12px; font-weight: 500; }
+        .similar-to { width: 100%; font-size: 13px; color: var(--text-muted); margin-top: 8px; font-style: italic; }
         .tag { padding: 6px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 16px; font-size: 13px; cursor: pointer; }
         .tag.selected { background: var(--accent); color: var(--bg-primary); border-color: var(--accent); }
         .alert { padding: 16px; border-radius: 12px; margin-bottom: 20px; }
@@ -181,7 +185,7 @@
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
         let currentAuthor = null;
-        let storyData = { title: '', description: '', text: '', genre: '', subgenres: [], shorts: [], moderation: null, literacy: null };
+        let storyData = { title: '', description: '', text: '', genres: [], subgenres: [], shorts: [], similar_to: null, moderation: null, literacy: null };
         let justLoggedOut = false;
         
         function onTelegramAuth(user) { 
@@ -313,7 +317,8 @@
                 const response = await fetch(AI_WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, title: storyData.title }) });
                 if (!response.ok) { const err = await response.json(); throw new Error(err.error || 'Ошибка API'); }
                 const result = await response.json();
-                storyData.genre = result.genre; storyData.subgenres = result.subgenres || []; storyData.shorts = result.shorts || [];
+                storyData.genres = result.genres || []; storyData.subgenres = result.subgenres || []; storyData.shorts = result.shorts || [];
+                storyData.similar_to = result.similar_to || null;
                 storyData.moderation = result.moderation || { status: 'ok', reason: null };
                 storyData.literacy = result.literacy || { score: 7, note: '', errors: [] };
                 hideLoading(); showStep3();
@@ -357,7 +362,8 @@
             document.getElementById('publish-btn').style.display = 'block';
             document.getElementById('step3-subtitle').textContent = 'Строка подобрала шортсы и теги';
             
-            document.getElementById('genre-display').innerHTML = `<span class="tag selected">${storyData.genre || 'Проза'}</span>`;
+            const genresHtml = storyData.genres.map(g => `<span class="genre-tag"><span class="genre-name">${g.name}</span><span class="genre-percent">${g.percent}%</span></span>`).join('');
+            document.getElementById('genre-display').innerHTML = genresHtml || '<span class="tag selected">Проза</span>';
             document.getElementById('subgenre-tags').innerHTML = storyData.subgenres.map(t => `<span class="tag selected">${t}</span>`).join('');
             document.getElementById('shorts-preview').innerHTML = storyData.shorts.map((s, i) => `<div class="short-preview"><span class="short-preview-label">Шортс ${i + 1}</span><div class="short-preview-text">${s}</div></div>`).join('');
         }
@@ -369,7 +375,8 @@
             try {
                 const { data: story, error } = await db.from('stories').insert({
                     author_id: currentAuthor.id, title: storyData.title, description: storyData.description,
-                    full_text: storyData.text, genre: storyData.genre, subgenres: storyData.subgenres,
+                    full_text: storyData.text, genres: storyData.genres, subgenres: storyData.subgenres,
+                    similar_to: storyData.similar_to,
                     character_count: storyData.characterCount, reading_time_minutes: storyData.readingTime,
                     literacy_score: storyData.literacy?.score, literacy_note: storyData.literacy?.note,
                     status: status, published_at: status === 'published' ? new Date().toISOString() : null
@@ -390,7 +397,7 @@
                 
                 hideLoading();
                 alert(isPending ? 'Отправлено на модерацию. Уведомим о результате.' : 'Рассказ опубликован!');
-                storyData = { title: '', description: '', text: '', genre: '', subgenres: [], shorts: [], moderation: null, literacy: null };
+                storyData = { title: '', description: '', text: '', genres: [], subgenres: [], shorts: [], similar_to: null, moderation: null, literacy: null };
                 document.getElementById('story-title').value = '';
                 document.getElementById('story-description').value = '';
                 document.getElementById('story-text').value = '';
