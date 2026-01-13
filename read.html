@@ -628,12 +628,19 @@
             
             if (progress && progress.read_percent > 5) {
                 console.log('Scrolling to:', progress.read_percent + '%');
-                setTimeout(() => {
+                const tryScroll = () => {
                     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-                    const scrollTo = (progress.read_percent / 100) * docHeight;
-                    console.log('DocHeight:', docHeight, 'ScrollTo:', scrollTo);
-                    window.scrollTo({ top: scrollTo, behavior: 'auto' });
-                }, 100);
+                    if (docHeight > 100) {
+                        const scrollTo = (progress.read_percent / 100) * docHeight;
+                        console.log('DocHeight:', docHeight, 'ScrollTo:', scrollTo);
+                        window.scrollTo({ top: scrollTo, behavior: 'auto' });
+                    } else {
+                        // Контент ещё не загружен, пробуем снова
+                        console.log('Waiting for content, docHeight:', docHeight);
+                        setTimeout(tryScroll, 100);
+                    }
+                };
+                setTimeout(tryScroll, 200);
             } else {
                 console.log('No scroll needed, progress:', progress);
             }
