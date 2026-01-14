@@ -347,6 +347,102 @@
             color: var(--accent);
         }
         
+        /* Time Filter */
+        .time-filter {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .time-btn {
+            padding: 6px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            color: var(--text-muted);
+            font-size: 12px;
+            cursor: pointer;
+            font-family: var(--font-ui);
+        }
+        
+        .time-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg-primary);
+        }
+        
+        .time-btn:hover:not(.active) {
+            border-color: var(--text-muted);
+            color: var(--text-secondary);
+        }
+        
+        /* Top List */
+        .top-list {
+            min-height: 60px;
+        }
+        
+        .top-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-card);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        
+        .top-item:hover {
+            border-color: var(--accent);
+        }
+        
+        .top-rank {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent);
+            min-width: 24px;
+            text-align: center;
+        }
+        
+        .top-rank.gold { color: #ffd700; }
+        .top-rank.silver { color: #c0c0c0; }
+        .top-rank.bronze { color: #cd7f32; }
+        
+        .top-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .top-title {
+            font-family: var(--font-display);
+            font-size: 15px;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .top-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        
+        .top-stat {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        
+        .top-skeleton {
+            height: 56px;
+            background: var(--bg-card);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        
         /* Bottom Navigation */
         .bottom-nav {
             position: fixed;
@@ -450,6 +546,28 @@
                         <span class="popular-tag" onclick="searchTag('Романтика')">Романтика</span>
                     </div>
                 </div>
+                
+                <div class="recent-section">
+                    <div class="section-title">🔥 Топ по просмотрам</div>
+                    <div class="time-filter" id="views-filter">
+                        <button class="time-btn active" data-period="week" onclick="loadTopViews('week')">Неделя</button>
+                        <button class="time-btn" data-period="month" onclick="loadTopViews('month')">Месяц</button>
+                        <button class="time-btn" data-period="year" onclick="loadTopViews('year')">Год</button>
+                        <button class="time-btn" data-period="all" onclick="loadTopViews('all')">Всё время</button>
+                    </div>
+                    <div id="top-views-list" class="top-list"></div>
+                </div>
+                
+                <div class="recent-section">
+                    <div class="section-title">❤️ Топ по рейтингу</div>
+                    <div class="time-filter" id="likes-filter">
+                        <button class="time-btn active" data-period="week" onclick="loadTopLikes('week')">Неделя</button>
+                        <button class="time-btn" data-period="month" onclick="loadTopLikes('month')">Месяц</button>
+                        <button class="time-btn" data-period="year" onclick="loadTopLikes('year')">Год</button>
+                        <button class="time-btn" data-period="all" onclick="loadTopLikes('all')">Всё время</button>
+                    </div>
+                    <div id="top-likes-list" class="top-list"></div>
+                </div>
             </div>
             
             <!-- Search Results -->
@@ -489,6 +607,156 @@
         function init() {
             loadRecentSearches();
             setupEventListeners();
+            loadTopViews('week');
+            loadTopLikes('week');
+        }
+        
+        // ===== TOP VIEWS =====
+        async function loadTopViews(period) {
+            // Update active button
+            document.querySelectorAll('#views-filter .time-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.period === period);
+            });
+            
+            const container = document.getElementById('top-views-list');
+            container.innerHTML = '<div class="top-skeleton skeleton"></div><div class="top-skeleton skeleton"></div><div class="top-skeleton skeleton"></div>';
+            
+            try {
+                let query = db
+                    .from('stories')
+                    .select('id, title, views, genres, genre, reading_time_minutes, published_at')
+                    .eq('status', 'published')
+                    .order('views', { ascending: false })
+                    .limit(5);
+                
+                // Filter by date
+                if (period !== 'all') {
+                    const dateFrom = getDateFrom(period);
+                    query = query.gte('published_at', dateFrom.toISOString());
+                }
+                
+                const { data: stories, error } = await query;
+                
+                if (error) throw error;
+                
+                renderTopList(container, stories || [], 'views');
+                
+            } catch (e) {
+                console.error('Top views error:', e);
+                container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">Ошибка загрузки</div>';
+            }
+        }
+        
+        // ===== TOP LIKES =====
+        async function loadTopLikes(period) {
+            // Update active button
+            document.querySelectorAll('#likes-filter .time-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.period === period);
+            });
+            
+            const container = document.getElementById('top-likes-list');
+            container.innerHTML = '<div class="top-skeleton skeleton"></div><div class="top-skeleton skeleton"></div><div class="top-skeleton skeleton"></div>';
+            
+            try {
+                // Get stories with reactions
+                let storiesQuery = db
+                    .from('stories')
+                    .select('id, title, genres, genre, reading_time_minutes, published_at')
+                    .eq('status', 'published');
+                
+                if (period !== 'all') {
+                    const dateFrom = getDateFrom(period);
+                    storiesQuery = storiesQuery.gte('published_at', dateFrom.toISOString());
+                }
+                
+                const { data: stories } = await storiesQuery.limit(100);
+                
+                if (!stories || stories.length === 0) {
+                    container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">Нет рассказов за этот период</div>';
+                    return;
+                }
+                
+                const storyIds = stories.map(s => s.id);
+                
+                const { data: reactions } = await db
+                    .from('reactions')
+                    .select('story_id, reaction')
+                    .in('story_id', storyIds);
+                
+                // Calculate like percentage
+                const statsMap = {};
+                storyIds.forEach(id => {
+                    statsMap[id] = { likes: 0, dislikes: 0 };
+                });
+                
+                (reactions || []).forEach(r => {
+                    if (statsMap[r.story_id]) {
+                        if (r.reaction === 'like') statsMap[r.story_id].likes++;
+                        else statsMap[r.story_id].dislikes++;
+                    }
+                });
+                
+                // Sort by like percentage (min 3 votes)
+                const ranked = stories
+                    .map(s => {
+                        const stats = statsMap[s.id];
+                        const total = stats.likes + stats.dislikes;
+                        const percent = total >= 3 ? Math.round(100 * stats.likes / total) : null;
+                        return { ...s, like_percent: percent, total_votes: total };
+                    })
+                    .filter(s => s.like_percent !== null)
+                    .sort((a, b) => b.like_percent - a.like_percent || b.total_votes - a.total_votes)
+                    .slice(0, 5);
+                
+                renderTopList(container, ranked, 'likes');
+                
+            } catch (e) {
+                console.error('Top likes error:', e);
+                container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">Ошибка загрузки</div>';
+            }
+        }
+        
+        function getDateFrom(period) {
+            const now = new Date();
+            switch (period) {
+                case 'week': return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                case 'month': return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                case 'year': return new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+                default: return new Date(0);
+            }
+        }
+        
+        function renderTopList(container, stories, type) {
+            if (stories.length === 0) {
+                container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">Нет данных за этот период</div>';
+                return;
+            }
+            
+            container.innerHTML = stories.map((s, i) => {
+                const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+                const genreText = s.genres?.length ? s.genres[0].name : (s.genre || 'Проза');
+                const statText = type === 'views' 
+                    ? `👁 ${formatNumber(s.views)}`
+                    : `👍 ${s.like_percent}% (${s.total_votes})`;
+                
+                return `
+                    <div class="top-item" onclick="openStory('${s.id}')">
+                        <div class="top-rank ${rankClass}">${i + 1}</div>
+                        <div class="top-info">
+                            <div class="top-title">${s.title}</div>
+                            <div class="top-meta">${genreText} · ${s.reading_time_minutes || '?'} мин</div>
+                        </div>
+                        <div class="top-stat">${statText}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function formatNumber(num) {
+            if (!num) return '0';
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
         }
         
         function setupEventListeners() {
