@@ -892,7 +892,6 @@
                 <div class="short-card" onclick="openStory('${short.story_id}')">
                     <div class="short-book-info">
                         <div class="short-book-title">${short.title}<span class="age-badge age-${short.age_rating?.replace('+','')}">${short.age_rating || '16+'}</span></div>
-                        <div class="short-book-author">${short.author}</div>
                         <div class="short-meta">
                             ${short.genres?.length ? short.genres.map(g => `<span class="short-meta-item genre">${g.name} <span class="genre-pct">${g.percent}%</span></span>`).join('') : '<span class="short-meta-item genre">Проза</span>'}
                             <span class="short-meta-item">⏱ ${short.reading_time || '?'} мин</span>
