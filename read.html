@@ -596,10 +596,8 @@
         }
         
         async function getConfirmedAge() {
-            // Проверяем localStorage
             const localAge = parseInt(localStorage.getItem('stroka_confirmed_age') || '0');
             
-            // Проверяем в базе (если авторизован)
             if (currentUser?.id) {
                 const { data: author } = await db
                     .from('authors')
@@ -608,11 +606,8 @@
                     .single();
                 
                 const dbAge = author?.confirmed_age || 0;
-                
-                // Берём максимум из localStorage и базы
                 const maxAge = Math.max(localAge, dbAge);
                 
-                // Синхронизируем
                 if (maxAge > localAge) {
                     localStorage.setItem('stroka_confirmed_age', maxAge.toString());
                 }
@@ -631,7 +626,7 @@
         
         function showAgeModal(rating, requiredAge) {
             document.getElementById('age-modal-rating').textContent = rating;
-            document.getElementById('age-confirm-btn').textContent = `Мне есть ${requiredAge} лет`;
+            document.getElementById('age-confirm-btn').textContent = 'Мне есть ' + requiredAge + ' лет';
             document.getElementById('age-confirm-btn').setAttribute('data-age', requiredAge);
             document.getElementById('age-modal').style.display = 'flex';
             document.getElementById('loading').style.display = 'none';
@@ -640,13 +635,11 @@
         async function confirmAge() {
             const age = parseInt(document.getElementById('age-confirm-btn').getAttribute('data-age'));
             
-            // Сохраняем в localStorage
             const currentConfirmed = parseInt(localStorage.getItem('stroka_confirmed_age') || '0');
             if (age > currentConfirmed) {
                 localStorage.setItem('stroka_confirmed_age', age.toString());
             }
             
-            // Сохраняем в базу (если авторизован)
             if (currentUser?.id) {
                 await db
                     .from('authors')
@@ -730,21 +723,19 @@
         }
         
         function renderStory(story, stats = {}) {
-            document.title = `${story.title} — Строка`;
+            document.title = story.title + ' — Строка';
             document.getElementById('story-genre').textContent = story.genre || 'Проза';
             document.getElementById('story-title').textContent = story.title;
             
-            // Жанры с процентами
             const genreEl = document.getElementById('story-genre');
             if (story.genres && story.genres.length > 0) {
-                genreEl.innerHTML = story.genres.map(g => `${g.name} <span style="opacity:0.6">${g.percent}%</span>`).join(' • ');
+                genreEl.innerHTML = story.genres.map(g => g.name + ' <span style="opacity:0.6">' + g.percent + '%</span>').join(' • ');
             } else if (story.genre) {
                 genreEl.textContent = story.genre;
             } else {
                 genreEl.textContent = 'Проза';
             }
             
-            // Возрастной рейтинг
             const ageRating = story.age_rating || '16+';
             const ageBadge = document.getElementById('age-badge');
             ageBadge.textContent = ageRating;
@@ -752,14 +743,14 @@
             
             document.getElementById('author-name').textContent = story.authors?.pen_name || story.authors?.name || 'Аноним';
             document.getElementById('author-avatar').textContent = (story.authors?.pen_name || story.authors?.name || 'А')[0].toUpperCase();
-            document.getElementById('story-reading-time').textContent = `${story.reading_time_minutes || '?'} мин`;
-            document.getElementById('story-char-count').textContent = `${story.character_count?.toLocaleString() || '?'} зн.`;
-            document.getElementById('story-views').textContent = `👁 ${formatNumber(stats.views || story.views || 0)}`;
-            document.getElementById('story-likes').textContent = stats.likePercent !== null ? `👍 ${stats.likePercent}%` : '👍 —';
+            document.getElementById('story-reading-time').textContent = (story.reading_time_minutes || '?') + ' мин';
+            document.getElementById('story-char-count').textContent = (story.character_count?.toLocaleString() || '?') + ' зн.';
+            document.getElementById('story-views').textContent = '👁 ' + formatNumber(stats.views || story.views || 0);
+            document.getElementById('story-likes').textContent = stats.likePercent !== null ? '👍 ' + stats.likePercent + '%' : '👍 —';
             
             const text = story.full_text || '';
             const paragraphs = text.split('\n').filter(p => p.trim());
-            document.getElementById('story-text').innerHTML = paragraphs.map(p => `<p>${p}</p>`).join('');
+            document.getElementById('story-text').innerHTML = paragraphs.map(p => '<p>' + p + '</p>').join('');
         }
         
         function showError() {
@@ -767,7 +758,6 @@
             document.getElementById('error').style.display = 'block';
         }
         
-        // ===== BOOKMARK =====
         function checkBookmarkStatus() {
             const bookmarks = JSON.parse(localStorage.getItem(LOCAL_BOOKMARKS_KEY) || '[]');
             isBookmarked = bookmarks.includes(storyId);
@@ -801,11 +791,9 @@
             updateBookmarkButton();
         }
         
-        // ===== SAVED PROGRESS =====
         async function loadSavedProgress() {
             let progress = null;
             
-            // Приоритет: параметр из URL > сохранённый прогресс
             if (scrollFromUrl) {
                 progress = { read_percent: parseInt(scrollFromUrl) };
             } else if (currentUser) {
@@ -848,7 +836,7 @@
                 maxScrollPercent = Math.max(maxScrollPercent, scrollPercent);
                 document.getElementById('progress-bar').style.width = scrollPercent + '%';
                 if (scrollPercent > 0) {
-                    document.getElementById('header-info').textContent = `${scrollPercent}%`;
+                    document.getElementById('header-info').textContent = scrollPercent + '%';
                 }
             });
         }
@@ -859,7 +847,6 @@
             
             if (currentUser) {
                 try {
-                    // Проверяем, было ли уже отмечено как прочитанное
                     const { data: existing } = await db
                         .from('reading_history')
                         .select('finished_at')
@@ -878,9 +865,8 @@
                         finished_at: isFinished ? new Date().toISOString() : null
                     }, { onConflict: 'user_id,story_id' });
                     
-                    // Если только что дочитал (и раньше не дочитывал) — добавляем вес жанрам
                     if (isFinished && !wasFinished && currentStory?.genres) {
-                        await updateGenrePreferences(currentStory.genres, 1); // Дочитал = +1
+                        await updateGenrePreferences(currentStory.genres, 1);
                     }
                 } catch (e) { console.error('Error saving progress:', e); }
             } else {
@@ -895,7 +881,6 @@
             }
         }
         
-        // ===== SUBSCRIPTION =====
         async function checkSubscription() {
             if (!currentAuthor) return;
             const { data } = await db
@@ -938,14 +923,12 @@
             updateSubscribeButton();
         }
         
-        // ===== USER PREFERENCES =====
         async function updateGenrePreferences(genres, delta) {
             if (!currentUser || !genres || genres.length === 0) return;
             
             for (const genre of genres) {
                 const genreName = genre.name || genre;
                 try {
-                    // Пробуем обновить существующую запись
                     const { data: existing } = await db
                         .from('user_preferences')
                         .select('weight')
@@ -977,7 +960,6 @@
             }
         }
         
-        // ===== REACTIONS =====
         async function checkReaction() {
             const { data } = await db
                 .from('reactions')
@@ -1010,7 +992,6 @@
                     .eq('user_id', currentUser.id)
                     .eq('story_id', storyId);
                 
-                // Откатываем предпочтения
                 if (type === 'like') {
                     await updateGenrePreferences(genres, -2);
                 } else if (type === 'dislike') {
@@ -1018,7 +999,6 @@
                 }
                 currentReaction = null;
             } else {
-                // Если меняем реакцию — сначала откатываем старую
                 if (currentReaction === 'like') {
                     await updateGenrePreferences(genres, -2);
                 } else if (currentReaction === 'dislike') {
@@ -1031,11 +1011,10 @@
                     reaction: type
                 }, { onConflict: 'user_id,story_id' });
                 
-                // Обновляем предпочтения
                 if (type === 'like') {
-                    await updateGenrePreferences(genres, 2); // Лайк = +2
+                    await updateGenrePreferences(genres, 2);
                 } else if (type === 'dislike') {
-                    await updateGenrePreferences(genres, -1); // Дизлайк = -1
+                    await updateGenrePreferences(genres, -1);
                 }
                 
                 currentReaction = type;
@@ -1048,14 +1027,19 @@
         
         // ===== SHARE =====
         function setupShareLinks() {
-            const url = encodeURIComponent(window.location.href);
-            const title = encodeURIComponent(currentStory.title + ' — читать на Строке');
-            document.getElementById('share-tg').href = `https://t.me/share/url?url=${url}&text=${title}`;
-            document.getElementById('share-vk').href = `https://vk.com/share.php?url=${url}&title=${title}`;
+            // Используем /share для красивого превью с og:image
+            var shareUrl = 'https://stroka.app/share?id=' + storyId;
+            var encodedUrl = encodeURIComponent(shareUrl);
+            var title = encodeURIComponent(currentStory.title + ' — читать на Строке');
+            
+            document.getElementById('share-tg').href = 'https://t.me/share/url?url=' + encodedUrl + '&text=' + title;
+            document.getElementById('share-vk').href = 'https://vk.com/share.php?url=' + encodedUrl;
         }
         
         function copyLink() {
-            navigator.clipboard.writeText(window.location.href);
+            // Копируем /share ссылку для красивого превью
+            var shareUrl = 'https://stroka.app/share?id=' + storyId;
+            navigator.clipboard.writeText(shareUrl);
             alert('Ссылка скопирована!');
         }
         
