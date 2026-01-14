@@ -53,6 +53,9 @@
         .story-item-status.pending { background: var(--warning); color: #000; }
         .story-item-status.rejected { background: var(--danger); }
         .story-item-meta { font-size: 13px; color: var(--text-secondary); }
+        .edit-count-badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: var(--bg-input); color: var(--text-muted); margin-left: 8px; }
+        .edit-count-badge.warning { background: rgba(240, 160, 48, 0.2); color: var(--warning); }
+        .edit-count-badge.exhausted { background: rgba(204, 68, 68, 0.2); color: var(--danger); }
         .step-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; }
         .step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
         .step-dot.active { background: var(--accent); }
@@ -88,6 +91,10 @@
         .score-circle.high { background: var(--success); color: white; }
         .score-circle.medium { background: var(--warning); color: #000; }
         .score-circle.low { background: var(--danger); color: white; }
+        .checkbox-group { display: flex; align-items: flex-start; gap: 12px; margin: 20px 0; padding: 16px; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); }
+        .checkbox-group input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+        .checkbox-group label { font-size: 14px; color: var(--text-secondary); line-height: 1.5; cursor: pointer; }
+        .checkbox-group label a { color: var(--accent); }
         .loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
         .loading-overlay.hidden { display: none; }
         .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
@@ -102,15 +109,9 @@
     </style>
 <!-- Yandex.Metrika counter -->
 <script type="text/javascript">
-    (function(m,e,t,r,i,k,a){
-        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-        m[i].l=1*new Date();
-        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=106258778', 'ym');
-    ym(106258778, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
+    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=106258778','ym');ym(106258778,'init',{ssr:true,webvisor:true,clickmap:true,ecommerce:"dataLayer",accurateTrackBounce:true,trackLinks:true});
 </script>
-<noscript><div><img src="https://mc.yandex.ru/watch/106258778" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<noscript><div><img src="https://mc.yandex.ru/watch/106258778" style="position:absolute;left:-9999px;" alt=""/></div></noscript>
 <!-- /Yandex.Metrika counter -->
 </head>
 <body>
@@ -181,6 +182,7 @@
                 <div class="form-group"><label class="form-label">Теги</label><div class="tags-container" id="subgenre-tags"></div></div>
                 <div class="form-group"><label class="form-label">Шортсы</label><div class="shorts-list" id="shorts-preview"></div></div>
             </div>
+            <div id="terms-checkbox-container"></div>
             <div class="nav-buttons"><button class="btn btn-secondary" onclick="showScreen('add-story-2')">← Редактировать</button><button class="btn" id="publish-btn" onclick="publishStory()">Опубликовать</button></div>
         </div>
         
@@ -200,20 +202,18 @@
         var AI_WORKER_URL = 'https://ai.stroka.app';
         var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
+        var MAX_EDITS = 3; // Максимум редактирований (включая первую публикацию)
         var currentAuthor = null;
-        var editingStoryId = null; // ID рассказа при редактировании
+        var editingStoryId = null;
+        var editingStoryEditCount = 0; // Текущее количество редактирований
         var storyData = { title: '', description: '', text: '', genres: [], subgenres: [], shorts: [], similar_to: null, age_rating: '16+', moderation: null, literacy: null };
         var justLoggedOut = false;
         
-        // Проверяем URL параметр edit
         var urlParams = new URLSearchParams(window.location.search);
         var editId = urlParams.get('edit');
         
         function onTelegramAuth(user) { 
-            if (justLoggedOut) {
-                justLoggedOut = false;
-                return;
-            }
+            if (justLoggedOut) { justLoggedOut = false; return; }
             if (currentAuthor) return;
             handleTelegramLogin(user); 
         }
@@ -240,13 +240,7 @@
                 localStorage.setItem('stroka_user', JSON.stringify({ id: currentAuthor.id, email: currentAuthor.email }));
                 document.getElementById('logout-btn').style.display = 'block';
                 hideLoading();
-                
-                // Проверяем, нужно ли редактировать рассказ
-                if (editId) {
-                    await loadStoryForEdit(editId);
-                } else {
-                    await showDashboard();
-                }
+                if (editId) { await loadStoryForEdit(editId); } else { await showDashboard(); }
             } catch (error) { hideLoading(); alert('Ошибка: ' + error.message); }
         }
         
@@ -258,9 +252,7 @@
             try { 
                 var { error } = await db.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true } }); 
                 if (error) throw error; 
-                pendingEmail = email; 
-                hideLoading(); 
-                showOtpForm(email); 
+                pendingEmail = email; hideLoading(); showOtpForm(email); 
             } catch (error) { hideLoading(); alert('Ошибка: ' + error.message); }
         });
         
@@ -292,12 +284,7 @@
                 localStorage.setItem('stroka_user', JSON.stringify({ id: currentAuthor.id, email: currentAuthor.email }));
                 document.getElementById('logout-btn').style.display = 'block';
                 hideLoading();
-                
-                if (editId) {
-                    await loadStoryForEdit(editId);
-                } else {
-                    await showDashboard();
-                }
+                if (editId) { await loadStoryForEdit(editId); } else { await showDashboard(); }
             } catch (error) { hideLoading(); alert('Ошибка: ' + error.message); }
         }
         
@@ -308,18 +295,16 @@
         
         function logout() { 
             justLoggedOut = true;
-            currentAuthor = null; 
-            editingStoryId = null;
+            currentAuthor = null; editingStoryId = null;
             localStorage.removeItem('stroka_author'); 
-            db.auth.signOut(); 
-            resetAuthForm(); 
-            showScreen('auth'); 
+            db.auth.signOut(); resetAuthForm(); showScreen('auth'); 
             document.getElementById('logout-btn').style.display = 'none';
             setTimeout(function() { justLoggedOut = false; }, 3000);
         }
         
         function startNewStory() {
             editingStoryId = null;
+            editingStoryEditCount = 0;
             storyData = { title: '', description: '', text: '', genres: [], subgenres: [], shorts: [], similar_to: null, age_rating: '16+', moderation: null, literacy: null };
             document.getElementById('story-title').value = '';
             document.getElementById('story-description').value = '';
@@ -327,56 +312,59 @@
             document.getElementById('step1-title').textContent = 'Новый рассказ';
             document.getElementById('edit-mode-alert').innerHTML = '';
             document.getElementById('publish-btn').textContent = 'Опубликовать';
-            updateDescCount();
-            updateCharCount();
+            updateDescCount(); updateCharCount();
             showScreen('add-story-1');
+        }
+        
+        function getEditCountBadge(editCount) {
+            var remaining = MAX_EDITS - editCount;
+            if (remaining <= 0) {
+                return '<span class="edit-count-badge exhausted">Правки исчерпаны</span>';
+            } else if (remaining === 1) {
+                return '<span class="edit-count-badge warning">Осталась 1 правка</span>';
+            } else {
+                return '<span class="edit-count-badge">Правок: ' + remaining + '/' + MAX_EDITS + '</span>';
+            }
         }
         
         async function loadStoryForEdit(storyId) {
             showLoading('Загружаем рассказ...');
             try {
-                var { data: story, error } = await db
-                    .from('stories')
-                    .select('*')
-                    .eq('id', storyId)
-                    .eq('author_id', currentAuthor.id)
-                    .single();
-                
+                var { data: story, error } = await db.from('stories').select('*').eq('id', storyId).eq('author_id', currentAuthor.id).single();
                 if (error || !story) {
                     hideLoading();
                     alert('Рассказ не найден или у вас нет прав на редактирование');
-                    await showDashboard();
-                    return;
+                    await showDashboard(); return;
+                }
+                
+                var editCount = story.edit_count || 0;
+                if (editCount >= MAX_EDITS) {
+                    hideLoading();
+                    alert('Лимит редактирований исчерпан (' + MAX_EDITS + '/' + MAX_EDITS + '). Если нужно внести важные исправления — напишите в поддержку: @stroka_support_bot');
+                    await showDashboard(); return;
                 }
                 
                 editingStoryId = storyId;
+                editingStoryEditCount = editCount;
                 storyData = {
-                    title: story.title || '',
-                    description: story.description || '',
-                    text: story.full_text || '',
-                    genres: story.genres || [],
-                    subgenres: story.subgenres || [],
-                    shorts: [],
-                    similar_to: story.similar_to,
-                    age_rating: story.age_rating || '16+',
-                    moderation: null,
-                    literacy: null
+                    title: story.title || '', description: story.description || '', text: story.full_text || '',
+                    genres: story.genres || [], subgenres: story.subgenres || [], shorts: [],
+                    similar_to: story.similar_to, age_rating: story.age_rating || '16+', moderation: null, literacy: null
                 };
                 
-                // Заполняем форму
                 document.getElementById('story-title').value = storyData.title;
                 document.getElementById('story-description').value = storyData.description;
                 document.getElementById('story-text').value = storyData.text;
                 document.getElementById('step1-title').textContent = 'Редактирование';
-                document.getElementById('edit-mode-alert').innerHTML = '<div class="alert alert-info"><div class="alert-title">✏️ Режим редактирования</div><div class="alert-text">Вы редактируете «' + story.title + '». Изменения будут сохранены после повторной проверки.</div></div>';
+                
+                var remaining = MAX_EDITS - editCount - 1; // -1 за текущую правку
+                var remainingText = remaining === 0 ? 'Это последняя возможность редактирования!' : 'После сохранения останется правок: ' + remaining;
+                document.getElementById('edit-mode-alert').innerHTML = '<div class="alert alert-info"><div class="alert-title">✏️ Редактирование «' + story.title + '»</div><div class="alert-text">' + remainingText + '</div></div>';
                 document.getElementById('publish-btn').textContent = 'Сохранить изменения';
                 
-                updateDescCount();
-                updateCharCount();
-                
+                updateDescCount(); updateCharCount();
                 hideLoading();
                 showScreen('add-story-1');
-                
             } catch (error) {
                 hideLoading();
                 alert('Ошибка загрузки: ' + error.message);
@@ -385,11 +373,8 @@
         }
         
         function cancelEdit() {
-            editingStoryId = null;
-            // Убираем параметр edit из URL
-            if (editId) {
-                window.history.replaceState({}, '', '/author.html');
-            }
+            editingStoryId = null; editingStoryEditCount = 0;
+            if (editId) window.history.replaceState({}, '', '/author.html');
             showScreen('dashboard');
         }
         
@@ -412,15 +397,21 @@
                     default: sc='draft'; st='Черновик'; 
                 }
                 var safeTitle = s.title.replace(/'/g, "\\'");
+                var editCount = s.edit_count || 0;
+                var canEdit = editCount < MAX_EDITS;
+                var editBtnHtml = canEdit 
+                    ? '<button onclick="loadStoryForEdit(\'' + s.id + '\')" style="padding: 8px 12px; background: none; border: 1px solid var(--accent); border-radius: 6px; color: var(--accent); cursor: pointer; font-size: 13px;">Редактировать</button>'
+                    : '<button disabled style="padding: 8px 12px; background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--text-muted); cursor: not-allowed; font-size: 13px;" title="Лимит исчерпан">Редактировать</button>';
+                
                 return '<div class="story-item">' +
                     '<div class="story-item-header">' +
-                        '<div class="story-item-title">' + s.title + '</div>' +
+                        '<div class="story-item-title">' + s.title + getEditCountBadge(editCount) + '</div>' +
                         '<span class="story-item-status ' + sc + '">' + st + '</span>' +
                     '</div>' +
                     '<div class="story-item-meta">' + (s.character_count ? s.character_count.toLocaleString() : '?') + ' зн. • ' + (s.reading_time_minutes || '?') + ' мин</div>' +
                     '<div style="margin-top: 12px; display: flex; gap: 8px;">' +
                         '<a href="/read.html?id=' + s.id + '" style="flex: 1; padding: 8px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: var(--text-secondary); text-decoration: none; text-align: center; font-size: 13px;">Открыть</a>' +
-                        '<button onclick="loadStoryForEdit(\'' + s.id + '\')" style="padding: 8px 12px; background: none; border: 1px solid var(--accent); border-radius: 6px; color: var(--accent); cursor: pointer; font-size: 13px;">Редактировать</button>' +
+                        editBtnHtml +
                         '<button onclick="deleteStory(\'' + s.id + '\', \'' + safeTitle + '\')" style="padding: 8px 12px; background: none; border: 1px solid var(--danger); border-radius: 6px; color: var(--danger); cursor: pointer; font-size: 13px;">Удалить</button>' +
                     '</div>' +
                 '</div>';
@@ -437,8 +428,7 @@
                 await db.from('reading_history').delete().eq('story_id', storyId);
                 var { error } = await db.from('stories').delete().eq('id', storyId).eq('author_id', currentAuthor.id);
                 if (error) throw error;
-                hideLoading();
-                await showDashboard();
+                hideLoading(); await showDashboard();
             } catch (error) { hideLoading(); alert('Ошибка удаления: ' + error.message); }
         }
         
@@ -454,8 +444,7 @@
             if (!t) { alert('Введите название'); return; } 
             var desc = document.getElementById('story-description').value.trim();
             if (desc.length > 1000) { alert('Описание слишком длинное (максимум 1000 символов)'); return; }
-            storyData.title = t; 
-            storyData.description = desc; 
+            storyData.title = t; storyData.description = desc; 
             showScreen('add-story-2'); 
         }
         
@@ -476,19 +465,12 @@
             showLoading('Строка анализирует текст...<br>Проверка грамотности и модерация');
             try {
                 var response = await fetch(AI_WORKER_URL, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, 
                     body: JSON.stringify({ text: text, title: storyData.title }) 
                 });
-                if (!response.ok) { 
-                    var err = await response.json(); 
-                    throw new Error(err.error || 'Ошибка API'); 
-                }
+                if (!response.ok) { var err = await response.json(); throw new Error(err.error || 'Ошибка API'); }
                 var result = await response.json();
-                console.log('AI Response:', result);
-                if (result.genre && !result.genres) {
-                    result.genres = [{ name: result.genre, percent: 100 }];
-                }
+                if (result.genre && !result.genres) result.genres = [{ name: result.genre, percent: 100 }];
                 storyData.genres = result.genres || [];
                 storyData.age_rating = result.age_rating || '16+'; 
                 storyData.subgenres = result.subgenres || []; 
@@ -496,8 +478,7 @@
                 storyData.moderation = result.moderation || { status: 'ok', reason: null };
                 storyData.literacy = result.literacy || { score: 7, note: '', errors: [], similar_to: null };
                 storyData.similar_to = result.literacy?.similar_to || null;
-                hideLoading(); 
-                showStep3();
+                hideLoading(); showStep3();
             } catch (error) { hideLoading(); alert('Ошибка: ' + error.message); }
         }
         
@@ -505,25 +486,23 @@
             showScreen('add-story-3');
             var mod = storyData.moderation, lit = storyData.literacy;
             var modDiv = document.getElementById('moderation-alert'), litDiv = document.getElementById('literacy-section');
+            var termsDiv = document.getElementById('terms-checkbox-container');
             
-            // Обновляем текст кнопки
             document.getElementById('publish-btn').textContent = editingStoryId ? 'Сохранить изменения' : 'Опубликовать';
+            document.getElementById('publish-btn').disabled = false;
             
             if (mod.status === 'reject') {
-                modDiv.innerHTML = '<div class="alert alert-error"><div class="alert-title">❌ Публикация невозможна</div><div class="alert-text"><strong>' + (mod.reason || 'Контент нарушает правила') + '</strong><br><br>Если это ошибка — напишите: <a href="https://t.me/stroka_support" style="color: var(--accent);">@stroka_support</a></div></div>';
+                modDiv.innerHTML = '<div class="alert alert-error"><div class="alert-title">❌ Публикация невозможна</div><div class="alert-text"><strong>' + (mod.reason || 'Контент нарушает правила') + '</strong><br><br>Если это ошибка — напишите: <a href="https://t.me/stroka_support_bot" style="color: var(--accent);">@stroka_support_bot</a></div></div>';
                 document.getElementById('publish-btn').style.display = 'none';
                 document.getElementById('genre-section').style.display = 'none';
                 document.getElementById('step3-subtitle').textContent = 'Требуется доработка';
-                litDiv.innerHTML = ''; 
-                return;
+                litDiv.innerHTML = ''; termsDiv.innerHTML = ''; return;
             }
             
             if (mod.status === 'review') {
                 modDiv.innerHTML = '<div class="alert alert-warning"><div class="alert-title">⚠️ Требуется модерация</div><div class="alert-text">' + (mod.reason || 'Обнаружены сомнительные моменты.') + '<br><br>Рассказ будет проверен модератором (до 24ч).</div></div>';
                 document.getElementById('publish-btn').textContent = editingStoryId ? 'Сохранить и отправить на проверку' : 'Отправить на проверку';
-            } else { 
-                modDiv.innerHTML = ''; 
-            }
+            } else { modDiv.innerHTML = ''; }
             
             var score = lit.score || 7;
             var scoreClass = score >= 8 ? 'high' : score >= 5 ? 'medium' : 'low';
@@ -539,7 +518,7 @@
                 document.getElementById('publish-btn').style.display = 'none';
                 document.getElementById('genre-section').style.display = 'none';
                 document.getElementById('step3-subtitle').textContent = 'Требуется доработка';
-                return;
+                termsDiv.innerHTML = ''; return;
             }
             
             var scoreLabel = score >= 8 ? 'отлично' : score >= 6 ? 'хорошо' : 'приемлемо';
@@ -551,12 +530,8 @@
             
             var genresHtml = '';
             if (storyData.genres && storyData.genres.length > 0) {
-                genresHtml = storyData.genres.map(function(g) { 
-                    return '<span class="genre-tag"><span class="genre-name">' + g.name + '</span><span class="genre-percent">' + g.percent + '%</span></span>'; 
-                }).join('');
-            } else {
-                genresHtml = '<span class="tag selected">Проза</span>';
-            }
+                genresHtml = storyData.genres.map(function(g) { return '<span class="genre-tag"><span class="genre-name">' + g.name + '</span><span class="genre-percent">' + g.percent + '%</span></span>'; }).join('');
+            } else { genresHtml = '<span class="tag selected">Проза</span>'; }
             document.getElementById('genre-display').innerHTML = genresHtml;
             
             var ageColors = {'0+': '#4a8', '6+': '#8bc34a', '12+': '#ffc107', '16+': '#ff9800', '18+': '#f44336'};
@@ -565,92 +540,89 @@
             
             document.getElementById('subgenre-tags').innerHTML = storyData.subgenres.map(function(t) { return '<span class="tag selected">' + t + '</span>'; }).join('');
             document.getElementById('shorts-preview').innerHTML = storyData.shorts.map(function(s, i) { return '<div class="short-preview"><span class="short-preview-label">Шортс ' + (i + 1) + '</span><div class="short-preview-text">' + s + '</div></div>'; }).join('');
+            
+            // Чекбокс согласия (только для новых публикаций)
+            if (!editingStoryId) {
+                termsDiv.innerHTML = '<div class="checkbox-group"><input type="checkbox" id="terms-agree" onchange="updatePublishButton()"><label for="terms-agree">Публикуя произведение, я подтверждаю, что являюсь его автором, и соглашаюсь с <a href="/terms.html" target="_blank">Условиями использования</a> и <a href="/privacy.html" target="_blank">Политикой конфиденциальности</a></label></div>';
+                document.getElementById('publish-btn').disabled = true;
+            } else {
+                termsDiv.innerHTML = '';
+            }
+        }
+        
+        function updatePublishButton() {
+            var checkbox = document.getElementById('terms-agree');
+            document.getElementById('publish-btn').disabled = checkbox ? !checkbox.checked : false;
         }
         
         async function publishStory() {
+            // Проверяем чекбокс для новых публикаций
+            if (!editingStoryId) {
+                var checkbox = document.getElementById('terms-agree');
+                if (!checkbox || !checkbox.checked) {
+                    alert('Необходимо согласиться с условиями использования');
+                    return;
+                }
+            }
+            
             var isPending = storyData.moderation?.status === 'review';
             var status = isPending ? 'pending_review' : 'published';
             
             if (editingStoryId) {
-                // Режим редактирования — обновляем существующий рассказ
                 showLoading('Сохраняем изменения...');
                 try {
-                    // Удаляем старые шортсы
                     await db.from('shorts').delete().eq('story_id', editingStoryId);
                     
-                    // Обновляем рассказ
                     var { error } = await db.from('stories').update({
-                        title: storyData.title,
-                        description: storyData.description,
-                        full_text: storyData.text,
-                        genres: storyData.genres,
-                        subgenres: storyData.subgenres,
-                        similar_to: storyData.similar_to,
-                        age_rating: storyData.age_rating,
-                        character_count: storyData.characterCount,
-                        reading_time_minutes: storyData.readingTime,
-                        literacy_score: storyData.literacy?.score,
-                        literacy_note: storyData.literacy?.note,
-                        status: status,
+                        title: storyData.title, description: storyData.description, full_text: storyData.text,
+                        genres: storyData.genres, subgenres: storyData.subgenres, similar_to: storyData.similar_to,
+                        age_rating: storyData.age_rating, character_count: storyData.characterCount,
+                        reading_time_minutes: storyData.readingTime, literacy_score: storyData.literacy?.score,
+                        literacy_note: storyData.literacy?.note, status: status,
+                        edit_count: editingStoryEditCount + 1, // Увеличиваем счётчик
                         updated_at: new Date().toISOString()
                     }).eq('id', editingStoryId).eq('author_id', currentAuthor.id);
                     
                     if (error) throw error;
                     
-                    // Добавляем новые шортсы
                     for (var i = 0; i < storyData.shorts.length; i++) {
                         await db.from('shorts').insert({ story_id: editingStoryId, text: storyData.shorts[i], position: i + 1 });
                     }
                     
-                    // Если нужна модерация
                     if (isPending) {
                         await db.from('moderation_queue').delete().eq('story_id', editingStoryId);
                         await db.from('moderation_queue').insert({
-                            story_id: editingStoryId, 
-                            author_id: currentAuthor.id,
-                            ai_status: 'review', 
-                            ai_reason: storyData.moderation?.reason,
-                            literacy_score: storyData.literacy?.score, 
-                            literacy_note: storyData.literacy?.note
+                            story_id: editingStoryId, author_id: currentAuthor.id,
+                            ai_status: 'review', ai_reason: storyData.moderation?.reason,
+                            literacy_score: storyData.literacy?.score, literacy_note: storyData.literacy?.note
                         });
                     }
                     
                     hideLoading();
-                    alert(isPending ? 'Изменения сохранены и отправлены на модерацию.' : 'Изменения сохранены!');
+                    var remaining = MAX_EDITS - editingStoryEditCount - 1;
+                    var msg = isPending ? 'Изменения сохранены и отправлены на модерацию.' : 'Изменения сохранены!';
+                    if (remaining === 0) msg += '\n\nВнимание: лимит редактирований исчерпан.';
+                    else if (remaining === 1) msg += '\n\nОсталась 1 правка.';
+                    alert(msg);
                     
-                    // Сбрасываем состояние
-                    editingStoryId = null;
+                    editingStoryId = null; editingStoryEditCount = 0;
                     storyData = { title: '', description: '', text: '', genres: [], subgenres: [], shorts: [], similar_to: null, age_rating: '16+', moderation: null, literacy: null };
                     document.getElementById('story-title').value = '';
                     document.getElementById('story-description').value = '';
                     document.getElementById('story-text').value = '';
-                    
-                    // Убираем параметр edit из URL
                     window.history.replaceState({}, '', '/author.html');
-                    
                     showDashboard();
-                } catch (error) { 
-                    hideLoading(); 
-                    alert('Ошибка сохранения: ' + error.message); 
-                }
+                } catch (error) { hideLoading(); alert('Ошибка сохранения: ' + error.message); }
             } else {
-                // Режим создания нового рассказа
                 showLoading(isPending ? 'Отправляем на модерацию...' : 'Публикуем...');
                 try {
                     var { data: story, error } = await db.from('stories').insert({
-                        author_id: currentAuthor.id, 
-                        title: storyData.title, 
-                        description: storyData.description,
-                        full_text: storyData.text, 
-                        genres: storyData.genres, 
-                        subgenres: storyData.subgenres,
-                        similar_to: storyData.similar_to, 
-                        age_rating: storyData.age_rating,
-                        character_count: storyData.characterCount, 
-                        reading_time_minutes: storyData.readingTime,
-                        literacy_score: storyData.literacy?.score, 
-                        literacy_note: storyData.literacy?.note,
-                        status: status, 
+                        author_id: currentAuthor.id, title: storyData.title, description: storyData.description,
+                        full_text: storyData.text, genres: storyData.genres, subgenres: storyData.subgenres,
+                        similar_to: storyData.similar_to, age_rating: storyData.age_rating,
+                        character_count: storyData.characterCount, reading_time_minutes: storyData.readingTime,
+                        literacy_score: storyData.literacy?.score, literacy_note: storyData.literacy?.note,
+                        status: status, edit_count: 1, // Первая публикация = 1
                         published_at: status === 'published' ? new Date().toISOString() : null
                     }).select().single();
                     
@@ -662,17 +634,14 @@
                     
                     if (isPending) {
                         await db.from('moderation_queue').insert({
-                            story_id: story.id, 
-                            author_id: currentAuthor.id,
-                            ai_status: 'review', 
-                            ai_reason: storyData.moderation?.reason,
-                            literacy_score: storyData.literacy?.score, 
-                            literacy_note: storyData.literacy?.note
+                            story_id: story.id, author_id: currentAuthor.id,
+                            ai_status: 'review', ai_reason: storyData.moderation?.reason,
+                            literacy_score: storyData.literacy?.score, literacy_note: storyData.literacy?.note
                         });
                     }
                     
                     hideLoading();
-                    alert(isPending ? 'Отправлено на модерацию. Уведомим о результате.' : 'Рассказ опубликован!');
+                    alert(isPending ? 'Отправлено на модерацию. Уведомим о результате.' : 'Рассказ опубликован!\n\nУ вас осталось 2 правки для этого рассказа.');
                     storyData = { title: '', description: '', text: '', genres: [], subgenres: [], shorts: [], similar_to: null, age_rating: '16+', moderation: null, literacy: null };
                     document.getElementById('story-title').value = '';
                     document.getElementById('story-description').value = '';
@@ -686,21 +655,13 @@
             document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); }); 
             document.getElementById(name + '-screen').classList.add('active'); 
         }
-        function showLoading(text) { 
-            document.getElementById('loading-text').innerHTML = (text || 'Загрузка...').replace(/\n/g, '<br>'); 
-            document.getElementById('loading').classList.remove('hidden'); 
-        }
+        function showLoading(text) { document.getElementById('loading-text').innerHTML = (text || 'Загрузка...').replace(/\n/g, '<br>'); document.getElementById('loading').classList.remove('hidden'); }
         function hideLoading() { document.getElementById('loading').classList.add('hidden'); }
         
-        // Проверяем сохранённого автора при загрузке
         var savedAuthor = localStorage.getItem('stroka_author');
         if (savedAuthor) { 
             currentAuthor = JSON.parse(savedAuthor); 
-            if (editId) {
-                loadStoryForEdit(editId);
-            } else {
-                showDashboard(); 
-            }
+            if (editId) { loadStoryForEdit(editId); } else { showDashboard(); }
         }
     </script>
 </body>
