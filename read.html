@@ -340,6 +340,86 @@
             .story-content { font-size: 17px; padding: 24px 16px; }
             .story-header { padding: 24px 16px; }
         }
+        
+        /* Age Modal */
+        .age-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .age-modal {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        
+        .age-modal-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .age-modal-title {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .age-modal-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        
+        .age-modal-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .age-modal-btn {
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            font-family: var(--font-ui);
+        }
+        
+        .age-modal-btn.confirm {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+        
+        .age-modal-btn.cancel {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+        
+        .age-modal-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .age-modal-note {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 16px;
+        }
     </style>
 </head>
 <body>
@@ -431,6 +511,20 @@
                 <span>Профиль</span>
             </a>
         </nav>
+        
+        <!-- Age Confirmation Modal -->
+        <div class="age-modal-overlay" id="age-modal" style="display: none;">
+            <div class="age-modal">
+                <div class="age-modal-icon">🔞</div>
+                <div class="age-modal-title">Ограничение по возрасту</div>
+                <div class="age-modal-text">Этот рассказ содержит контент для взрослых (<span id="age-modal-rating">18+</span>). Подтвердите, что вам исполнилось 18 лет.</div>
+                <div class="age-modal-buttons">
+                    <button class="age-modal-btn confirm" onclick="confirmAge()">Мне есть 18 лет</button>
+                    <button class="age-modal-btn cancel" onclick="cancelAge()">Назад</button>
+                </div>
+                <div class="age-modal-note">Продолжая, вы подтверждаете свой возраст</div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -466,6 +560,75 @@
             }
             
             await loadStory();
+            
+            // Проверка возраста для 16+ и 18+ контента
+            if (currentStory && needsAgeConfirmation(currentStory.age_rating)) {
+                const confirmed = await checkAgeConfirmation();
+                if (!confirmed) {
+                    showAgeModal(currentStory.age_rating);
+                    return;
+                }
+            }
+            
+            showStoryContent();
+        }
+        
+        function needsAgeConfirmation(rating) {
+            return rating === '18+' || rating === '16+';
+        }
+        
+        async function checkAgeConfirmation() {
+            // Проверяем localStorage
+            const localConfirmed = localStorage.getItem('stroka_age_confirmed');
+            if (localConfirmed === 'true') return true;
+            
+            // Проверяем в базе (если авторизован)
+            if (currentUser?.id) {
+                const { data: author } = await db
+                    .from('authors')
+                    .select('age_confirmed')
+                    .eq('id', currentUser.id)
+                    .single();
+                
+                if (author?.age_confirmed) {
+                    localStorage.setItem('stroka_age_confirmed', 'true');
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        function showAgeModal(rating) {
+            document.getElementById('age-modal-rating').textContent = rating;
+            document.getElementById('age-modal').style.display = 'flex';
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+        async function confirmAge() {
+            // Сохраняем в localStorage
+            localStorage.setItem('stroka_age_confirmed', 'true');
+            
+            // Сохраняем в базу (если авторизован)
+            if (currentUser?.id) {
+                await db
+                    .from('authors')
+                    .update({ 
+                        age_confirmed: true,
+                        age_confirmed_at: new Date().toISOString()
+                    })
+                    .eq('id', currentUser.id);
+            }
+            
+            document.getElementById('age-modal').style.display = 'none';
+            showStoryContent();
+        }
+        
+        function cancelAge() {
+            window.location.href = '/';
+        }
+        
+        function showStoryContent() {
             checkBookmarkStatus();
             setupScrollTracking();
             
