@@ -517,9 +517,9 @@
             <div class="age-modal">
                 <div class="age-modal-icon">🔞</div>
                 <div class="age-modal-title">Ограничение по возрасту</div>
-                <div class="age-modal-text">Этот рассказ содержит контент для взрослых (<span id="age-modal-rating">18+</span>). Подтвердите, что вам исполнилось 18 лет.</div>
+                <div class="age-modal-text">Этот рассказ содержит контент с возрастным ограничением <span id="age-modal-rating">18+</span>. Подтвердите свой возраст.</div>
                 <div class="age-modal-buttons">
-                    <button class="age-modal-btn confirm" onclick="confirmAge()">Мне есть 18 лет</button>
+                    <button class="age-modal-btn confirm" onclick="confirmAge()" id="age-confirm-btn">Мне есть 18 лет</button>
                     <button class="age-modal-btn cancel" onclick="cancelAge()">Назад</button>
                 </div>
                 <div class="age-modal-note">Продолжая, вы подтверждаете свой возраст</div>
@@ -561,11 +561,12 @@
             
             await loadStory();
             
-            // Проверка возраста для 16+ и 18+ контента
-            if (currentStory && needsAgeConfirmation(currentStory.age_rating)) {
-                const confirmed = await checkAgeConfirmation();
-                if (!confirmed) {
-                    showAgeModal(currentStory.age_rating);
+            // Проверка возраста для 12+, 16+ и 18+ контента
+            const requiredAge = getRequiredAge(currentStory?.age_rating);
+            if (requiredAge > 0) {
+                const confirmedAge = await getConfirmedAge();
+                if (confirmedAge < requiredAge) {
+                    showAgeModal(currentStory.age_rating, requiredAge);
                     return;
                 }
             }
@@ -573,48 +574,72 @@
             showStoryContent();
         }
         
-        function needsAgeConfirmation(rating) {
-            return rating === '18+' || rating === '16+';
+        function getRequiredAge(rating) {
+            switch (rating) {
+                case '18+': return 18;
+                case '16+': return 16;
+                case '12+': return 12;
+                default: return 0;
+            }
         }
         
-        async function checkAgeConfirmation() {
+        async function getConfirmedAge() {
             // Проверяем localStorage
-            const localConfirmed = localStorage.getItem('stroka_age_confirmed');
-            if (localConfirmed === 'true') return true;
+            const localAge = parseInt(localStorage.getItem('stroka_confirmed_age') || '0');
             
             // Проверяем в базе (если авторизован)
             if (currentUser?.id) {
                 const { data: author } = await db
                     .from('authors')
-                    .select('age_confirmed')
+                    .select('confirmed_age')
                     .eq('id', currentUser.id)
                     .single();
                 
-                if (author?.age_confirmed) {
-                    localStorage.setItem('stroka_age_confirmed', 'true');
-                    return true;
+                const dbAge = author?.confirmed_age || 0;
+                
+                // Берём максимум из localStorage и базы
+                const maxAge = Math.max(localAge, dbAge);
+                
+                // Синхронизируем
+                if (maxAge > localAge) {
+                    localStorage.setItem('stroka_confirmed_age', maxAge.toString());
                 }
+                if (maxAge > dbAge) {
+                    await db
+                        .from('authors')
+                        .update({ confirmed_age: maxAge, age_confirmed_at: new Date().toISOString() })
+                        .eq('id', currentUser.id);
+                }
+                
+                return maxAge;
             }
             
-            return false;
+            return localAge;
         }
         
-        function showAgeModal(rating) {
+        function showAgeModal(rating, requiredAge) {
             document.getElementById('age-modal-rating').textContent = rating;
+            document.getElementById('age-confirm-btn').textContent = `Мне есть ${requiredAge} лет`;
+            document.getElementById('age-confirm-btn').setAttribute('data-age', requiredAge);
             document.getElementById('age-modal').style.display = 'flex';
             document.getElementById('loading').style.display = 'none';
         }
         
         async function confirmAge() {
+            const age = parseInt(document.getElementById('age-confirm-btn').getAttribute('data-age'));
+            
             // Сохраняем в localStorage
-            localStorage.setItem('stroka_age_confirmed', 'true');
+            const currentConfirmed = parseInt(localStorage.getItem('stroka_confirmed_age') || '0');
+            if (age > currentConfirmed) {
+                localStorage.setItem('stroka_confirmed_age', age.toString());
+            }
             
             // Сохраняем в базу (если авторизован)
             if (currentUser?.id) {
                 await db
                     .from('authors')
                     .update({ 
-                        age_confirmed: true,
+                        confirmed_age: age,
                         age_confirmed_at: new Date().toISOString()
                     })
                     .eq('id', currentUser.id);
