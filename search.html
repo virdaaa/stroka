@@ -20,7 +20,6 @@
             --accent: #c9a55c;
             --accent-dim: #8a7340;
             --border: #2a2a2c;
-            
             --font-display: 'Cormorant Garamond', serif;
             --font-ui: 'IBM Plex Sans', sans-serif;
         }
@@ -46,10 +45,26 @@
         /* Header */
         .header {
             padding: 16px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             border-bottom: 1px solid var(--border);
         }
         
-        .search-input-wrapper {
+        .header-title {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        /* Search Box */
+        .search-box {
+            padding: 16px 20px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .search-input-wrap {
             position: relative;
         }
         
@@ -69,6 +84,10 @@
             border-color: var(--accent);
         }
         
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+        
         .search-icon {
             position: absolute;
             left: 16px;
@@ -83,75 +102,41 @@
             right: 12px;
             top: 50%;
             transform: translateY(-50%);
-            background: var(--text-muted);
+            background: none;
             border: none;
-            color: var(--bg-primary);
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            font-size: 12px;
+            font-size: 18px;
+            color: var(--text-muted);
             cursor: pointer;
             display: none;
         }
         
-        .search-clear.visible { display: block; }
-        
-        /* Filters */
-        .filters {
-            padding: 12px 20px;
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            border-bottom: 1px solid var(--border);
-            -webkit-overflow-scrolling: touch;
+        .search-clear.visible {
+            display: block;
         }
         
-        .filters::-webkit-scrollbar { display: none; }
+        /* Tabs */
+        .search-tabs {
+            display: flex;
+            padding: 12px 20px;
+            gap: 8px;
+            border-bottom: 1px solid var(--border);
+        }
         
-        .filter-chip {
-            padding: 8px 14px;
-            background: var(--bg-card);
+        .search-tab {
+            padding: 8px 16px;
+            background: none;
             border: 1px solid var(--border);
             border-radius: 20px;
             color: var(--text-secondary);
-            font-size: 13px;
+            font-family: var(--font-ui);
+            font-size: 14px;
             cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s;
         }
         
-        .filter-chip:hover {
-            border-color: var(--text-muted);
-        }
-        
-        .filter-chip.active {
+        .search-tab.active {
             background: var(--accent);
             border-color: var(--accent);
             color: var(--bg-primary);
-        }
-        
-        /* Time Filter */
-        .time-filters {
-            padding: 12px 20px;
-            display: flex;
-            gap: 8px;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .time-chip {
-            padding: 6px 12px;
-            background: none;
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            color: var(--text-muted);
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .time-chip.active {
-            border-color: var(--accent);
-            color: var(--accent);
         }
         
         /* Results */
@@ -174,19 +159,21 @@
             padding: 16px;
             margin-bottom: 12px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: border 0.2s;
+            border: 1px solid transparent;
         }
         
         .story-card:hover {
-            border: 1px solid var(--accent);
-            margin: -1px;
-            margin-bottom: 11px;
+            border-color: var(--accent);
         }
         
         .story-card-title {
             font-family: var(--font-display);
             font-size: 18px;
             margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .story-card-author {
@@ -200,16 +187,86 @@
             color: var(--text-muted);
             display: flex;
             gap: 12px;
+            flex-wrap: wrap;
         }
         
-        .story-card-genre {
-            display: inline-block;
-            padding: 4px 8px;
-            background: var(--bg-input);
-            border-radius: 4px;
-            font-size: 11px;
-            color: var(--text-secondary);
+        .story-card-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
             margin-top: 8px;
+        }
+        
+        .story-tag {
+            font-size: 11px;
+            padding: 3px 8px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            color: var(--text-secondary);
+        }
+        
+        .age-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        
+        .age-badge.age-0 { background: #4a822; color: #4a8; border: 1px solid #4a8; }
+        .age-badge.age-6 { background: #8bc34a22; color: #8bc34a; border: 1px solid #8bc34a; }
+        .age-badge.age-12 { background: #ffc10722; color: #ffc107; border: 1px solid #ffc107; }
+        .age-badge.age-16 { background: #ff980022; color: #ff9800; border: 1px solid #ff9800; }
+        .age-badge.age-18 { background: #f4433622; color: #f44336; border: 1px solid #f44336; }
+        
+        /* Author Card */
+        .author-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        
+        .author-card:hover {
+            border-color: var(--accent);
+        }
+        
+        .author-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .author-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .author-name {
+            font-family: var(--font-display);
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        
+        .author-stats {
+            font-size: 12px;
+            color: var(--text-muted);
         }
         
         /* Empty State */
@@ -228,17 +285,47 @@
             margin-bottom: 8px;
         }
         
-        /* Initial State */
-        .initial-state {
-            padding: 20px 0;
+        /* Recent Searches */
+        .recent-section {
+            margin-bottom: 24px;
         }
         
         .section-title {
             font-size: 14px;
             color: var(--text-muted);
             margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
+        .clear-btn {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .recent-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+        }
+        
+        .recent-item:hover {
+            color: var(--accent);
+        }
+        
+        .recent-icon {
+            font-size: 16px;
+            color: var(--text-muted);
+        }
+        
+        /* Popular Tags */
         .popular-tags {
             display: flex;
             flex-wrap: wrap;
@@ -246,14 +333,13 @@
         }
         
         .popular-tag {
-            padding: 10px 16px;
+            padding: 8px 14px;
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-size: 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
             cursor: pointer;
-            transition: all 0.2s;
         }
         
         .popular-tag:hover {
@@ -286,7 +372,6 @@
             color: var(--text-muted);
             font-size: 11px;
             padding: 4px 16px;
-            transition: color 0.2s;
         }
         
         .bottom-nav-item:hover { color: var(--text-secondary); }
@@ -296,52 +381,81 @@
             font-size: 22px;
             margin-bottom: 2px;
         }
+        
+        /* Skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-secondary) 50%, var(--bg-card) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .skeleton-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .skeleton-title { height: 22px; width: 70%; margin-bottom: 8px; }
+        .skeleton-author { height: 14px; width: 40%; margin-bottom: 12px; }
+        .skeleton-meta { height: 12px; width: 60%; }
     </style>
 </head>
 <body>
     <div class="app">
         <header class="header">
-            <div class="search-input-wrapper">
-                <span class="search-icon">🔍</span>
-                <input type="text" class="search-input" id="search-input" placeholder="Название, автор, тема...">
-                <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
-            </div>
+            <div class="header-title">Поиск</div>
         </header>
         
-        <div class="filters" id="genre-filters">
-            <div class="filter-chip active" data-genre="">Все</div>
-            <div class="filter-chip" data-genre="Хоррор">Хоррор</div>
-            <div class="filter-chip" data-genre="Мистика">Мистика</div>
-            <div class="filter-chip" data-genre="Фантастика">Фантастика</div>
-            <div class="filter-chip" data-genre="Триллер">Триллер</div>
-            <div class="filter-chip" data-genre="Фэнтези">Фэнтези</div>
-            <div class="filter-chip" data-genre="Драма">Драма</div>
-            <div class="filter-chip" data-genre="Детектив">Детектив</div>
+        <div class="search-box">
+            <div class="search-input-wrap">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="search-input" placeholder="Название, автор или тег..." autocomplete="off">
+                <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
+            </div>
         </div>
         
-        <div class="time-filters">
-            <div class="time-chip active" data-time="">Любое</div>
-            <div class="time-chip" data-time="10">до 10 мин</div>
-            <div class="time-chip" data-time="30">до 30 мин</div>
-            <div class="time-chip" data-time="60">до часа</div>
+        <div class="search-tabs" id="search-tabs" style="display: none;">
+            <button class="search-tab active" data-tab="stories">Рассказы</button>
+            <button class="search-tab" data-tab="authors">Авторы</button>
         </div>
         
         <div class="results" id="results">
-            <div class="initial-state" id="initial-state">
-                <div class="section-title">Популярные темы</div>
-                <div class="popular-tags">
-                    <div class="popular-tag" onclick="searchTag('призраки')">👻 Призраки</div>
-                    <div class="popular-tag" onclick="searchTag('космос')">🚀 Космос</div>
-                    <div class="popular-tag" onclick="searchTag('апокалипсис')">💀 Апокалипсис</div>
-                    <div class="popular-tag" onclick="searchTag('любовь')">❤️ Любовь</div>
-                    <div class="popular-tag" onclick="searchTag('детектив')">🔍 Детектив</div>
-                    <div class="popular-tag" onclick="searchTag('монстры')">👹 Монстры</div>
+            <!-- Initial State -->
+            <div id="initial-state">
+                <div class="recent-section" id="recent-section" style="display: none;">
+                    <div class="section-title">
+                        Недавние поиски
+                        <button class="clear-btn" onclick="clearRecent()">Очистить</button>
+                    </div>
+                    <div id="recent-list"></div>
+                </div>
+                
+                <div class="recent-section">
+                    <div class="section-title">Популярные жанры</div>
+                    <div class="popular-tags">
+                        <span class="popular-tag" onclick="searchTag('Хоррор')">Хоррор</span>
+                        <span class="popular-tag" onclick="searchTag('Мистика')">Мистика</span>
+                        <span class="popular-tag" onclick="searchTag('Фантастика')">Фантастика</span>
+                        <span class="popular-tag" onclick="searchTag('Триллер')">Триллер</span>
+                        <span class="popular-tag" onclick="searchTag('Драма')">Драма</span>
+                        <span class="popular-tag" onclick="searchTag('Детектив')">Детектив</span>
+                        <span class="popular-tag" onclick="searchTag('Фэнтези')">Фэнтези</span>
+                        <span class="popular-tag" onclick="searchTag('Романтика')">Романтика</span>
+                    </div>
                 </div>
             </div>
-            <div id="results-list" style="display: none;"></div>
+            
+            <!-- Search Results -->
+            <div id="search-results" style="display: none;"></div>
         </div>
         
-        <!-- Bottom Navigation -->
         <nav class="bottom-nav">
             <a href="/" class="bottom-nav-item">
                 <span class="bottom-nav-icon">🏠</span>
@@ -363,122 +477,115 @@
     </div>
 
     <script>
-        // ===== CONFIG =====
         const SUPABASE_URL = 'https://xcnvejvkklypvkzkanwj.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbnZlanZra2x5cHZremthbndqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNjU4NzIsImV4cCI6MjA4MzY0MTg3Mn0.8ldNxEbzc8aNJYWtOgP0b5lOsPhl4zMeoht2rn0DeP8';
-        
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
-        // ===== STATE =====
-        let searchQuery = '';
-        let selectedGenre = '';
-        let selectedTime = '';
+        const RECENT_KEY = 'stroka_recent_searches';
+        let currentTab = 'stories';
         let searchTimeout = null;
         
         // ===== INIT =====
         function init() {
+            loadRecentSearches();
             setupEventListeners();
         }
         
-        // ===== EVENT LISTENERS =====
         function setupEventListeners() {
-            const searchInput = document.getElementById('search-input');
-            const searchClear = document.getElementById('search-clear');
+            const input = document.getElementById('search-input');
+            const clearBtn = document.getElementById('search-clear');
             
-            searchInput.addEventListener('input', (e) => {
-                searchQuery = e.target.value;
-                searchClear.classList.toggle('visible', searchQuery.length > 0);
+            input.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                clearBtn.classList.toggle('visible', query.length > 0);
                 
+                // Debounce search
                 clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    if (searchQuery.length >= 2 || selectedGenre || selectedTime) {
-                        performSearch();
-                    } else if (searchQuery.length === 0 && !selectedGenre && !selectedTime) {
-                        showInitialState();
+                if (query.length >= 2) {
+                    searchTimeout = setTimeout(() => search(query), 300);
+                } else if (query.length === 0) {
+                    showInitialState();
+                }
+            });
+            
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const query = e.target.value.trim();
+                    if (query.length >= 2) {
+                        clearTimeout(searchTimeout);
+                        search(query);
+                        saveRecentSearch(query);
                     }
-                }, 300);
+                }
             });
             
-            document.querySelectorAll('.filter-chip').forEach(chip => {
-                chip.addEventListener('click', () => {
-                    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-                    chip.classList.add('active');
-                    selectedGenre = chip.dataset.genre;
-                    performSearch();
-                });
-            });
-            
-            document.querySelectorAll('.time-chip').forEach(chip => {
-                chip.addEventListener('click', () => {
-                    document.querySelectorAll('.time-chip').forEach(c => c.classList.remove('active'));
-                    chip.classList.add('active');
-                    selectedTime = chip.dataset.time;
-                    performSearch();
+            // Tab switching
+            document.querySelectorAll('.search-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentTab = tab.dataset.tab;
+                    
+                    const query = document.getElementById('search-input').value.trim();
+                    if (query.length >= 2) {
+                        search(query);
+                    }
                 });
             });
         }
         
         // ===== SEARCH =====
-        async function performSearch() {
-            const resultsList = document.getElementById('results-list');
-            const initialState = document.getElementById('initial-state');
+        async function search(query) {
+            document.getElementById('initial-state').style.display = 'none';
+            document.getElementById('search-tabs').style.display = 'flex';
+            document.getElementById('search-results').style.display = 'block';
             
-            initialState.style.display = 'none';
-            resultsList.style.display = 'block';
-            resultsList.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 20px;">Поиск...</div>';
+            // Show skeleton
+            document.getElementById('search-results').innerHTML = `
+                <div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-author"></div><div class="skeleton skeleton-meta"></div></div>
+                <div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-author"></div><div class="skeleton skeleton-meta"></div></div>
+            `;
             
+            if (currentTab === 'stories') {
+                await searchStories(query);
+            } else {
+                await searchAuthors(query);
+            }
+        }
+        
+        async function searchStories(query) {
             try {
-                let query = db
+                const { data: stories, error } = await db
                     .from('stories')
-                    .select('*, authors(pen_name)')
-                    .eq('status', 'published');
-                
-                if (searchQuery && searchQuery.length >= 2) {
-                    query = query.or(`title.ilike.%${searchQuery}%,full_text.ilike.%${searchQuery}%`);
-                }
-                
-                if (selectedGenre) {
-                    query = query.eq('genre', selectedGenre);
-                }
-                
-                if (selectedTime) {
-                    query = query.lte('reading_time_minutes', parseInt(selectedTime));
-                }
-                
-                query = query.order('published_at', { ascending: false }).limit(50);
-                
-                const { data: stories, error } = await query;
+                    .select('id, title, genres, genre, subgenres, age_rating, reading_time_minutes, authors(pen_name)')
+                    .eq('status', 'published')
+                    .or(`title.ilike.%${query}%,genre.ilike.%${query}%`)
+                    .order('published_at', { ascending: false })
+                    .limit(30);
                 
                 if (error) throw error;
                 
-                if (!stories || stories.length === 0) {
-                    resultsList.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-state-icon">🔍</div>
-                            <div class="empty-state-text">Ничего не найдено</div>
-                        </div>
-                    `;
-                    return;
-                }
+                // Также ищем по тегам (subgenres)
+                const { data: byTags } = await db
+                    .from('stories')
+                    .select('id, title, genres, genre, subgenres, age_rating, reading_time_minutes, authors(pen_name)')
+                    .eq('status', 'published')
+                    .contains('subgenres', [query])
+                    .limit(20);
                 
-                resultsList.innerHTML = `
-                    <div class="results-count">Найдено: ${stories.length}</div>
-                    ${stories.map(s => `
-                        <div class="story-card" onclick="openStory('${s.id}')">
-                            <div class="story-card-title">${s.title}</div>
-                            <div class="story-card-author">${s.authors?.pen_name || 'Автор'}</div>
-                            <div class="story-card-meta">
-                                <span>${s.reading_time_minutes || '?'} мин</span>
-                                <span>${s.character_count?.toLocaleString() || '?'} зн.</span>
-                            </div>
-                            ${s.genre ? `<span class="story-card-genre">${s.genre}</span>` : ''}
-                        </div>
-                    `).join('')}
-                `;
+                // Объединяем результаты
+                const allResults = [...(stories || [])];
+                (byTags || []).forEach(s => {
+                    if (!allResults.find(r => r.id === s.id)) {
+                        allResults.push(s);
+                    }
+                });
+                
+                renderStoryResults(allResults, query);
                 
             } catch (error) {
                 console.error('Search error:', error);
-                resultsList.innerHTML = `
+                document.getElementById('search-results').innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">😕</div>
                         <div class="empty-state-text">Ошибка поиска</div>
@@ -487,32 +594,198 @@
             }
         }
         
-        function showInitialState() {
-            document.getElementById('initial-state').style.display = 'block';
-            document.getElementById('results-list').style.display = 'none';
+        async function searchAuthors(query) {
+            try {
+                const { data: authors, error } = await db
+                    .from('authors')
+                    .select('id, pen_name, name, bio')
+                    .or(`pen_name.ilike.%${query}%,name.ilike.%${query}%`)
+                    .limit(20);
+                
+                if (error) throw error;
+                
+                // Получаем количество рассказов для каждого автора
+                const authorIds = (authors || []).map(a => a.id);
+                const { data: storyCounts } = await db
+                    .from('stories')
+                    .select('author_id')
+                    .eq('status', 'published')
+                    .in('author_id', authorIds);
+                
+                const countMap = {};
+                (storyCounts || []).forEach(s => {
+                    countMap[s.author_id] = (countMap[s.author_id] || 0) + 1;
+                });
+                
+                const authorsWithCounts = (authors || []).map(a => ({
+                    ...a,
+                    story_count: countMap[a.id] || 0
+                })).filter(a => a.story_count > 0); // Только авторы с рассказами
+                
+                renderAuthorResults(authorsWithCounts, query);
+                
+            } catch (error) {
+                console.error('Search error:', error);
+                document.getElementById('search-results').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">😕</div>
+                        <div class="empty-state-text">Ошибка поиска</div>
+                    </div>
+                `;
+            }
         }
         
-        function clearSearch() {
-            document.getElementById('search-input').value = '';
-            document.getElementById('search-clear').classList.remove('visible');
-            searchQuery = '';
+        // ===== RENDER =====
+        function renderStoryResults(stories, query) {
+            const container = document.getElementById('search-results');
             
-            if (!selectedGenre && !selectedTime) {
-                showInitialState();
-            } else {
-                performSearch();
+            if (stories.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <div class="empty-state-text">Ничего не найдено</div>
+                        <div class="empty-state-subtext" style="font-size: 13px; color: var(--text-muted);">Попробуйте другой запрос</div>
+                    </div>
+                `;
+                return;
             }
+            
+            container.innerHTML = `
+                <div class="results-count">Найдено: ${stories.length}</div>
+                ${stories.map(s => {
+                    const genreText = s.genres?.length 
+                        ? s.genres.map(g => g.name).join(', ') 
+                        : (s.genre || 'Проза');
+                    const ageRating = s.age_rating || '16+';
+                    
+                    return `
+                    <div class="story-card" onclick="openStory('${s.id}')">
+                        <div class="story-card-title">
+                            ${highlightMatch(s.title, query)}
+                            <span class="age-badge age-${ageRating.replace('+', '')}">${ageRating}</span>
+                        </div>
+                        <div class="story-card-author">${s.authors?.pen_name || 'Автор'}</div>
+                        <div class="story-card-meta">
+                            <span>${genreText}</span>
+                            <span>⏱ ${s.reading_time_minutes || '?'} мин</span>
+                        </div>
+                        ${s.subgenres?.length ? `
+                        <div class="story-card-tags">
+                            ${s.subgenres.slice(0, 4).map(t => `<span class="story-tag">${t}</span>`).join('')}
+                        </div>
+                        ` : ''}
+                    </div>
+                `}).join('')}
+            `;
+        }
+        
+        function renderAuthorResults(authors, query) {
+            const container = document.getElementById('search-results');
+            
+            if (authors.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <div class="empty-state-text">Авторы не найдены</div>
+                        <div class="empty-state-subtext" style="font-size: 13px; color: var(--text-muted);">Попробуйте другой запрос</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="results-count">Найдено: ${authors.length}</div>
+                ${authors.map(a => `
+                    <div class="author-card" onclick="searchByAuthor('${a.pen_name || a.name}')">
+                        <div class="author-avatar">${(a.pen_name || a.name || 'A').charAt(0).toUpperCase()}</div>
+                        <div class="author-info">
+                            <div class="author-name">${highlightMatch(a.pen_name || a.name, query)}</div>
+                            <div class="author-stats">${a.story_count} ${pluralize(a.story_count, 'рассказ', 'рассказа', 'рассказов')}</div>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+        
+        function highlightMatch(text, query) {
+            if (!text || !query) return text;
+            const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+            return text.replace(regex, '<span style="color: var(--accent);">$1</span>');
+        }
+        
+        function escapeRegex(str) {
+            return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+        
+        function pluralize(n, one, few, many) {
+            if (n % 10 === 1 && n % 100 !== 11) return one;
+            if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return few;
+            return many;
+        }
+        
+        // ===== ACTIONS =====
+        function openStory(storyId) {
+            window.location.href = `/read.html?id=${storyId}`;
         }
         
         function searchTag(tag) {
             document.getElementById('search-input').value = tag;
             document.getElementById('search-clear').classList.add('visible');
-            searchQuery = tag;
-            performSearch();
+            search(tag);
+            saveRecentSearch(tag);
         }
         
-        function openStory(storyId) {
-            window.location.href = `/read.html?id=${storyId}`;
+        function searchByAuthor(authorName) {
+            // Переключаемся на вкладку рассказов и ищем по автору
+            currentTab = 'stories';
+            document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector('.search-tab[data-tab="stories"]').classList.add('active');
+            
+            document.getElementById('search-input').value = authorName;
+            search(authorName);
+        }
+        
+        function clearSearch() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('search-clear').classList.remove('visible');
+            showInitialState();
+        }
+        
+        function showInitialState() {
+            document.getElementById('initial-state').style.display = 'block';
+            document.getElementById('search-tabs').style.display = 'none';
+            document.getElementById('search-results').style.display = 'none';
+        }
+        
+        // ===== RECENT SEARCHES =====
+        function loadRecentSearches() {
+            const recent = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+            
+            if (recent.length === 0) {
+                document.getElementById('recent-section').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('recent-section').style.display = 'block';
+            document.getElementById('recent-list').innerHTML = recent.slice(0, 5).map(q => `
+                <div class="recent-item" onclick="searchTag('${q}')">
+                    <span class="recent-icon">🕒</span>
+                    <span>${q}</span>
+                </div>
+            `).join('');
+        }
+        
+        function saveRecentSearch(query) {
+            let recent = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+            recent = recent.filter(q => q.toLowerCase() !== query.toLowerCase());
+            recent.unshift(query);
+            recent = recent.slice(0, 10);
+            localStorage.setItem(RECENT_KEY, JSON.stringify(recent));
+        }
+        
+        function clearRecent() {
+            localStorage.removeItem(RECENT_KEY);
+            document.getElementById('recent-section').style.display = 'none';
         }
         
         // ===== START =====
