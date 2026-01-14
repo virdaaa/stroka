@@ -139,6 +139,7 @@
             <div id="auth-screen" class="auth-screen" style="display: none;">
                 <div class="auth-title">Добро пожаловать</div>
                 <div class="auth-subtitle">Войдите, чтобы сохранять прогресс и публиковать рассказы</div>
+                <div class="platform-stats" id="platform-stats" style="display: none; margin-bottom: 24px; padding: 12px 20px; background: var(--bg-card); border-radius: 10px; font-size: 14px; color: var(--text-secondary);"></div>
                 <div style="margin-bottom: 24px;">
                     <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="stroka_auth_bot" data-size="large" data-radius="8" data-onauth="onTelegramAuth(user)" data-request-access="write"></script>
                 </div>
@@ -409,6 +410,7 @@
             } else {
                 loadingScreen.style.display = 'none';
                 authScreen.style.display = 'flex';
+                loadPlatformStats();
             }
         }
         
@@ -583,6 +585,38 @@
             if (seconds < 86400) return Math.floor(seconds / 3600) + ' ч назад';
             if (seconds < 604800) return Math.floor(seconds / 86400) + ' дн назад';
             return date.toLocaleDateString('ru-RU');
+        }
+        
+        async function loadPlatformStats() {
+            try {
+                // Считаем читателей (всех зарегистрированных)
+                var { count: readersCount } = await db.from('authors').select('*', { count: 'exact', head: true });
+                
+                // Считаем опубликованные рассказы
+                var { count: storiesCount } = await db.from('stories').select('*', { count: 'exact', head: true }).eq('status', 'published');
+                
+                // Считаем авторов с опубликованными рассказами
+                var { data: authorsData } = await db.from('stories').select('author_id').eq('status', 'published');
+                var uniqueAuthors = new Set((authorsData || []).map(function(s) { return s.author_id; }));
+                var authorsCount = uniqueAuthors.size;
+                
+                var statsEl = document.getElementById('platform-stats');
+                
+                if (readersCount >= 1000) {
+                    // Полная статистика с точными числами
+                    statsEl.innerHTML = '✍️ ' + authorsCount.toLocaleString('ru-RU') + ' авторов • 📚 ' + storiesCount.toLocaleString('ru-RU') + ' рассказов • 👥 ' + readersCount.toLocaleString('ru-RU') + ' читателей';
+                    statsEl.style.display = 'block';
+                } else if (readersCount >= 200) {
+                    // Средний вариант — акцент на контент
+                    statsEl.innerHTML = '📚 ' + storiesCount.toLocaleString('ru-RU') + ' рассказов от ' + authorsCount + ' авторов';
+                    statsEl.style.display = 'block';
+                } else {
+                    // Мало — не показываем
+                    statsEl.style.display = 'none';
+                }
+            } catch (e) {
+                console.error('Error loading platform stats:', e);
+            }
         }
         
         checkAuthAndLoad();
