@@ -418,6 +418,75 @@
             border-color: var(--text-muted);
         }
         
+        /* Notifications */
+        .notifications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .notification-item {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 14px;
+            display: flex;
+            gap: 12px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            transition: border-color 0.2s;
+        }
+        
+        .notification-item:hover {
+            border-color: var(--accent);
+        }
+        
+        .notification-item.unread {
+            border-left: 3px solid var(--accent);
+        }
+        
+        .notification-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        
+        .notification-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .notification-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .notification-message {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+        
+        .notification-time {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+        
+        .mark-all-read {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: auto;
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
         .my-story-actions {
             display: flex;
             gap: 8px;
@@ -539,6 +608,15 @@
             
             <!-- Profile Content (hidden until auth) -->
             <div id="profile-content" style="display: none;">
+                <!-- Notifications -->
+                <div class="profile-section" id="notifications-section" style="display: none;">
+                    <div class="section-title">
+                        🔔 Уведомления
+                        <button class="mark-all-read" id="mark-all-read" onclick="markAllRead()">Прочитать все</button>
+                    </div>
+                    <div id="notifications-list"></div>
+                </div>
+                
                 <!-- Author CTA or My Stories -->
                 <div id="author-section"></div>
                 
@@ -823,6 +901,7 @@
                     
                     loadAuthorSection();
                     loadStats();
+                    loadNotifications();
                     return;
                 }
             }
@@ -856,6 +935,7 @@
                 
                 loadAuthorSection();
                 loadStats();
+                loadNotifications();
             } else {
                 // Не авторизован — показываем форму входа
                 loadingScreen.style.display = 'none';
@@ -1195,6 +1275,88 @@
             } catch (error) {
                 alert('Ошибка сохранения: ' + error.message);
             }
+        }
+        
+        // ===== NOTIFICATIONS =====
+        async function loadNotifications() {
+            if (!currentUser?.id) return;
+            
+            try {
+                const { data: notifications, error } = await db
+                    .from('notifications')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+                
+                if (error) throw error;
+                
+                const section = document.getElementById('notifications-section');
+                const list = document.getElementById('notifications-list');
+                
+                if (!notifications || notifications.length === 0) {
+                    section.style.display = 'none';
+                    return;
+                }
+                
+                section.style.display = 'block';
+                
+                list.innerHTML = notifications.map(n => {
+                    const icon = n.type === 'approved' ? '✅' : n.type === 'rejected' ? '❌' : '🔔';
+                    const timeAgo = formatTimeAgo(new Date(n.created_at));
+                    
+                    return `
+                        <div class="notification-item ${n.is_read ? '' : 'unread'}" onclick="openNotification('${n.id}', '${n.link || ''}')">
+                            <div class="notification-icon">${icon}</div>
+                            <div class="notification-content">
+                                <div class="notification-title">${n.title}</div>
+                                <div class="notification-message">${n.message || ''}</div>
+                                <div class="notification-time">${timeAgo}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (e) {
+                console.error('Notifications error:', e);
+            }
+        }
+        
+        async function openNotification(id, link) {
+            // Помечаем как прочитанное
+            await db
+                .from('notifications')
+                .update({ is_read: true })
+                .eq('id', id);
+            
+            if (link) {
+                window.location.href = link;
+            } else {
+                // Перезагружаем список
+                loadNotifications();
+            }
+        }
+        
+        async function markAllRead() {
+            if (!currentUser?.id) return;
+            
+            await db
+                .from('notifications')
+                .update({ is_read: true })
+                .eq('user_id', currentUser.id);
+            
+            loadNotifications();
+        }
+        
+        function formatTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            
+            if (seconds < 60) return 'только что';
+            if (seconds < 3600) return Math.floor(seconds / 60) + ' мин назад';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + ' ч назад';
+            if (seconds < 604800) return Math.floor(seconds / 86400) + ' дн назад';
+            
+            return date.toLocaleDateString('ru-RU');
         }
         
         // ===== INIT =====
