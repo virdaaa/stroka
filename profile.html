@@ -10,642 +10,117 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg-primary: #0a0a0b;
-            --bg-secondary: #111113;
-            --bg-card: #161618;
-            --bg-input: #1a1a1c;
-            --text-primary: #e8e6e3;
-            --text-secondary: #8a8a8a;
-            --text-muted: #5a5a5a;
-            --accent: #c9a55c;
-            --accent-dim: #8a7340;
-            --border: #2a2a2c;
-            
-            --font-display: 'Cormorant Garamond', serif;
-            --font-ui: 'IBM Plex Sans', sans-serif;
+            --bg-primary: #0a0a0b; --bg-secondary: #111113; --bg-card: #161618; --bg-input: #1a1a1c;
+            --text-primary: #e8e6e3; --text-secondary: #8a8a8a; --text-muted: #5a5a5a;
+            --accent: #c9a55c; --accent-dim: #8a7340; --border: #2a2a2c;
+            --font-display: 'Cormorant Garamond', serif; --font-ui: 'IBM Plex Sans', sans-serif;
         }
-        
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: var(--font-ui);
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-        }
-        
-        .app {
-            max-width: 480px;
-            margin: 0 auto;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding-bottom: 70px;
-        }
-        
-        .header {
-            padding: 16px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .header-title {
-            font-family: var(--font-display);
-            font-size: 24px;
-            font-weight: 600;
-        }
-        
-        .btn-logout {
-            padding: 8px 16px;
-            background: var(--bg-card);
-            color: var(--text-secondary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 13px;
-            cursor: pointer;
-        }
-        
-        .btn-logout:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-        
-        .content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-        }
-        
-        .auth-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 60vh;
-            padding: 20px;
-            text-align: center;
-        }
-        
-        .auth-title {
-            font-family: var(--font-display);
-            font-size: 28px;
-            margin-bottom: 8px;
-        }
-        
-        .auth-subtitle {
-            color: var(--text-secondary);
-            margin-bottom: 32px;
-            font-size: 14px;
-        }
-        
-        .auth-form {
-            width: 100%;
-            max-width: 300px;
-        }
-        
-        .input {
-            width: 100%;
-            padding: 14px 16px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-family: var(--font-ui);
-            font-size: 15px;
-            margin-bottom: 12px;
-        }
-        
-        .input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-        
-        .btn {
-            width: 100%;
-            padding: 14px 24px;
-            background: var(--accent);
-            color: var(--bg-primary);
-            border: none;
-            border-radius: 8px;
-            font-family: var(--font-ui);
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-        }
-        
+        body { font-family: var(--font-ui); background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
+        .app { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; padding-bottom: 70px; }
+        .header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        .header-title { font-family: var(--font-display); font-size: 24px; font-weight: 600; }
+        .btn-logout { padding: 8px 16px; background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border); border-radius: 8px; font-size: 13px; cursor: pointer; }
+        .btn-logout:hover { border-color: var(--accent); color: var(--accent); }
+        .content { flex: 1; overflow-y: auto; padding: 20px; }
+        .auth-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; padding: 20px; text-align: center; }
+        .auth-title { font-family: var(--font-display); font-size: 28px; margin-bottom: 8px; }
+        .auth-subtitle { color: var(--text-secondary); margin-bottom: 32px; font-size: 14px; }
+        .auth-form { width: 100%; max-width: 300px; }
+        .input { width: 100%; padding: 14px 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-family: var(--font-ui); font-size: 15px; margin-bottom: 12px; }
+        .input:focus { outline: none; border-color: var(--accent); }
+        .btn { width: 100%; padding: 14px 24px; background: var(--accent); color: var(--bg-primary); border: none; border-radius: 8px; font-family: var(--font-ui); font-size: 15px; font-weight: 500; cursor: pointer; }
         .btn:hover { background: var(--accent-dim); }
-        
-        .btn-secondary {
-            background: var(--bg-card);
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-            margin-top: 12px;
-        }
-        
-        .divider {
-            color: var(--text-muted);
-            margin: 24px 0;
-            font-size: 13px;
-        }
-        
-        .profile-section {
-            margin-bottom: 24px;
-        }
-        
-        .section-title {
-            font-family: var(--font-display);
-            font-size: 20px;
-            margin-bottom: 12px;
-        }
-        
-        .author-cta {
-            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 24px;
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        
-        .author-cta-icon {
-            font-size: 40px;
-            margin-bottom: 12px;
-        }
-        
-        .author-cta-title {
-            font-family: var(--font-display);
-            font-size: 22px;
-            margin-bottom: 8px;
-        }
-        
-        .author-cta-text {
-            color: var(--text-secondary);
-            font-size: 14px;
-            margin-bottom: 16px;
-        }
-        
-        .author-cta .btn {
-            width: auto;
-            padding: 12px 32px;
-        }
-        
-        .my-story-item {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-            position: relative;
-        }
-        
-        .my-story-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 8px;
-        }
-        
-        .my-story-title {
-            font-family: var(--font-display);
-            font-size: 18px;
-            flex: 1;
-            padding-right: 12px;
-        }
-        
-        .my-story-status {
-            font-size: 11px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            background: var(--accent);
-            color: var(--bg-primary);
-        }
-        
-        .my-story-status.draft {
-            background: var(--text-muted);
-            color: var(--bg-primary);
-        }
-        
-        .my-story-status.pending {
-            background: #ff9800;
-            color: var(--bg-primary);
-        }
-        
-        .my-story-stats {
-            display: flex;
-            gap: 16px;
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
-        
-        .my-story-metrics {
-            display: flex;
-            gap: 16px;
-            font-size: 13px;
-            color: var(--accent);
-            padding: 8px 0;
-            border-top: 1px solid var(--border);
-            margin-top: 8px;
-        }
-        
-        .my-story-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-            align-items: center;
-        }
-        
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 12px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            cursor: pointer;
-        }
-        
-        .btn-small:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-        
-        /* Dropdown Menu */
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        
-        .dropdown-toggle {
-            padding: 6px 12px;
-            font-size: 12px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
-        .dropdown-toggle:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-        
-        .dropdown-menu {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            margin-top: 4px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            min-width: 140px;
-            z-index: 100;
-            display: none;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-        
-        .dropdown-menu.show {
-            display: block;
-        }
-        
-        .dropdown-item {
-            display: block;
-            width: 100%;
-            padding: 10px 14px;
-            font-size: 13px;
-            color: var(--text-primary);
-            background: none;
-            border: none;
-            text-align: left;
-            cursor: pointer;
-            text-decoration: none;
-        }
-        
-        .dropdown-item:hover {
-            background: var(--bg-secondary);
-        }
-        
-        .dropdown-item.danger {
-            color: #e74c3c;
-        }
-        
-        .dropdown-item.danger:hover {
-            background: rgba(231, 76, 60, 0.1);
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-        
-        .stat-card {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 20px 16px;
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-family: var(--font-display);
-            font-size: 32px;
-            color: var(--accent);
-        }
-        
-        .stat-label {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-        
-        .achievements-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .achievement {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            opacity: 0.5;
-            transition: opacity 0.3s;
-        }
-        
-        .achievement.unlocked { 
-            opacity: 1; 
-        }
-        
-        .achievement.unlocked .achievement-icon {
-            transform: scale(1.1);
-        }
-        
-        .achievement-icon {
-            font-size: 32px;
-            flex-shrink: 0;
-            transition: transform 0.3s;
-        }
-        
-        .achievement-info {
-            flex: 1;
-            min-width: 0;
-        }
-        
-        .achievement-name {
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 4px;
-        }
-        
-        .achievement-desc {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-        }
-        
-        .achievement-progress {
-            height: 6px;
-            background: var(--border);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-        
-        .achievement-progress-fill {
-            height: 100%;
-            background: var(--accent);
-            border-radius: 3px;
-            transition: width 0.5s ease-out;
-        }
-        
-        .achievement-count {
-            font-size: 12px;
-            color: var(--text-secondary);
-            font-weight: 500;
-            white-space: nowrap;
-        }
-        
-        .author-profile-card {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 16px;
-            background: var(--bg-card);
-            border-radius: 12px;
-            position: relative;
-        }
-        
-        .author-avatar-large {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: var(--accent);
-            color: var(--bg-primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
-        
-        .author-profile-info {
-            flex: 1;
-            min-width: 0;
-        }
-        
-        .author-profile-name {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-        
-        .author-profile-bio {
-            font-size: 14px;
-            color: var(--text-secondary);
-            line-height: 1.4;
-        }
-        
-        .btn-edit {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: none;
-            border: none;
-            font-size: 18px;
-            cursor: pointer;
-            opacity: 0.6;
-            transition: opacity 0.2s;
-        }
-        
-        .btn-edit:hover {
-            opacity: 1;
-        }
-        
-        .form-group {
-            margin-bottom: 16px;
-        }
-        
-        .form-label {
-            display: block;
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-        }
-        
-        .textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-        
-        .btn-secondary {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-        }
-        
-        .btn-secondary:hover {
-            border-color: var(--text-muted);
-        }
-        
-        .notifications-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .notification-item {
-            background: var(--bg-card);
-            border-radius: 10px;
-            padding: 14px;
-            display: flex;
-            gap: 12px;
-            cursor: pointer;
-            border: 1px solid var(--border);
-            transition: border-color 0.2s;
-        }
-        
-        .notification-item:hover {
-            border-color: var(--accent);
-        }
-        
-        .notification-item.unread {
-            border-left: 3px solid var(--accent);
-        }
-        
-        .notification-icon {
-            font-size: 24px;
-            flex-shrink: 0;
-        }
-        
-        .notification-content {
-            flex: 1;
-            min-width: 0;
-        }
-        
-        .notification-title {
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 4px;
-        }
-        
-        .notification-message {
-            font-size: 13px;
-            color: var(--text-secondary);
-            line-height: 1.4;
-        }
-        
-        .notification-time {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-top: 6px;
-        }
-        
-        .mark-all-read {
-            background: none;
-            border: none;
-            color: var(--accent);
-            font-size: 12px;
-            cursor: pointer;
-            margin-left: auto;
-        }
-        
-        .section-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 0;
-            padding-bottom: max(8px, env(safe-area-inset-bottom));
-            z-index: 1000;
-            max-width: 480px;
-            margin: 0 auto;
-        }
-        
-        .bottom-nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-decoration: none;
-            color: var(--text-muted);
-            font-size: 11px;
-            padding: 4px 16px;
-            transition: color 0.2s;
-        }
-        
+        .btn-secondary { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); margin-top: 12px; }
+        .btn-danger { background: #c44; color: white; }
+        .btn-danger:hover { background: #a33; }
+        .divider { color: var(--text-muted); margin: 24px 0; font-size: 13px; }
+        .profile-section { margin-bottom: 24px; }
+        .section-title { font-family: var(--font-display); font-size: 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .author-cta { background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%); border: 1px solid var(--border); border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 24px; }
+        .author-cta-icon { font-size: 40px; margin-bottom: 12px; }
+        .author-cta-title { font-family: var(--font-display); font-size: 22px; margin-bottom: 8px; }
+        .author-cta-text { color: var(--text-secondary); font-size: 14px; margin-bottom: 16px; }
+        .author-cta .btn { width: auto; padding: 12px 32px; }
+        .my-story-item { background: var(--bg-card); border-radius: 12px; padding: 16px; margin-bottom: 12px; position: relative; }
+        .my-story-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
+        .my-story-title { font-family: var(--font-display); font-size: 18px; flex: 1; padding-right: 12px; }
+        .my-story-status { font-size: 11px; padding: 4px 8px; border-radius: 4px; background: var(--accent); color: var(--bg-primary); }
+        .my-story-status.draft { background: var(--text-muted); color: var(--bg-primary); }
+        .my-story-status.pending { background: #ff9800; color: var(--bg-primary); }
+        .my-story-stats { display: flex; gap: 16px; font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+        .my-story-metrics { display: flex; gap: 16px; font-size: 13px; color: var(--accent); padding: 8px 0; border-top: 1px solid var(--border); margin-top: 8px; }
+        .my-story-actions { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
+        .btn-small { padding: 6px 12px; font-size: 12px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-secondary); text-decoration: none; cursor: pointer; }
+        .btn-small:hover { border-color: var(--accent); color: var(--accent); }
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-toggle { padding: 6px 12px; font-size: 12px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .dropdown-toggle:hover { border-color: var(--accent); color: var(--accent); }
+        .dropdown-menu { position: absolute; top: 100%; right: 0; margin-top: 4px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; min-width: 140px; z-index: 100; display: none; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .dropdown-menu.show { display: block; }
+        .dropdown-item { display: block; width: 100%; padding: 10px 14px; font-size: 13px; color: var(--text-primary); background: none; border: none; text-align: left; cursor: pointer; text-decoration: none; }
+        .dropdown-item:hover { background: var(--bg-secondary); }
+        .dropdown-item.danger { color: #e74c3c; }
+        .dropdown-item.danger:hover { background: rgba(231, 76, 60, 0.1); }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+        .stat-card { background: var(--bg-card); border-radius: 12px; padding: 20px 16px; text-align: center; }
+        .stat-value { font-family: var(--font-display); font-size: 32px; color: var(--accent); }
+        .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        .achievements-list { display: flex; flex-direction: column; gap: 12px; }
+        .achievement { background: var(--bg-card); border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 14px; opacity: 0.5; transition: opacity 0.3s; }
+        .achievement.unlocked { opacity: 1; }
+        .achievement.unlocked .achievement-icon { transform: scale(1.1); }
+        .achievement-icon { font-size: 32px; flex-shrink: 0; transition: transform 0.3s; }
+        .achievement-info { flex: 1; min-width: 0; }
+        .achievement-name { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+        .achievement-desc { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
+        .achievement-progress { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+        .achievement-progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.5s ease-out; }
+        .achievement-count { font-size: 12px; color: var(--text-secondary); font-weight: 500; white-space: nowrap; }
+        .author-profile-card { display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--bg-card); border-radius: 12px; position: relative; }
+        .author-avatar-large { width: 64px; height: 64px; border-radius: 50%; background: var(--accent); color: var(--bg-primary); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; flex-shrink: 0; }
+        .author-profile-info { flex: 1; min-width: 0; }
+        .author-profile-name { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+        .author-profile-bio { font-size: 14px; color: var(--text-secondary); line-height: 1.4; }
+        .btn-edit { position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 18px; cursor: pointer; opacity: 0.6; transition: opacity 0.2s; }
+        .btn-edit:hover { opacity: 1; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
+        .textarea { min-height: 80px; resize: vertical; }
+        .settings-card { background: var(--bg-card); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+        .settings-row:last-child { border-bottom: none; }
+        .settings-label { font-size: 14px; }
+        .settings-value { font-size: 14px; color: var(--accent); }
+        .settings-action { padding: 6px 12px; font-size: 12px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-secondary); cursor: pointer; }
+        .settings-action:hover { border-color: var(--accent); color: var(--accent); }
+        .settings-action.danger { border-color: #c44; color: #c44; }
+        .settings-action.danger:hover { background: rgba(204,68,68,0.1); }
+        .admin-link { display: block; padding: 14px 16px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border: 1px solid #0f3460; border-radius: 12px; color: #e94560; text-decoration: none; text-align: center; font-weight: 500; margin-bottom: 12px; }
+        .admin-link:hover { border-color: #e94560; }
+        .notifications-list { display: flex; flex-direction: column; gap: 8px; }
+        .notification-item { background: var(--bg-card); border-radius: 10px; padding: 14px; display: flex; gap: 12px; cursor: pointer; border: 1px solid var(--border); transition: border-color 0.2s; }
+        .notification-item:hover { border-color: var(--accent); }
+        .notification-item.unread { border-left: 3px solid var(--accent); }
+        .notification-icon { font-size: 24px; flex-shrink: 0; }
+        .notification-content { flex: 1; min-width: 0; }
+        .notification-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+        .notification-message { font-size: 13px; color: var(--text-secondary); line-height: 1.4; }
+        .notification-time { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+        .mark-all-read { background: none; border: none; color: var(--accent); font-size: 12px; cursor: pointer; margin-left: auto; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-secondary); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 8px 0; padding-bottom: max(8px, env(safe-area-inset-bottom)); z-index: 1000; max-width: 480px; margin: 0 auto; }
+        .bottom-nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: var(--text-muted); font-size: 11px; padding: 4px 16px; transition: color 0.2s; }
         .bottom-nav-item:hover { color: var(--text-secondary); }
         .bottom-nav-item.active { color: var(--accent); }
-        
-        .bottom-nav-icon {
-            font-size: 22px;
-            margin-bottom: 2px;
-        }
-        
-        .spinner {
-            width: 32px;
-            height: 32px;
-            border: 3px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 16px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        .bottom-nav-icon { font-size: 22px; margin-bottom: 2px; }
+        .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 <!-- Yandex.Metrika counter -->
 <script type="text/javascript">
-    (function(m,e,t,r,i,k,a){
-        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-        m[i].l=1*new Date();
-        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=106258778', 'ym');
-    ym(106258778, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
+    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=106258778','ym');ym(106258778,'init',{ssr:true,webvisor:true,clickmap:true,ecommerce:"dataLayer",accurateTrackBounce:true,trackLinks:true});
 </script>
-<noscript><div><img src="https://mc.yandex.ru/watch/106258778" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<noscript><div><img src="https://mc.yandex.ru/watch/106258778" style="position:absolute;left:-9999px;" alt=""/></div></noscript>
 <!-- /Yandex.Metrika counter -->
 </head>
 <body>
@@ -664,19 +139,10 @@
             <div id="auth-screen" class="auth-screen" style="display: none;">
                 <div class="auth-title">Добро пожаловать</div>
                 <div class="auth-subtitle">Войдите, чтобы сохранять прогресс и публиковать рассказы</div>
-                
                 <div style="margin-bottom: 24px;">
-                    <script async src="https://telegram.org/js/telegram-widget.js?22" 
-                        data-telegram-login="stroka_auth_bot" 
-                        data-size="large" 
-                        data-radius="8"
-                        data-onauth="onTelegramAuth(user)"
-                        data-request-access="write">
-                    </script>
+                    <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="stroka_auth_bot" data-size="large" data-radius="8" data-onauth="onTelegramAuth(user)" data-request-access="write"></script>
                 </div>
-                
                 <div class="divider">или по email</div>
-                
                 <form class="auth-form" id="auth-form">
                     <input type="email" class="input" id="auth-email" placeholder="email@example.com" required>
                     <button type="submit" class="btn">Войти</button>
@@ -684,11 +150,10 @@
             </div>
             
             <div id="profile-content" style="display: none;">
+                <div id="admin-section"></div>
+                
                 <div class="profile-section" id="notifications-section" style="display: none;">
-                    <div class="section-title">
-                        🔔 Уведомления
-                        <button class="mark-all-read" id="mark-all-read" onclick="markAllRead()">Прочитать все</button>
-                    </div>
+                    <div class="section-title">🔔 Уведомления <button class="mark-all-read" id="mark-all-read" onclick="markAllRead()">Прочитать все</button></div>
                     <div id="notifications-list"></div>
                 </div>
                 
@@ -697,22 +162,10 @@
                 <div class="profile-section">
                     <div class="section-title">Статистика</div>
                     <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-value" id="stat-read">0</div>
-                            <div class="stat-label">Прочитано</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="stat-time">0</div>
-                            <div class="stat-label">Мин чтения</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="stat-likes">0</div>
-                            <div class="stat-label">Лайков</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="stat-subs">0</div>
-                            <div class="stat-label">Подписок</div>
-                        </div>
+                        <div class="stat-card"><div class="stat-value" id="stat-read">0</div><div class="stat-label">Прочитано</div></div>
+                        <div class="stat-card"><div class="stat-value" id="stat-time">0</div><div class="stat-label">Мин чтения</div></div>
+                        <div class="stat-card"><div class="stat-value" id="stat-likes">0</div><div class="stat-label">Лайков</div></div>
+                        <div class="stat-card"><div class="stat-value" id="stat-subs">0</div><div class="stat-label">Подписок</div></div>
                     </div>
                 </div>
                 
@@ -720,41 +173,49 @@
                     <div class="section-title">Достижения</div>
                     <div class="achievements-list" id="achievements-list"></div>
                 </div>
+                
+                <div class="profile-section">
+                    <div class="section-title">Настройки</div>
+                    <div class="settings-card">
+                        <div class="settings-row">
+                            <span class="settings-label">Подтверждённый возраст</span>
+                            <span class="settings-value" id="confirmed-age-display">—</span>
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Сбросить возраст</span>
+                            <button class="settings-action danger" onclick="resetAge()">Сбросить</button>
+                        </div>
+                    </div>
+                    <div style="margin-top: 12px; padding: 12px; background: var(--bg-card); border-radius: 8px; font-size: 12px; color: var(--text-muted);">
+                        <a href="/terms.html" style="color: var(--accent); margin-right: 16px;">Условия использования</a>
+                        <a href="/privacy.html" style="color: var(--accent);">Политика конфиденциальности</a>
+                    </div>
+                </div>
             </div>
         </div>
         
         <nav class="bottom-nav">
-            <a href="/" class="bottom-nav-item">
-                <span class="bottom-nav-icon">🏠</span>
-                <span>Главная</span>
-            </a>
-            <a href="/search.html" class="bottom-nav-item">
-                <span class="bottom-nav-icon">🔍</span>
-                <span>Поиск</span>
-            </a>
-            <a href="/moe.html" class="bottom-nav-item">
-                <span class="bottom-nav-icon">📚</span>
-                <span>Моё</span>
-            </a>
-            <a href="/profile.html" class="bottom-nav-item active">
-                <span class="bottom-nav-icon">👤</span>
-                <span>Профиль</span>
-            </a>
+            <a href="/" class="bottom-nav-item"><span class="bottom-nav-icon">🏠</span><span>Главная</span></a>
+            <a href="/search.html" class="bottom-nav-item"><span class="bottom-nav-icon">🔍</span><span>Поиск</span></a>
+            <a href="/moe.html" class="bottom-nav-item"><span class="bottom-nav-icon">📚</span><span>Моё</span></a>
+            <a href="/profile.html" class="bottom-nav-item active"><span class="bottom-nav-icon">👤</span><span>Профиль</span></a>
         </nav>
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://xcnvejvkklypvkzkanwj.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbnZlanZra2x5cHZremthbndqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNjU4NzIsImV4cCI6MjA4MzY0MTg3Mn0.8ldNxEbzc8aNJYWtOgP0b5lOsPhl4zMeoht2rn0DeP8';
+        var SUPABASE_URL = 'https://xcnvejvkklypvkzkanwj.supabase.co';
+        var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbnZlanZra2x5cHZremthbndqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNjU4NzIsImV4cCI6MjA4MzY0MTg3Mn0.8ldNxEbzc8aNJYWtOgP0b5lOsPhl4zMeoht2rn0DeP8';
+        var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
-        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        var currentUser = null;
+        var currentAuthor = null;
+        var pendingEmail = null;
+        var justLoggedOut = false;
         
-        let currentUser = null;
-        let currentAuthor = null;
-        let pendingEmail = null;
-        let justLoggedOut = false;
+        // Админские email-адреса
+        var ADMIN_EMAILS = ['svalka.plus@gmail.com', 'admin@stroka.app'];
         
-        const ACHIEVEMENTS = [
+        var ACHIEVEMENTS = [
             { id: 'bookworm_10', icon: '📖', name: 'Книгочей', desc: 'Дочитать 10 рассказов', target: 10, stat: 'finished' },
             { id: 'bookworm_50', icon: '📚', name: 'Библиофил', desc: 'Дочитать 50 рассказов', target: 50, stat: 'finished' },
             { id: 'bookworm_100', icon: '🏆', name: 'Марафонец', desc: 'Дочитать 100 рассказов', target: 100, stat: 'finished' },
@@ -770,163 +231,90 @@
             { id: 'author_likes', icon: '❤️', name: 'Любимый', desc: 'Получить 50 лайков', target: 50, stat: 'totalLikes' },
         ];
         
-        // Close dropdowns when clicking outside
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.dropdown')) {
-                document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-                    menu.classList.remove('show');
-                });
+                document.querySelectorAll('.dropdown-menu.show').forEach(function(menu) { menu.classList.remove('show'); });
             }
         });
         
         function toggleDropdown(id) {
             event.stopPropagation();
-            const menu = document.getElementById(id);
-            const wasOpen = menu.classList.contains('show');
-            
-            // Close all dropdowns
-            document.querySelectorAll('.dropdown-menu.show').forEach(m => m.classList.remove('show'));
-            
-            // Toggle this one
-            if (!wasOpen) {
-                menu.classList.add('show');
-            }
+            var menu = document.getElementById(id);
+            var wasOpen = menu.classList.contains('show');
+            document.querySelectorAll('.dropdown-menu.show').forEach(function(m) { m.classList.remove('show'); });
+            if (!wasOpen) menu.classList.add('show');
         }
         
         function onTelegramAuth(user) {
-            if (justLoggedOut) {
-                justLoggedOut = false;
-                return;
-            }
+            if (justLoggedOut) { justLoggedOut = false; return; }
             handleTelegramLogin(user);
         }
         
         async function handleTelegramLogin(tgUser) {
             try {
-                const email = tgUser.username 
-                    ? tgUser.username + '@telegram.user'
-                    : 'tg_' + tgUser.id + '@telegram.user';
-                const name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || tgUser.username || 'User ' + tgUser.id;
+                var email = tgUser.username ? tgUser.username + '@telegram.user' : 'tg_' + tgUser.id + '@telegram.user';
+                var name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || tgUser.username || 'User ' + tgUser.id;
                 
-                let { data: existingAuthor } = await db
-                    .from('authors')
-                    .select('*')
-                    .eq('telegram_id', tgUser.id.toString())
-                    .single();
-                
+                var { data: existingAuthor } = await db.from('authors').select('*').eq('telegram_id', tgUser.id.toString()).single();
                 if (!existingAuthor) {
-                    const { data: byEmail } = await db
-                        .from('authors')
-                        .select('*')
-                        .eq('email', email)
-                        .single();
+                    var { data: byEmail } = await db.from('authors').select('*').eq('email', email).single();
                     existingAuthor = byEmail;
                 }
                 
                 if (existingAuthor) {
-                    if (!existingAuthor.telegram_id) {
-                        await db.from('authors')
-                            .update({ telegram_id: tgUser.id.toString() })
-                            .eq('id', existingAuthor.id);
-                    }
+                    if (!existingAuthor.telegram_id) await db.from('authors').update({ telegram_id: tgUser.id.toString() }).eq('id', existingAuthor.id);
                     currentAuthor = existingAuthor;
                 } else {
-                    const { data: newAuthor, error } = await db
-                        .from('authors')
-                        .insert({ 
-                            email: email, 
-                            name: name, 
-                            pen_name: tgUser.username || name,
-                            telegram_id: tgUser.id.toString()
-                        })
-                        .select()
-                        .single();
-                    
+                    var { data: newAuthor, error } = await db.from('authors').insert({ email: email, name: name, pen_name: tgUser.username || name, telegram_id: tgUser.id.toString() }).select().single();
                     if (error) throw error;
                     currentAuthor = newAuthor;
                 }
                 
-                localStorage.setItem('stroka_user', JSON.stringify({
-                    id: currentAuthor.id,
-                    email: currentAuthor.email,
-                    telegram_id: tgUser.id.toString()
-                }));
-                
+                localStorage.setItem('stroka_user', JSON.stringify({ id: currentAuthor.id, email: currentAuthor.email, telegram_id: tgUser.id.toString() }));
                 currentUser = { id: currentAuthor.id, email: currentAuthor.email };
                 
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('profile-content').style.display = 'block';
                 document.getElementById('logout-btn').style.display = 'block';
                 
+                loadAdminSection();
                 loadAuthorSection();
                 loadStats();
-                
+                loadSettings();
             } catch (error) {
                 console.error('Telegram auth error:', error);
                 alert('Ошибка авторизации: ' + error.message);
             }
         }
         
-        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+        document.getElementById('auth-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const email = document.getElementById('auth-email').value;
-            
+            var email = document.getElementById('auth-email').value;
             try {
-                const { error } = await db.auth.signInWithOtp({
-                    email: email,
-                    options: { shouldCreateUser: true }
-                });
-                
+                var { error } = await db.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true } });
                 if (error) throw error;
-                
                 pendingEmail = email;
                 showOtpForm(email);
-                
-            } catch (error) {
-                alert('Ошибка: ' + error.message);
-            }
+            } catch (error) { alert('Ошибка: ' + error.message); }
         });
         
         function showOtpForm(email) {
-            document.getElementById('auth-form').innerHTML = 
-                '<p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">' +
-                    'Код отправлен на<br><strong style="color: var(--text-primary);">' + email + '</strong>' +
-                '</p>' +
-                '<input type="text" class="input" id="otp-code" placeholder="Введите код" maxlength="6" ' +
-                    'style="text-align: center; font-size: 24px;" ' +
-                    'oninput="this.style.letterSpacing = this.value ? \'8px\' : \'0px\'">' +
-                '<button type="button" class="btn" onclick="verifyOtp()">Подтвердить</button>' +
-                '<button type="button" class="btn btn-secondary" onclick="resetAuthForm()">Изменить email</button>';
+            document.getElementById('auth-form').innerHTML = '<p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">Код отправлен на<br><strong style="color: var(--text-primary);">' + email + '</strong></p><input type="text" class="input" id="otp-code" placeholder="Введите код" maxlength="6" style="text-align: center; font-size: 24px;" oninput="this.style.letterSpacing = this.value ? \'8px\' : \'0px\'"><button type="button" class="btn" onclick="verifyOtp()">Подтвердить</button><button type="button" class="btn btn-secondary" onclick="resetAuthForm()">Изменить email</button>';
         }
         
         async function verifyOtp() {
-            const code = document.getElementById('otp-code').value;
-            
-            if (!code || code.length < 6) {
-                alert('Введите 6-значный код');
-                return;
-            }
-            
+            var code = document.getElementById('otp-code').value;
+            if (!code || code.length < 6) { alert('Введите 6-значный код'); return; }
             try {
-                const { error } = await db.auth.verifyOtp({
-                    email: pendingEmail,
-                    token: code,
-                    type: 'email'
-                });
-                
+                var { error } = await db.auth.verifyOtp({ email: pendingEmail, token: code, type: 'email' });
                 if (error) throw error;
                 await checkAuthAndLoad();
-                
-            } catch (error) {
-                alert('Неверный код: ' + error.message);
-            }
+            } catch (error) { alert('Неверный код: ' + error.message); }
         }
         
         function resetAuthForm() {
             pendingEmail = null;
-            document.getElementById('auth-form').innerHTML = 
-                '<input type="email" class="input" id="auth-email" placeholder="email@example.com" required>' +
-                '<button type="submit" class="btn">Войти</button>';
+            document.getElementById('auth-form').innerHTML = '<input type="email" class="input" id="auth-email" placeholder="email@example.com" required><button type="submit" class="btn">Войти</button>';
         }
         
         function logout() {
@@ -943,6 +331,40 @@
             setTimeout(function() { justLoggedOut = false; }, 3000);
         }
         
+        function loadAdminSection() {
+            var container = document.getElementById('admin-section');
+            if (currentAuthor && ADMIN_EMAILS.indexOf(currentAuthor.email) !== -1) {
+                container.innerHTML = '<a href="/admin.html" class="admin-link">🛡️ Панель администратора</a>';
+            } else {
+                container.innerHTML = '';
+            }
+        }
+        
+        function loadSettings() {
+            var confirmedAge = parseInt(localStorage.getItem('stroka_confirmed_age') || '0');
+            var display = document.getElementById('confirmed-age-display');
+            if (confirmedAge > 0) {
+                display.textContent = confirmedAge + '+';
+            } else {
+                display.textContent = 'Не подтверждён';
+            }
+        }
+        
+        async function resetAge() {
+            if (!confirm('Сбросить подтверждённый возраст? Контент 16+ и 18+ снова будет скрыт до повторного подтверждения.')) return;
+            
+            localStorage.removeItem('stroka_confirmed_age');
+            
+            if (currentAuthor) {
+                try {
+                    await db.from('authors').update({ confirmed_age: null }).eq('id', currentAuthor.id);
+                } catch (e) { console.error('Error resetting age in DB:', e); }
+            }
+            
+            loadSettings();
+            alert('Возраст сброшен. Контент с возрастными ограничениями будет скрыт.');
+        }
+        
         async function checkAuthAndLoad() {
             var loadingScreen = document.getElementById('loading-screen');
             var authScreen = document.getElementById('auth-screen');
@@ -953,56 +375,37 @@
             if (savedUser) {
                 var userData = JSON.parse(savedUser);
                 currentUser = userData;
-                
-                var { data: author } = await db
-                    .from('authors')
-                    .select('*')
-                    .eq('id', userData.id)
-                    .single();
-                
+                var { data: author } = await db.from('authors').select('*').eq('id', userData.id).single();
                 if (author) {
                     currentAuthor = author;
-                    
                     loadingScreen.style.display = 'none';
                     authScreen.style.display = 'none';
                     profileContent.style.display = 'block';
                     logoutBtn.style.display = 'block';
-                    
+                    loadAdminSection();
                     loadAuthorSection();
                     loadStats();
                     loadNotifications();
+                    loadSettings();
                     return;
                 }
             }
             
             var { data: { user } } = await db.auth.getUser();
-            
             if (user) {
                 currentUser = user;
-                
-                var { data: author } = await db
-                    .from('authors')
-                    .select('*')
-                    .eq('email', user.email)
-                    .single();
-                
+                var { data: author } = await db.from('authors').select('*').eq('email', user.email).single();
                 currentAuthor = author;
-                
-                if (author) {
-                    localStorage.setItem('stroka_user', JSON.stringify({
-                        id: author.id,
-                        email: author.email
-                    }));
-                }
-                
+                if (author) localStorage.setItem('stroka_user', JSON.stringify({ id: author.id, email: author.email }));
                 loadingScreen.style.display = 'none';
                 authScreen.style.display = 'none';
                 profileContent.style.display = 'block';
                 logoutBtn.style.display = 'block';
-                
+                loadAdminSection();
                 loadAuthorSection();
                 loadStats();
                 loadNotifications();
+                loadSettings();
             } else {
                 loadingScreen.style.display = 'none';
                 authScreen.style.display = 'flex';
@@ -1011,31 +414,16 @@
         
         async function loadAuthorSection() {
             var container = document.getElementById('author-section');
-            
             var stories = [];
             var storyLikes = {};
             
             if (currentAuthor) {
-                var { data } = await db
-                    .from('stories')
-                    .select('*')
-                    .eq('author_id', currentAuthor.id)
-                    .order('created_at', { ascending: false });
+                var { data } = await db.from('stories').select('*').eq('author_id', currentAuthor.id).order('created_at', { ascending: false });
                 stories = data || [];
-                
-                // Load likes for each story
                 if (stories.length > 0) {
                     var storyIds = stories.map(function(s) { return s.id; });
-                    var { data: reactions } = await db
-                        .from('reactions')
-                        .select('story_id, reaction')
-                        .in('story_id', storyIds);
-                    
-                    (reactions || []).forEach(function(r) {
-                        if (r.reaction === 'like') {
-                            storyLikes[r.story_id] = (storyLikes[r.story_id] || 0) + 1;
-                        }
-                    });
+                    var { data: reactions } = await db.from('reactions').select('story_id, reaction').in('story_id', storyIds);
+                    (reactions || []).forEach(function(r) { if (r.reaction === 'like') storyLikes[r.story_id] = (storyLikes[r.story_id] || 0) + 1; });
                 }
             }
             
@@ -1044,197 +432,69 @@
                 var displayName = currentAuthor?.pen_name || currentAuthor?.name || (currentUser?.email ? currentUser.email.split('@')[0] : 'Читатель');
                 var bio = currentAuthor?.bio || 'Любитель хороших историй';
                 
-                container.innerHTML = 
-                    '<div class="profile-section">' +
-                        '<div class="section-title">Профиль</div>' +
-                        '<div class="author-profile-card">' +
-                            '<div class="author-avatar-large">' + avatarLetter + '</div>' +
-                            '<div class="author-profile-info">' +
-                                '<div class="author-profile-name">' + displayName + '</div>' +
-                                '<div class="author-profile-bio">' + bio + '</div>' +
-                            '</div>' +
-                            (currentAuthor ? '<button class="btn-edit" onclick="showEditProfile()">✏️</button>' : '') +
-                        '</div>' +
-                        (currentAuthor ? 
-                        '<div id="edit-profile-form" style="display: none; margin-top: 16px;">' +
-                            '<div class="form-group">' +
-                                '<label class="form-label">Имя</label>' +
-                                '<input type="text" class="input" id="edit-pen-name" value="' + (currentAuthor.pen_name || '') + '" placeholder="Ваше имя">' +
-                            '</div>' +
-                            '<div class="form-group">' +
-                                '<label class="form-label">О себе</label>' +
-                                '<textarea class="input textarea" id="edit-bio" placeholder="Расскажите о себе">' + (currentAuthor.bio || '') + '</textarea>' +
-                            '</div>' +
-                            '<div style="display: flex; gap: 8px;">' +
-                                '<button class="btn" onclick="saveProfile()">Сохранить</button>' +
-                                '<button class="btn btn-secondary" onclick="hideEditProfile()">Отмена</button>' +
-                            '</div>' +
-                        '</div>' : '') +
-                    '</div>' +
-                    '<div class="author-cta">' +
-                        '<div class="author-cta-icon">✍️</div>' +
-                        '<div class="author-cta-title">Станьте автором</div>' +
-                        '<div class="author-cta-text">Опубликуйте свой рассказ и найдите читателей</div>' +
-                        '<a href="/author.html" class="btn" style="text-decoration: none; display: inline-block;">Опубликовать</a>' +
-                    '</div>';
+                container.innerHTML = '<div class="profile-section"><div class="section-title">Профиль</div><div class="author-profile-card"><div class="author-avatar-large">' + avatarLetter + '</div><div class="author-profile-info"><div class="author-profile-name">' + displayName + '</div><div class="author-profile-bio">' + bio + '</div></div>' + (currentAuthor ? '<button class="btn-edit" onclick="showEditProfile()">✏️</button>' : '') + '</div>' + (currentAuthor ? '<div id="edit-profile-form" style="display: none; margin-top: 16px;"><div class="form-group"><label class="form-label">Имя</label><input type="text" class="input" id="edit-pen-name" value="' + (currentAuthor.pen_name || '') + '" placeholder="Ваше имя"></div><div class="form-group"><label class="form-label">О себе</label><textarea class="input textarea" id="edit-bio" placeholder="Расскажите о себе">' + (currentAuthor.bio || '') + '</textarea></div><div style="display: flex; gap: 8px;"><button class="btn" onclick="saveProfile()">Сохранить</button><button class="btn btn-secondary" onclick="hideEditProfile()">Отмена</button></div></div>' : '') + '</div><div class="author-cta"><div class="author-cta-icon">✍️</div><div class="author-cta-title">Станьте автором</div><div class="author-cta-text">Опубликуйте свой рассказ и найдите читателей</div><a href="/author.html" class="btn" style="text-decoration: none; display: inline-block;">Опубликовать</a></div>';
             } else {
                 var avatarLetter = (currentAuthor.pen_name || currentAuthor.name || 'A').charAt(0).toUpperCase();
-                
                 var storiesHtml = stories.map(function(s) {
-                    var statusClass = s.status === 'draft' ? 'draft' : (s.status === 'pending' ? 'pending' : '');
-                    var statusText = s.status === 'published' ? 'Опубликован' : (s.status === 'pending' ? 'На модерации' : 'Черновик');
+                    var statusClass = s.status === 'draft' ? 'draft' : (s.status === 'pending' || s.status === 'pending_review' ? 'pending' : '');
+                    var statusText = s.status === 'published' ? 'Опубликован' : (s.status === 'pending' || s.status === 'pending_review' ? 'На модерации' : 'Черновик');
                     var views = s.views || 0;
                     var likes = storyLikes[s.id] || 0;
                     var safeTitle = s.title.replace(/'/g, "\\'");
-                    
-                    return '<div class="my-story-item">' +
-                        '<div class="my-story-header">' +
-                            '<div class="my-story-title">' + s.title + '</div>' +
-                            '<span class="my-story-status ' + statusClass + '">' + statusText + '</span>' +
-                        '</div>' +
-                        '<div class="my-story-stats">' +
-                            '<span>' + (s.character_count ? s.character_count.toLocaleString() : '?') + ' зн.</span>' +
-                            '<span>' + (s.reading_time_minutes || '?') + ' мин</span>' +
-                        '</div>' +
-                        (s.status === 'published' ? 
-                        '<div class="my-story-metrics">' +
-                            '<span>👁 ' + views + ' просмотров</span>' +
-                            '<span>👍 ' + likes + ' лайков</span>' +
-                        '</div>' : '') +
-                        '<div class="my-story-actions">' +
-                            '<a href="/read.html?id=' + s.id + '" class="btn-small">Открыть</a>' +
-                            '<div class="dropdown">' +
-                                '<button class="dropdown-toggle" onclick="toggleDropdown(\'dropdown-' + s.id + '\')">Действия ▾</button>' +
-                                '<div class="dropdown-menu" id="dropdown-' + s.id + '">' +
-                                    '<a href="/author.html?edit=' + s.id + '" class="dropdown-item">✏️ Редактировать</a>' +
-                                    '<button class="dropdown-item danger" onclick="deleteStory(\'' + s.id + '\', \'' + safeTitle + '\')">🗑 Удалить</button>' +
-                                '</div>' +
-                            '</div>' +
-                        '</div>' +
-                    '</div>';
+                    return '<div class="my-story-item"><div class="my-story-header"><div class="my-story-title">' + s.title + '</div><span class="my-story-status ' + statusClass + '">' + statusText + '</span></div><div class="my-story-stats"><span>' + (s.character_count ? s.character_count.toLocaleString() : '?') + ' зн.</span><span>' + (s.reading_time_minutes || '?') + ' мин</span></div>' + (s.status === 'published' ? '<div class="my-story-metrics"><span>👁 ' + views + '</span><span>👍 ' + likes + '</span></div>' : '') + '<div class="my-story-actions"><a href="/read.html?id=' + s.id + '" class="btn-small">Открыть</a><div class="dropdown"><button class="dropdown-toggle" onclick="toggleDropdown(\'dropdown-' + s.id + '\')">Действия ▾</button><div class="dropdown-menu" id="dropdown-' + s.id + '"><a href="/author.html?edit=' + s.id + '" class="dropdown-item">✏️ Редактировать</a><button class="dropdown-item danger" onclick="deleteStory(\'' + s.id + '\', \'' + safeTitle + '\')">🗑 Удалить</button></div></div></div></div>';
                 }).join('');
                 
-                container.innerHTML = 
-                    '<div class="profile-section">' +
-                        '<div class="section-title">Профиль автора</div>' +
-                        '<div class="author-profile-card">' +
-                            '<div class="author-avatar-large">' + avatarLetter + '</div>' +
-                            '<div class="author-profile-info">' +
-                                '<div class="author-profile-name">' + (currentAuthor.pen_name || currentAuthor.name) + '</div>' +
-                                '<div class="author-profile-bio">' + (currentAuthor.bio || 'Нет описания') + '</div>' +
-                            '</div>' +
-                            '<button class="btn-edit" onclick="showEditProfile()">✏️</button>' +
-                        '</div>' +
-                        '<div id="edit-profile-form" style="display: none; margin-top: 16px;">' +
-                            '<div class="form-group">' +
-                                '<label class="form-label">Псевдоним</label>' +
-                                '<input type="text" class="input" id="edit-pen-name" value="' + (currentAuthor.pen_name || '') + '" placeholder="Как подписывать рассказы">' +
-                            '</div>' +
-                            '<div class="form-group">' +
-                                '<label class="form-label">О себе</label>' +
-                                '<textarea class="input textarea" id="edit-bio" placeholder="Расскажите о себе читателям">' + (currentAuthor.bio || '') + '</textarea>' +
-                            '</div>' +
-                            '<div style="display: flex; gap: 8px;">' +
-                                '<button class="btn" onclick="saveProfile()">Сохранить</button>' +
-                                '<button class="btn btn-secondary" onclick="hideEditProfile()">Отмена</button>' +
-                            '</div>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="profile-section">' +
-                        '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">' +
-                            '<div class="section-title" style="margin-bottom: 0;">Мои рассказы</div>' +
-                            '<a href="/author.html" class="btn" style="padding: 8px 16px; font-size: 13px; text-decoration: none;">+ Добавить</a>' +
-                        '</div>' +
-                        storiesHtml +
-                    '</div>';
+                container.innerHTML = '<div class="profile-section"><div class="section-title">Профиль автора</div><div class="author-profile-card"><div class="author-avatar-large">' + avatarLetter + '</div><div class="author-profile-info"><div class="author-profile-name">' + (currentAuthor.pen_name || currentAuthor.name) + '</div><div class="author-profile-bio">' + (currentAuthor.bio || 'Нет описания') + '</div></div><button class="btn-edit" onclick="showEditProfile()">✏️</button></div><div id="edit-profile-form" style="display: none; margin-top: 16px;"><div class="form-group"><label class="form-label">Псевдоним</label><input type="text" class="input" id="edit-pen-name" value="' + (currentAuthor.pen_name || '') + '"></div><div class="form-group"><label class="form-label">О себе</label><textarea class="input textarea" id="edit-bio">' + (currentAuthor.bio || '') + '</textarea></div><div style="display: flex; gap: 8px;"><button class="btn" onclick="saveProfile()">Сохранить</button><button class="btn btn-secondary" onclick="hideEditProfile()">Отмена</button></div></div></div><div class="profile-section"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;"><div class="section-title" style="margin-bottom: 0;">Мои рассказы</div><a href="/author.html" class="btn" style="padding: 8px 16px; font-size: 13px; text-decoration: none;">+ Добавить</a></div>' + storiesHtml + '</div>';
             }
         }
         
         async function deleteStory(storyId, title) {
-            if (!confirm('Удалить рассказ "' + title + '"? Это действие нельзя отменить.')) return;
-            
+            if (!confirm('Удалить рассказ "' + title + '"?')) return;
             try {
                 await db.from('shorts').delete().eq('story_id', storyId);
                 await db.from('moderation_queue').delete().eq('story_id', storyId);
                 await db.from('reactions').delete().eq('story_id', storyId);
                 await db.from('reading_history').delete().eq('story_id', storyId);
-                var { error } = await db.from('stories').delete().eq('id', storyId).eq('author_id', currentAuthor.id);
-                if (error) throw error;
-                
+                await db.from('stories').delete().eq('id', storyId).eq('author_id', currentAuthor.id);
                 await loadAuthorSection();
-            } catch (error) {
-                alert('Ошибка удаления: ' + error.message);
-            }
+            } catch (error) { alert('Ошибка: ' + error.message); }
         }
         
         async function loadStats() {
             try {
-                var { data: history } = await db
-                    .from('reading_history')
-                    .select('story_id, read_percent, read_time_seconds, finished_at')
-                    .eq('user_id', currentUser.id);
-                
+                var { data: history } = await db.from('reading_history').select('story_id, read_percent, read_time_seconds, finished_at').eq('user_id', currentUser.id);
                 var finished = (history || []).filter(function(h) { return h.read_percent >= 90; }).length;
                 var time = Math.round((history || []).reduce(function(sum, h) { return sum + (h.read_time_seconds || 0); }, 0) / 60);
                 
-                var { data: reactions } = await db
-                    .from('reactions')
-                    .select('id, reaction')
-                    .eq('user_id', currentUser.id);
-                
+                var { data: reactions } = await db.from('reactions').select('id, reaction').eq('user_id', currentUser.id);
                 var reactionsCount = (reactions || []).length;
                 var likes = (reactions || []).filter(function(r) { return r.reaction === 'like'; }).length;
                 
-                var { data: subscriptions } = await db
-                    .from('subscriptions')
-                    .select('id')
-                    .eq('user_id', currentUser.id);
-                
+                var { data: subscriptions } = await db.from('subscriptions').select('id').eq('user_id', currentUser.id);
                 var subs = (subscriptions || []).length;
                 
                 var finishedStoryIds = (history || []).filter(function(h) { return h.read_percent >= 90; }).map(function(h) { return h.story_id; });
                 var uniqueGenres = 0;
                 if (finishedStoryIds.length > 0) {
-                    var { data: genreStories } = await db
-                        .from('stories')
-                        .select('genre, genres')
-                        .in('id', finishedStoryIds);
-                    
+                    var { data: genreStories } = await db.from('stories').select('genre, genres').in('id', finishedStoryIds);
                     var genreSet = {};
                     (genreStories || []).forEach(function(s) {
-                        if (s.genres && s.genres.length) {
-                            s.genres.forEach(function(g) { genreSet[g.name] = true; });
-                        } else if (s.genre) {
-                            genreSet[s.genre] = true;
-                        }
+                        if (s.genres && s.genres.length) s.genres.forEach(function(g) { genreSet[g.name] = true; });
+                        else if (s.genre) genreSet[s.genre] = true;
                     });
                     uniqueGenres = Object.keys(genreSet).length;
                 }
                 
                 var streak = calculateStreak(history || []);
-                
-                var storiesCount = 0;
-                var totalViews = 0;
-                var totalLikes = 0;
+                var storiesCount = 0, totalViews = 0, totalLikes = 0;
                 
                 if (currentAuthor) {
-                    var { data: authorStories } = await db
-                        .from('stories')
-                        .select('id, views')
-                        .eq('author_id', currentAuthor.id)
-                        .eq('status', 'published');
-                    
+                    var { data: authorStories } = await db.from('stories').select('id, views').eq('author_id', currentAuthor.id).eq('status', 'published');
                     storiesCount = (authorStories || []).length;
                     totalViews = (authorStories || []).reduce(function(sum, s) { return sum + (s.views || 0); }, 0);
-                    
                     if (storiesCount > 0) {
                         var storyIds = authorStories.map(function(s) { return s.id; });
-                        var { data: storyReactions } = await db
-                            .from('reactions')
-                            .select('reaction')
-                            .in('story_id', storyIds)
-                            .eq('reaction', 'like');
-                        
+                        var { data: storyReactions } = await db.from('reactions').select('reaction').in('story_id', storyIds).eq('reaction', 'like');
                         totalLikes = (storyReactions || []).length;
                     }
                 }
@@ -1244,194 +504,84 @@
                 document.getElementById('stat-likes').textContent = likes;
                 document.getElementById('stat-subs').textContent = subs;
                 
-                var stats = {
-                    finished: finished,
-                    streak: streak,
-                    genres: uniqueGenres,
-                    reactions: reactionsCount,
-                    stories: storiesCount,
-                    totalViews: totalViews,
-                    totalLikes: totalLikes
-                };
-                
-                renderAchievements(stats);
-                
-            } catch (error) {
-                console.error('Stats error:', error);
-            }
+                renderAchievements({ finished: finished, streak: streak, genres: uniqueGenres, reactions: reactionsCount, stories: storiesCount, totalViews: totalViews, totalLikes: totalLikes });
+            } catch (error) { console.error('Stats error:', error); }
         }
         
         function calculateStreak(history) {
             if (!history || history.length === 0) return 0;
-            
             var days = {};
-            history.forEach(function(h) {
-                if (h.finished_at) {
-                    var day = new Date(h.finished_at).toDateString();
-                    days[day] = true;
-                }
-            });
-            
+            history.forEach(function(h) { if (h.finished_at) days[new Date(h.finished_at).toDateString()] = true; });
             var dayKeys = Object.keys(days);
             if (dayKeys.length === 0) return 0;
-            
             var sortedDays = dayKeys.map(function(d) { return new Date(d); }).sort(function(a, b) { return b - a; });
-            
             var streak = 1;
             var today = new Date().toDateString();
-            var yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
-            
-            if (sortedDays[0].toDateString() !== today && sortedDays[0].toDateString() !== yesterday) {
-                return 0;
-            }
-            
+            var yesterday = new Date(Date.now() - 86400000).toDateString();
+            if (sortedDays[0].toDateString() !== today && sortedDays[0].toDateString() !== yesterday) return 0;
             for (var i = 0; i < sortedDays.length - 1; i++) {
-                var diff = (sortedDays[i] - sortedDays[i + 1]) / (24 * 60 * 60 * 1000);
-                if (diff <= 1.5) {
-                    streak++;
-                } else {
-                    break;
-                }
+                if ((sortedDays[i] - sortedDays[i + 1]) / 86400000 <= 1.5) streak++;
+                else break;
             }
-            
             return streak;
         }
         
         function renderAchievements(stats) {
-            var container = document.getElementById('achievements-list');
-            
-            container.innerHTML = ACHIEVEMENTS.map(function(a) {
+            document.getElementById('achievements-list').innerHTML = ACHIEVEMENTS.map(function(a) {
                 var current = stats[a.stat] || 0;
                 var percent = Math.min(100, Math.round((current / a.target) * 100));
-                var unlocked = current >= a.target;
-                
-                return '<div class="achievement ' + (unlocked ? 'unlocked' : '') + '">' +
-                    '<div class="achievement-icon">' + a.icon + '</div>' +
-                    '<div class="achievement-info">' +
-                        '<div class="achievement-name">' + a.name + '</div>' +
-                        '<div class="achievement-desc">' + a.desc + '</div>' +
-                        '<div class="achievement-progress">' +
-                            '<div class="achievement-progress-fill" style="width: ' + percent + '%"></div>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="achievement-count">' + current + '/' + a.target + '</div>' +
-                '</div>';
+                return '<div class="achievement ' + (current >= a.target ? 'unlocked' : '') + '"><div class="achievement-icon">' + a.icon + '</div><div class="achievement-info"><div class="achievement-name">' + a.name + '</div><div class="achievement-desc">' + a.desc + '</div><div class="achievement-progress"><div class="achievement-progress-fill" style="width: ' + percent + '%"></div></div></div><div class="achievement-count">' + current + '/' + a.target + '</div></div>';
             }).join('');
         }
         
-        function showEditProfile() {
-            document.getElementById('edit-profile-form').style.display = 'block';
-        }
-        
-        function hideEditProfile() {
-            document.getElementById('edit-profile-form').style.display = 'none';
-        }
+        function showEditProfile() { document.getElementById('edit-profile-form').style.display = 'block'; }
+        function hideEditProfile() { document.getElementById('edit-profile-form').style.display = 'none'; }
         
         async function saveProfile() {
             var penName = document.getElementById('edit-pen-name').value.trim();
             var bio = document.getElementById('edit-bio').value.trim();
-            
-            if (!penName) {
-                alert('Введите псевдоним');
-                return;
-            }
-            
+            if (!penName) { alert('Введите псевдоним'); return; }
             try {
-                var { error } = await db
-                    .from('authors')
-                    .update({ pen_name: penName, bio: bio })
-                    .eq('id', currentAuthor.id);
-                
-                if (error) throw error;
-                
+                await db.from('authors').update({ pen_name: penName, bio: bio }).eq('id', currentAuthor.id);
                 currentAuthor.pen_name = penName;
                 currentAuthor.bio = bio;
-                
-                var savedUser = JSON.parse(localStorage.getItem('stroka_user') || '{}');
-                savedUser.pen_name = penName;
-                localStorage.setItem('stroka_user', JSON.stringify(savedUser));
-                
                 await loadAuthorSection();
-                
-            } catch (error) {
-                alert('Ошибка сохранения: ' + error.message);
-            }
+            } catch (error) { alert('Ошибка: ' + error.message); }
         }
         
         async function loadNotifications() {
             if (!currentUser || !currentUser.id) return;
-            
             try {
-                var { data: notifications, error } = await db
-                    .from('notifications')
-                    .select('*')
-                    .eq('user_id', currentUser.id)
-                    .order('created_at', { ascending: false })
-                    .limit(20);
-                
-                if (error) throw error;
-                
+                var { data: notifications } = await db.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(20);
                 var section = document.getElementById('notifications-section');
                 var list = document.getElementById('notifications-list');
-                
-                if (!notifications || notifications.length === 0) {
-                    section.style.display = 'none';
-                    return;
-                }
-                
+                if (!notifications || notifications.length === 0) { section.style.display = 'none'; return; }
                 section.style.display = 'block';
-                
                 list.innerHTML = notifications.map(function(n) {
                     var icon = n.type === 'approved' ? '✅' : (n.type === 'rejected' ? '❌' : '🔔');
-                    var timeAgo = formatTimeAgo(new Date(n.created_at));
-                    
-                    return '<div class="notification-item ' + (n.is_read ? '' : 'unread') + '" onclick="openNotification(\'' + n.id + '\', \'' + (n.link || '') + '\')">' +
-                        '<div class="notification-icon">' + icon + '</div>' +
-                        '<div class="notification-content">' +
-                            '<div class="notification-title">' + n.title + '</div>' +
-                            '<div class="notification-message">' + (n.message || '') + '</div>' +
-                            '<div class="notification-time">' + timeAgo + '</div>' +
-                        '</div>' +
-                    '</div>';
+                    return '<div class="notification-item ' + (n.is_read ? '' : 'unread') + '" onclick="openNotification(\'' + n.id + '\', \'' + (n.link || '') + '\')"><div class="notification-icon">' + icon + '</div><div class="notification-content"><div class="notification-title">' + n.title + '</div><div class="notification-message">' + (n.message || '') + '</div><div class="notification-time">' + formatTimeAgo(new Date(n.created_at)) + '</div></div></div>';
                 }).join('');
-                
-            } catch (e) {
-                console.error('Notifications error:', e);
-            }
+            } catch (e) { console.error('Notifications error:', e); }
         }
         
         async function openNotification(id, link) {
-            await db
-                .from('notifications')
-                .update({ is_read: true })
-                .eq('id', id);
-            
-            if (link) {
-                window.location.href = link;
-            } else {
-                loadNotifications();
-            }
+            await db.from('notifications').update({ is_read: true }).eq('id', id);
+            if (link) window.location.href = link;
+            else loadNotifications();
         }
         
         async function markAllRead() {
-            if (!currentUser || !currentUser.id) return;
-            
-            await db
-                .from('notifications')
-                .update({ is_read: true })
-                .eq('user_id', currentUser.id);
-            
+            if (!currentUser) return;
+            await db.from('notifications').update({ is_read: true }).eq('user_id', currentUser.id);
             loadNotifications();
         }
         
         function formatTimeAgo(date) {
             var seconds = Math.floor((new Date() - date) / 1000);
-            
             if (seconds < 60) return 'только что';
             if (seconds < 3600) return Math.floor(seconds / 60) + ' мин назад';
             if (seconds < 86400) return Math.floor(seconds / 3600) + ' ч назад';
             if (seconds < 604800) return Math.floor(seconds / 86400) + ' дн назад';
-            
             return date.toLocaleDateString('ru-RU');
         }
         
