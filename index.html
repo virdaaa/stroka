@@ -24,503 +24,93 @@
             --accent: #c9a55c;
             --accent-dim: #8a7340;
             --border: #2a2a2c;
-            
             --font-display: 'Cormorant Garamond', serif;
             --font-body: 'Literata', serif;
             --font-ui: 'IBM Plex Sans', sans-serif;
         }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        html, body {
-            height: 100%;
-            overflow: hidden;
-        }
-        
-        body {
-            font-family: var(--font-ui);
-            background: var(--bg-primary);
-            color: var(--text-primary);
-        }
-        
-        .app {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            max-width: 480px;
-            margin: 0 auto;
-            position: relative;
-            padding-bottom: 70px;
-        }
-        
-        /* Header */
-        .header {
-            padding: 16px 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: var(--bg-primary);
-            border-bottom: 1px solid var(--border);
-            z-index: 100;
-        }
-        
-        .logo {
-            font-family: var(--font-display);
-            font-size: 28px;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; overflow: hidden; }
+        body { font-family: var(--font-ui); background: var(--bg-primary); color: var(--text-primary); }
+        .app { height: 100%; display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; position: relative; padding-bottom: 70px; }
+        .header { padding: 16px 20px; display: flex; justify-content: center; align-items: center; background: var(--bg-primary); border-bottom: 1px solid var(--border); z-index: 100; }
+        .logo { font-family: var(--font-display); font-size: 28px; font-weight: 600; letter-spacing: 0.05em; }
         .logo span { color: var(--accent); }
-        
-        /* Top Tabs */
-        .top-tabs {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 16px;
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border);
-            overflow-x: visible;
-            overflow-y: visible;
-            -webkit-overflow-scrolling: touch;
-            position: relative;
-            z-index: 100;
-        }
-        
+        .top-tabs { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); overflow-x: visible; overflow-y: visible; -webkit-overflow-scrolling: touch; position: relative; z-index: 100; }
         .top-tabs::-webkit-scrollbar { display: none; }
-        
-        .top-tab {
-            padding: 8px 16px;
-            background: none;
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            color: var(--text-secondary);
-            font-family: var(--font-ui);
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-        
-        .top-tab:hover {
-            border-color: var(--text-muted);
-        }
-        
-        .top-tab.active {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: var(--bg-primary);
-        }
-        
-        .genre-dropdown {
-            position: relative;
-        }
-        
-        .genre-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            margin-top: 8px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 8px 0;
-            min-width: 150px;
-            z-index: 200;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-        }
-        
+        .top-tab { padding: 8px 16px; background: none; border: 1px solid var(--border); border-radius: 20px; color: var(--text-secondary); font-family: var(--font-ui); font-size: 14px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+        .top-tab:hover { border-color: var(--text-muted); }
+        .top-tab.active { background: var(--accent); border-color: var(--accent); color: var(--bg-primary); }
+        .genre-dropdown { position: relative; }
+        .genre-menu { display: none; position: absolute; top: 100%; left: 0; margin-top: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 8px 0; min-width: 150px; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
         .genre-menu.open { display: block; }
-        
-        .genre-item {
-            padding: 10px 16px;
-            color: var(--text-primary);
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        
-        .genre-item:hover {
-            background: var(--bg-secondary);
-        }
-        
-        .genre-item.active {
-            color: var(--accent);
-        }
-        
-        /* Feed */
-        .feed {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0;
-        }
-        
-        .short-card {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            border-bottom: 1px solid var(--border);
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        
-        .short-card:active {
-            background: var(--bg-secondary);
-        }
-        
+        .genre-item { padding: 10px 16px; color: var(--text-primary); cursor: pointer; transition: background 0.2s; }
+        .genre-item:hover { background: var(--bg-secondary); }
+        .genre-item.active { color: var(--accent); }
+        .feed { flex: 1; overflow-y: auto; padding: 0; }
+        .short-card { padding: 20px; display: flex; flex-direction: column; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.2s; }
+        .short-card:active { background: var(--bg-secondary); }
         .short-book-info { margin-bottom: 16px; }
-        
-        .short-book-title {
-            font-family: var(--font-display);
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-        
-        .short-book-author {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
-        }
-        
-        .short-meta {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 12px;
-        }
-        
-        .short-meta-item {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-        
-        .short-meta-item.genre {
-            color: var(--accent);
-            font-weight: 500;
-        }
-        
-        .genre-pct {
-            opacity: 0.6;
-            font-weight: 400;
-            font-size: 11px;
-        }
-        
-        .short-tags {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        
-        .short-tag {
-            font-size: 11px;
-            padding: 4px 10px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            color: var(--text-secondary);
-        }
-        
-        .short-stats {
-            display: flex;
-            gap: 16px;
-            margin-top: 12px;
-            font-size: 13px;
-            color: var(--text-muted);
-            align-items: center;
-        }
-        
-        .short-stat {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
-        .short-stat-icon {
-            font-size: 14px;
-        }
-        
-        .rating-block {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 6px 12px;
-        }
-        
-        .rating-thumbs {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
-        .rating-thumb {
-            font-size: 18px;
-        }
-        
+        .short-book-title { font-family: var(--font-display); font-size: 24px; font-weight: 600; margin-bottom: 4px; }
+        .short-book-author { font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; }
+        .short-meta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+        .short-meta-item { font-size: 12px; color: var(--text-muted); }
+        .short-meta-item.genre { color: var(--accent); font-weight: 500; }
+        .genre-pct { opacity: 0.6; font-weight: 400; font-size: 11px; }
+        .short-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+        .short-tag { font-size: 11px; padding: 4px 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; color: var(--text-secondary); }
+        .short-stats { display: flex; gap: 16px; margin-top: 12px; font-size: 13px; color: var(--text-muted); align-items: center; }
+        .short-stat { display: flex; align-items: center; gap: 4px; }
+        .short-stat-icon { font-size: 14px; }
+        .rating-block { display: flex; align-items: center; gap: 8px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; }
+        .rating-thumbs { display: flex; align-items: center; gap: 4px; }
+        .rating-thumb { font-size: 18px; }
         .rating-thumb.up { color: #c9a55c; }
         .rating-thumb.down { color: var(--text-muted); opacity: 0.5; }
-        
-        .rating-percent {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--accent);
-        }
-        
-        .rating-divider {
-            width: 1px;
-            height: 20px;
-            background: var(--border);
-        }
-        
-        .rating-votes {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-        
-        .literacy-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        
-        .literacy-badge.high {
-            background: rgba(124, 179, 66, 0.15);
-            color: #7cb342;
-            border: 1px solid #7cb342;
-        }
-        
-        .literacy-badge.medium {
-            background: rgba(255, 183, 77, 0.15);
-            color: #ffb74d;
-            border: 1px solid #ffb74d;
-        }
-        
-        .literacy-badge.low {
-            background: rgba(229, 115, 115, 0.15);
-            color: #e57373;
-            border: 1px solid #e57373;
-        }
-        
-        .age-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 28px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-        
+        .rating-percent { font-size: 16px; font-weight: 600; color: var(--accent); }
+        .rating-divider { width: 1px; height: 20px; background: var(--border); }
+        .rating-votes { font-size: 11px; color: var(--text-muted); }
+        .literacy-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+        .literacy-badge.high { background: rgba(124, 179, 66, 0.15); color: #7cb342; border: 1px solid #7cb342; }
+        .literacy-badge.medium { background: rgba(255, 183, 77, 0.15); color: #ffb74d; border: 1px solid #ffb74d; }
+        .literacy-badge.low { background: rgba(229, 115, 115, 0.15); color: #e57373; border: 1px solid #e57373; }
+        .age-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 8px; }
         .age-badge.age-0 { background: #4a822; color: #4a8; border: 1px solid #4a8; }
         .age-badge.age-6 { background: #8bc34a22; color: #8bc34a; border: 1px solid #8bc34a; }
         .age-badge.age-12 { background: #ffc10722; color: #ffc107; border: 1px solid #ffc107; }
         .age-badge.age-16 { background: #ff980022; color: #ff9800; border: 1px solid #ff9800; }
         .age-badge.age-18 { background: #f4433622; color: #f44336; border: 1px solid #f44336; }
-        
-        .similar-to {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 8px;
-            font-style: italic;
-        }
-        
-        .short-content {
-            flex: 1;
-            position: relative;
-            margin: 16px 0;
-        }
-        
-        .short-text {
-            font-family: var(--font-body);
-            font-size: 16px;
-            line-height: 1.7;
-            color: var(--text-primary);
-        }
-        
-        .short-fade {
-            display: none;
-        }
-        
-        /* Loading */
-        .loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: var(--text-muted);
-            gap: 16px;
-        }
-        
-        .spinner {
-            width: 32px;
-            height: 32px;
-            border: 3px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Skeleton Loading */
-        .skeleton-card {
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .skeleton {
-            background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-secondary) 50%, var(--bg-card) 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: 4px;
-        }
-        
-        .skeleton-title {
-            height: 28px;
-            width: 70%;
-            margin-bottom: 8px;
-        }
-        
-        .skeleton-author {
-            height: 16px;
-            width: 40%;
-            margin-bottom: 16px;
-        }
-        
-        .skeleton-meta {
-            height: 14px;
-            width: 50%;
-            margin-bottom: 12px;
-        }
-        
-        .skeleton-text {
-            height: 80px;
-            width: 100%;
-        }
-        
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-        
-        /* Load More */
-        .load-more {
-            padding: 20px;
-            text-align: center;
-        }
-        
-        .load-more-btn {
-            padding: 12px 32px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text-secondary);
-            font-family: var(--font-ui);
-            font-size: 14px;
-            cursor: pointer;
-        }
-        
-        .load-more-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-        
-        /* Empty State */
-        .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: var(--text-muted);
-            text-align: center;
-            padding: 40px;
-        }
-        
-        .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-        
-        .empty-state-text {
-            margin-bottom: 8px;
-        }
-        
-        .empty-state-subtext {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-        
-        /* Bottom Navigation */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 0;
-            padding-bottom: max(8px, env(safe-area-inset-bottom));
-            z-index: 1000;
-            max-width: 480px;
-            margin: 0 auto;
-        }
-        
-        .bottom-nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-decoration: none;
-            color: var(--text-muted);
-            font-size: 11px;
-            padding: 4px 16px;
-            transition: color 0.2s;
-        }
-        
-        .bottom-nav-item:hover {
-            color: var(--text-secondary);
-        }
-        
-        .bottom-nav-item.active {
-            color: var(--accent);
-        }
-        
-        .bottom-nav-icon {
-            font-size: 22px;
-            margin-bottom: 2px;
-        }
+        .similar-to { font-size: 12px; color: var(--text-muted); margin-top: 8px; font-style: italic; }
+        .short-content { flex: 1; position: relative; margin: 16px 0; }
+        .short-text { font-family: var(--font-body); font-size: 16px; line-height: 1.7; color: var(--text-primary); }
+        .short-fade { display: none; }
+        .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); gap: 16px; }
+        .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .skeleton-card { padding: 20px; border-bottom: 1px solid var(--border); }
+        .skeleton { background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-secondary) 50%, var(--bg-card) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+        .skeleton-title { height: 28px; width: 70%; margin-bottom: 8px; }
+        .skeleton-author { height: 16px; width: 40%; margin-bottom: 16px; }
+        .skeleton-meta { height: 14px; width: 50%; margin-bottom: 12px; }
+        .skeleton-text { height: 80px; width: 100%; }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .load-more { padding: 20px; text-align: center; }
+        .load-more-btn { padding: 12px 32px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; color: var(--text-secondary); font-family: var(--font-ui); font-size: 14px; cursor: pointer; }
+        .load-more-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); text-align: center; padding: 40px; }
+        .empty-state-icon { font-size: 48px; margin-bottom: 16px; }
+        .empty-state-text { margin-bottom: 8px; }
+        .empty-state-subtext { font-size: 13px; color: var(--text-muted); }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-secondary); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 8px 0; padding-bottom: max(8px, env(safe-area-inset-bottom)); z-index: 1000; max-width: 480px; margin: 0 auto; }
+        .bottom-nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: var(--text-muted); font-size: 11px; padding: 4px 16px; transition: color 0.2s; }
+        .bottom-nav-item:hover { color: var(--text-secondary); }
+        .bottom-nav-item.active { color: var(--accent); }
+        .bottom-nav-icon { font-size: 22px; margin-bottom: 2px; }
     </style>
 <!-- Yandex.Metrika counter -->
 <script type="text/javascript">
-    (function(m,e,t,r,i,k,a){
-        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-        m[i].l=1*new Date();
-        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=106258778', 'ym');
-    ym(106258778, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
+    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=106258778','ym');ym(106258778,'init',{ssr:true,webvisor:true,clickmap:true,ecommerce:"dataLayer",accurateTrackBounce:true,trackLinks:true});
 </script>
-<noscript><div><img src="https://mc.yandex.ru/watch/106258778" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<noscript><div><img src="https://mc.yandex.ru/watch/106258778" style="position:absolute;left:-9999px;" alt=""/></div></noscript>
 <!-- /Yandex.Metrika counter -->
 </head>
 <body>
@@ -549,74 +139,41 @@
         </div>
         
         <div class="feed" id="feed">
-            <!-- Скелетоны показываются сразу -->
             <div id="skeleton-loader">
-                <div class="skeleton-card">
-                    <div class="skeleton skeleton-title"></div>
-                    <div class="skeleton skeleton-author"></div>
-                    <div class="skeleton skeleton-meta"></div>
-                    <div class="skeleton skeleton-text"></div>
-                </div>
-                <div class="skeleton-card">
-                    <div class="skeleton skeleton-title"></div>
-                    <div class="skeleton skeleton-author"></div>
-                    <div class="skeleton skeleton-meta"></div>
-                    <div class="skeleton skeleton-text"></div>
-                </div>
-                <div class="skeleton-card">
-                    <div class="skeleton skeleton-title"></div>
-                    <div class="skeleton skeleton-author"></div>
-                    <div class="skeleton skeleton-meta"></div>
-                    <div class="skeleton skeleton-text"></div>
-                </div>
+                <div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-author"></div><div class="skeleton skeleton-meta"></div><div class="skeleton skeleton-text"></div></div>
+                <div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-author"></div><div class="skeleton skeleton-meta"></div><div class="skeleton skeleton-text"></div></div>
+                <div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-author"></div><div class="skeleton skeleton-meta"></div><div class="skeleton skeleton-text"></div></div>
             </div>
         </div>
         
-        <!-- Bottom Navigation -->
         <nav class="bottom-nav">
-            <a href="/" class="bottom-nav-item active">
-                <span class="bottom-nav-icon">🏠</span>
-                <span>Главная</span>
-            </a>
-            <a href="/search.html" class="bottom-nav-item">
-                <span class="bottom-nav-icon">🔍</span>
-                <span>Поиск</span>
-            </a>
-            <a href="/moe.html" class="bottom-nav-item">
-                <span class="bottom-nav-icon">📚</span>
-                <span>Моё</span>
-            </a>
-            <a href="/profile.html" class="bottom-nav-item">
-                <span class="bottom-nav-icon">👤</span>
-                <span>Профиль</span>
-            </a>
+            <a href="/" class="bottom-nav-item active"><span class="bottom-nav-icon">🏠</span><span>Главная</span></a>
+            <a href="/search.html" class="bottom-nav-item"><span class="bottom-nav-icon">🔍</span><span>Поиск</span></a>
+            <a href="/moe.html" class="bottom-nav-item"><span class="bottom-nav-icon">📚</span><span>Моё</span></a>
+            <a href="/profile.html" class="bottom-nav-item"><span class="bottom-nav-icon">👤</span><span>Профиль</span></a>
         </nav>
     </div>
 
     <script>
-        // ===== CONFIG =====
-        const SUPABASE_URL = 'https://xcnvejvkklypvkzkanwj.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbnZlanZra2x5cHZremthbndqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNjU4NzIsImV4cCI6MjA4MzY0MTg3Mn0.8ldNxEbzc8aNJYWtOgP0b5lOsPhl4zMeoht2rn0DeP8';
+        var SUPABASE_URL = 'https://xcnvejvkklypvkzkanwj.supabase.co';
+        var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbnZlanZra2x5cHZremthbndqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNjU4NzIsImV4cCI6MjA4MzY0MTg3Mn0.8ldNxEbzc8aNJYWtOgP0b5lOsPhl4zMeoht2rn0DeP8';
+        var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
-        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        var stories = [];
+        var shorts = [];
+        var currentFilter = 'foryou';
+        var currentGenre = '';
+        var currentUser = null;
+        var userPreferences = {};
+        var readStoryIds = new Set();
+        var confirmedAge = 0; // Подтверждённый возраст пользователя
         
-        // ===== STATE =====
-        let stories = [];
-        let shorts = [];
-        let currentFilter = 'foryou';
-        let currentGenre = '';
-        let currentUser = null;
-        let userPreferences = {}; // { genre: weight }
-        let readStoryIds = new Set(); // Уже прочитанные
+        var ITEMS_PER_PAGE = 10;
+        var displayedCount = 0;
+        var allShorts = [];
+        var CACHE_KEY = 'stroka_feed_cache';
+        var CACHE_TTL = 5 * 60 * 1000;
         
-        // Pagination & Cache
-        const ITEMS_PER_PAGE = 10;
-        let displayedCount = 0;
-        let allShorts = [];
-        const CACHE_KEY = 'stroka_feed_cache';
-        const CACHE_TTL = 5 * 60 * 1000; // 5 минут
-        
-        // ===== HELPERS =====
         function formatNumber(num) {
             if (!num || num === 0) return '0';
             if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
@@ -624,42 +181,85 @@
             return num.toString();
         }
         
-        // ===== INIT =====
+        // Получить требуемый возраст для рейтинга
+        function getRequiredAge(rating) {
+            switch (rating) {
+                case '18+': return 18;
+                case '16+': return 16;
+                case '12+': return 12;
+                default: return 0;
+            }
+        }
+        
+        // Загрузить подтверждённый возраст
+        async function loadConfirmedAge() {
+            // Из localStorage
+            confirmedAge = parseInt(localStorage.getItem('stroka_confirmed_age') || '0');
+            
+            // Из базы (если авторизован)
+            if (currentUser && currentUser.id) {
+                try {
+                    var { data: author } = await db
+                        .from('authors')
+                        .select('confirmed_age')
+                        .eq('id', currentUser.id)
+                        .single();
+                    
+                    if (author && author.confirmed_age) {
+                        var dbAge = author.confirmed_age;
+                        // Берём максимум
+                        if (dbAge > confirmedAge) {
+                            confirmedAge = dbAge;
+                            localStorage.setItem('stroka_confirmed_age', confirmedAge.toString());
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error loading confirmed age:', e);
+                }
+            }
+        }
+        
+        // Фильтр контента по возрасту
+        function filterByAge(items) {
+            return items.filter(function(item) {
+                var requiredAge = getRequiredAge(item.age_rating);
+                return confirmedAge >= requiredAge;
+            });
+        }
+        
         async function init() {
-            const savedUser = localStorage.getItem('stroka_user');
+            var savedUser = localStorage.getItem('stroka_user');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
             } else {
-                const { data: { user } } = await db.auth.getUser();
+                var { data: { user } } = await db.auth.getUser();
                 currentUser = user;
             }
             
-            // Сначала показываем кэш (мгновенно)
+            // Загружаем подтверждённый возраст
+            await loadConfirmedAge();
+            
             showCachedData();
             
-            // Загружаем предпочтения пользователя
             if (currentUser) {
                 await loadUserPreferences();
                 await loadReadHistory();
             }
             
-            // Загружаем свежие данные
             await loadData();
             setupEventListeners();
             setupInfiniteScroll();
         }
         
-        // ===== CACHE =====
         function showCachedData() {
             try {
-                const cached = localStorage.getItem(CACHE_KEY);
+                var cached = localStorage.getItem(CACHE_KEY);
                 if (cached) {
-                    const { data, timestamp, filter, genre } = JSON.parse(cached);
-                    // Показываем кэш только если фильтры совпадают и не протух
-                    if (filter === currentFilter && genre === currentGenre && Date.now() - timestamp < CACHE_TTL) {
-                        allShorts = data;
+                    var parsed = JSON.parse(cached);
+                    if (parsed.filter === currentFilter && parsed.genre === currentGenre && Date.now() - parsed.timestamp < CACHE_TTL) {
+                        allShorts = filterByAge(parsed.data); // Фильтруем кэш по возрасту
                         displayedCount = 0;
-                        renderFeed(true); // true = из кэша
+                        renderFeed(true);
                     }
                 }
             } catch (e) {
@@ -669,90 +269,49 @@
         
         function saveToCache() {
             try {
-                const cacheData = {
-                    data: allShorts,
-                    timestamp: Date.now(),
-                    filter: currentFilter,
-                    genre: currentGenre
-                };
+                var cacheData = { data: allShorts, timestamp: Date.now(), filter: currentFilter, genre: currentGenre };
                 localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
             } catch (e) {
                 console.error('Cache save error:', e);
             }
         }
         
-        // ===== LOAD USER PREFERENCES =====
         async function loadUserPreferences() {
             try {
-                const { data } = await db
-                    .from('user_preferences')
-                    .select('genre, weight')
-                    .eq('user_id', currentUser.id);
-                
+                var { data } = await db.from('user_preferences').select('genre, weight').eq('user_id', currentUser.id);
                 userPreferences = {};
-                (data || []).forEach(p => {
-                    userPreferences[p.genre] = p.weight;
-                });
-            } catch (e) {
-                console.error('Error loading preferences:', e);
-            }
+                (data || []).forEach(function(p) { userPreferences[p.genre] = p.weight; });
+            } catch (e) { console.error('Error loading preferences:', e); }
         }
         
-        // ===== LOAD READ HISTORY =====
         async function loadReadHistory() {
             try {
-                const { data } = await db
-                    .from('reading_history')
-                    .select('story_id')
-                    .eq('user_id', currentUser.id);
-                
-                readStoryIds = new Set((data || []).map(h => h.story_id));
-            } catch (e) {
-                console.error('Error loading history:', e);
-            }
+                var { data } = await db.from('reading_history').select('story_id').eq('user_id', currentUser.id);
+                readStoryIds = new Set((data || []).map(function(h) { return h.story_id; }));
+            } catch (e) { console.error('Error loading history:', e); }
         }
         
-        // ===== LOAD DATA =====
         async function loadData() {
             try {
-                let query = db
-                    .from('stories')
-                    .select(`
-                        *,
-                        authors (name, pen_name),
-                        shorts (id, text, position)
-                    `)
-                    .eq('status', 'published');
-                
-                if (currentGenre) {
-                    query = query.eq('genre', currentGenre);
-                }
-                
+                var query = db.from('stories').select('*, authors (name, pen_name), shorts (id, text, position)').eq('status', 'published');
+                if (currentGenre) query = query.eq('genre', currentGenre);
                 if (currentFilter === 'new') {
                     query = query.order('published_at', { ascending: false });
                 } else {
                     query = query.order('created_at', { ascending: false });
                 }
                 
-                const { data: storiesData, error } = await query;
-                
+                var { data: storiesData, error } = await query;
                 if (error) throw error;
                 
                 stories = storiesData || [];
+                var storyIds = stories.map(function(s) { return s.id; });
                 
-                const storyIds = stories.map(s => s.id);
+                var { data: reactionsData } = await db.from('reactions').select('story_id, reaction').in('story_id', storyIds);
                 
-                const { data: reactionsData } = await db
-                    .from('reactions')
-                    .select('story_id, reaction')
-                    .in('story_id', storyIds);
-                
-                const statsMap = {};
-                stories.forEach(s => {
-                    statsMap[s.id] = { views: s.views || 0, likes: 0, dislikes: 0 };
-                });
-                
-                (reactionsData || []).forEach(r => {
+                var statsMap = {};
+                stories.forEach(function(s) { statsMap[s.id] = { views: s.views || 0, likes: 0, dislikes: 0 }; });
+                (reactionsData || []).forEach(function(r) {
                     if (statsMap[r.story_id]) {
                         if (r.reaction === 'like') statsMap[r.story_id].likes++;
                         else if (r.reaction === 'dislike') statsMap[r.story_id].dislikes++;
@@ -760,15 +319,17 @@
                 });
                 
                 shorts = [];
-                stories.forEach(story => {
-                    const stats = statsMap[story.id] || { views: 0, likes: 0, dislikes: 0 };
-                    const totalReactions = stats.likes + stats.dislikes;
-                    const likePercent = totalReactions > 0 ? Math.round(100 * stats.likes / totalReactions) : null;
+                stories.forEach(function(story) {
+                    var stats = statsMap[story.id] || { views: 0, likes: 0, dislikes: 0 };
+                    var totalReactions = stats.likes + stats.dislikes;
+                    var likePercent = totalReactions > 0 ? Math.round(100 * stats.likes / totalReactions) : null;
                     
                     if (story.shorts) {
-                        story.shorts.forEach(short => {
+                        story.shorts.forEach(function(short) {
                             shorts.push({
-                                ...short,
+                                id: short.id,
+                                text: short.text,
+                                position: short.position,
                                 story_id: story.id,
                                 title: story.title,
                                 author: story.authors?.pen_name || story.authors?.name || 'Неизвестный автор',
@@ -793,238 +354,173 @@
                     shorts = smartSort(shorts);
                 }
                 
-                // Сохраняем все шортсы и кэшируем
-                allShorts = shorts;
+                // Фильтруем по возрасту перед показом
+                allShorts = filterByAge(shorts);
                 displayedCount = 0;
                 saveToCache();
-                
-                renderFeed(false); // false = свежие данные
+                renderFeed(false);
                 
             } catch (error) {
                 console.error('Error loading data:', error);
-                document.getElementById('feed').innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">😕</div>
-                        <div class="empty-state-text">Ошибка загрузки</div>
-                        <div class="empty-state-subtext">${error.message}</div>
-                        <button onclick="loadData()" style="margin-top: 16px; padding: 10px 20px; background: var(--accent); border: none; border-radius: 8px; color: var(--bg-primary); cursor: pointer;">Повторить</button>
-                    </div>
-                `;
+                document.getElementById('feed').innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><div class="empty-state-text">Ошибка загрузки</div><div class="empty-state-subtext">' + error.message + '</div><button onclick="loadData()" style="margin-top: 16px; padding: 10px 20px; background: var(--accent); border: none; border-radius: 8px; color: var(--bg-primary); cursor: pointer;">Повторить</button></div>';
             }
         }
         
-        // ===== SMART SORT (For You Algorithm) =====
         function smartSort(items) {
-            const now = Date.now();
-            const hour48 = 48 * 60 * 60 * 1000;
+            var now = Date.now();
+            var hour48 = 48 * 60 * 60 * 1000;
             
-            // Группируем по story_id чтобы не показывать дубли
-            const seenStories = new Set();
-            const uniqueItems = items.filter(item => {
-                if (seenStories.has(item.story_id)) return false;
-                seenStories.add(item.story_id);
+            var seenStories = {};
+            var uniqueItems = items.filter(function(item) {
+                if (seenStories[item.story_id]) return false;
+                seenStories[item.story_id] = true;
                 return true;
             });
             
-            // Фильтруем уже прочитанные (но оставляем если мало контента)
-            let filtered = uniqueItems;
+            var filtered = uniqueItems;
             if (readStoryIds.size > 0 && uniqueItems.length > 5) {
-                const unread = uniqueItems.filter(item => !readStoryIds.has(item.story_id));
-                if (unread.length >= 3) {
-                    filtered = unread;
-                }
+                var unread = uniqueItems.filter(function(item) { return !readStoryIds.has(item.story_id); });
+                if (unread.length >= 3) filtered = unread;
             }
             
-            // Считаем score для каждого шортса
-            const scored = filtered.map(item => {
-                let score = Math.random() * 2; // Базовый рандом 0-2
-                
-                // Бонус за новизну (< 48ч)
-                const storyDate = new Date(item.published_at || item.created_at).getTime();
-                if (now - storyDate < hour48) {
-                    score += 3; // Новые рассказы получают буст
-                }
-                
-                // Бонус за предпочтения жанров
+            var scored = filtered.map(function(item) {
+                var score = Math.random() * 2;
+                var storyDate = new Date(item.published_at || item.created_at).getTime();
+                if (now - storyDate < hour48) score += 3;
                 if (item.genres && item.genres.length > 0) {
-                    item.genres.forEach(g => {
-                        const genreName = g.name || g;
-                        const weight = userPreferences[genreName] || 0;
-                        score += weight * 0.5; // Вес жанра влияет на score
+                    item.genres.forEach(function(g) {
+                        var genreName = g.name || g;
+                        var weight = userPreferences[genreName] || 0;
+                        score += weight * 0.5;
                     });
                 }
-                
-                // Небольшой бонус за популярность (но не решающий)
-                if (item.like_percent && item.like_percent > 70) {
-                    score += 0.5;
-                }
-                
-                return { ...item, score };
+                if (item.like_percent && item.like_percent > 70) score += 0.5;
+                item.score = score;
+                return item;
             });
             
-            // Сортируем по score
-            scored.sort((a, b) => b.score - a.score);
+            scored.sort(function(a, b) { return b.score - a.score; });
             
-            // Антибуст: не больше 2 рассказов одного автора подряд
-            const result = [];
-            const authorCount = {};
-            
-            for (const item of scored) {
-                const author = item.author;
-                const count = authorCount[author] || 0;
-                
-                if (count < 2) {
-                    result.push(item);
-                    authorCount[author] = count + 1;
-                } else {
-                    // Добавляем в конец
-                    result.push(item);
-                }
-            }
+            var result = [];
+            var authorCount = {};
+            scored.forEach(function(item) {
+                var author = item.author;
+                var count = authorCount[author] || 0;
+                if (count < 2) authorCount[author] = count + 1;
+                result.push(item);
+            });
             
             return result;
         }
         
-        // ===== RENDER =====
-        function renderFeed(fromCache = false) {
-            const feed = document.getElementById('feed');
+        function renderFeed(fromCache) {
+            var feed = document.getElementById('feed');
             
             if (allShorts.length === 0) {
-                feed.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📖</div>
-                        <div class="empty-state-text">Пока нет рассказов</div>
-                        <div class="empty-state-subtext">Станьте первым автором!</div>
-                        <a href="/profile.html" style="margin-top: 16px; padding: 12px 24px; background: var(--accent); color: var(--bg-primary); border-radius: 8px; text-decoration: none; font-weight: 500;">Опубликовать</a>
-                    </div>
-                `;
+                feed.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📖</div><div class="empty-state-text">Пока нет рассказов</div><div class="empty-state-subtext">Станьте первым автором!</div><a href="/profile.html" style="margin-top: 16px; padding: 12px 24px; background: var(--accent); color: var(--bg-primary); border-radius: 8px; text-decoration: none; font-weight: 500;">Опубликовать</a></div>';
                 return;
             }
             
-            // Берём первые N элементов
-            const toShow = allShorts.slice(0, displayedCount + ITEMS_PER_PAGE);
+            var toShow = allShorts.slice(0, displayedCount + ITEMS_PER_PAGE);
             displayedCount = toShow.length;
             
-            let html = toShow.map(short => `
-                <div class="short-card" onclick="openStory('${short.story_id}')">
-                    <div class="short-book-info">
-                        <div class="short-book-title">${short.title}<span class="age-badge age-${short.age_rating?.replace('+','')}">${short.age_rating || '16+'}</span></div>
-                        <div class="short-meta">
-                            ${short.genres?.length ? short.genres.map(g => `<span class="short-meta-item genre">${g.name} <span class="genre-pct">${g.percent}%</span></span>`).join('') : '<span class="short-meta-item genre">Проза</span>'}
-                            <span class="short-meta-item">⏱ ${short.reading_time || '?'} мин</span>
-                        </div>
-                        <div class="short-tags">
-                            ${(short.subgenres || []).slice(0, 4).map(tag => `<span class="short-tag">${tag}</span>`).join('')}
-                        </div>
-                        ${short.similar_to?.length ? `
-                        <div class="similar-to">Если нравится: ${short.similar_to.join(', ')}</div>
-                        ` : ''}
-                        <div class="short-stats">
-                            <span class="short-stat views">
-                                <span class="short-stat-icon">👁</span>
-                                <span class="short-stat-value">${formatNumber(short.views)}</span>
-                            </span>
-                            ${short.like_percent !== null ? `
-                            <div class="rating-block">
-                                <div class="rating-thumbs">
-                                    <span class="rating-thumb up">👍</span>
-                                    <span class="rating-thumb down">👎</span>
-                                </div>
-                                <span class="rating-percent">${short.like_percent}%</span>
-                                <div class="rating-divider"></div>
-                                <span class="rating-votes">Голосов: ${short.total_votes || 0}</span>
-                            </div>
-                            ` : ''}
-                            ${short.literacy_score ? `
-                            <span class="literacy-badge ${short.literacy_score < 5 ? 'low' : short.literacy_score < 7 ? 'medium' : 'high'}" title="Грамотность текста">
-                                ✎ ${short.literacy_score}
-                            </span>
-                            ` : ''}
-                        </div>
-                    </div>
-                    <div class="short-content">
-                        <div class="short-text">${short.text}</div>
-                        <div class="short-fade"></div>
-                    </div>
-                </div>
-            `).join('');
+            var html = toShow.map(function(short) {
+                var genresHtml = '';
+                if (short.genres && short.genres.length) {
+                    genresHtml = short.genres.map(function(g) { return '<span class="short-meta-item genre">' + g.name + ' <span class="genre-pct">' + g.percent + '%</span></span>'; }).join('');
+                } else {
+                    genresHtml = '<span class="short-meta-item genre">Проза</span>';
+                }
+                
+                var tagsHtml = (short.subgenres || []).slice(0, 4).map(function(tag) { return '<span class="short-tag">' + tag + '</span>'; }).join('');
+                
+                var similarHtml = '';
+                if (short.similar_to && short.similar_to.length) {
+                    similarHtml = '<div class="similar-to">Если нравится: ' + short.similar_to.join(', ') + '</div>';
+                }
+                
+                var ratingHtml = '';
+                if (short.like_percent !== null) {
+                    ratingHtml = '<div class="rating-block"><div class="rating-thumbs"><span class="rating-thumb up">👍</span><span class="rating-thumb down">👎</span></div><span class="rating-percent">' + short.like_percent + '%</span><div class="rating-divider"></div><span class="rating-votes">Голосов: ' + (short.total_votes || 0) + '</span></div>';
+                }
+                
+                var literacyHtml = '';
+                if (short.literacy_score) {
+                    var litClass = short.literacy_score < 5 ? 'low' : short.literacy_score < 7 ? 'medium' : 'high';
+                    literacyHtml = '<span class="literacy-badge ' + litClass + '" title="Грамотность текста">✎ ' + short.literacy_score + '</span>';
+                }
+                
+                var ageClass = 'age-' + (short.age_rating || '16+').replace('+', '');
+                
+                return '<div class="short-card" onclick="openStory(\'' + short.story_id + '\')">' +
+                    '<div class="short-book-info">' +
+                        '<div class="short-book-title">' + short.title + '<span class="age-badge ' + ageClass + '">' + (short.age_rating || '16+') + '</span></div>' +
+                        '<div class="short-meta">' + genresHtml + '<span class="short-meta-item">⏱ ' + (short.reading_time || '?') + ' мин</span></div>' +
+                        '<div class="short-tags">' + tagsHtml + '</div>' +
+                        similarHtml +
+                        '<div class="short-stats">' +
+                            '<span class="short-stat views"><span class="short-stat-icon">👁</span><span class="short-stat-value">' + formatNumber(short.views) + '</span></span>' +
+                            ratingHtml +
+                            literacyHtml +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="short-content"><div class="short-text">' + short.text + '</div><div class="short-fade"></div></div>' +
+                '</div>';
+            }).join('');
             
-            // Кнопка "Показать ещё" если есть что показывать
             if (displayedCount < allShorts.length) {
-                html += `
-                    <div class="load-more">
-                        <button class="load-more-btn" onclick="loadMore()">Показать ещё</button>
-                    </div>
-                `;
+                html += '<div class="load-more"><button class="load-more-btn" onclick="loadMore()">Показать ещё</button></div>';
             }
             
             feed.innerHTML = html;
         }
         
-        function loadMore() {
-            renderFeed();
-        }
+        function loadMore() { renderFeed(); }
         
-        // ===== INFINITE SCROLL =====
         function setupInfiniteScroll() {
-            const feed = document.getElementById('feed');
-            feed.addEventListener('scroll', () => {
+            var feed = document.getElementById('feed');
+            feed.addEventListener('scroll', function() {
                 if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 200) {
-                    if (displayedCount < allShorts.length) {
-                        loadMore();
-                    }
+                    if (displayedCount < allShorts.length) loadMore();
                 }
             });
         }
         
-        // ===== EVENT LISTENERS =====
         function setupEventListeners() {
-            document.querySelectorAll('.top-tab[data-filter]').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    document.querySelectorAll('.top-tab[data-filter]').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.top-tab[data-filter]').forEach(function(tab) {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.top-tab[data-filter]').forEach(function(t) { t.classList.remove('active'); });
                     tab.classList.add('active');
                     currentFilter = tab.dataset.filter;
                     loadData();
                 });
             });
             
-            const genreBtn = document.getElementById('genre-btn');
-            const genreMenu = document.getElementById('genre-menu');
+            var genreBtn = document.getElementById('genre-btn');
+            var genreMenu = document.getElementById('genre-menu');
             
-            genreBtn.addEventListener('click', (e) => {
+            genreBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 genreMenu.classList.toggle('open');
             });
             
-            document.addEventListener('click', () => {
-                genreMenu.classList.remove('open');
-            });
+            document.addEventListener('click', function() { genreMenu.classList.remove('open'); });
             
-            document.querySelectorAll('.genre-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    document.querySelectorAll('.genre-item').forEach(i => i.classList.remove('active'));
+            document.querySelectorAll('.genre-item').forEach(function(item) {
+                item.addEventListener('click', function() {
+                    document.querySelectorAll('.genre-item').forEach(function(i) { i.classList.remove('active'); });
                     item.classList.add('active');
                     currentGenre = item.dataset.genre;
-                    
-                    genreBtn.textContent = currentGenre ? `${currentGenre} ▾` : 'Жанры ▾';
-                    if (currentGenre) {
-                        genreBtn.classList.add('active');
-                    } else {
-                        genreBtn.classList.remove('active');
-                    }
-                    
+                    genreBtn.textContent = currentGenre ? currentGenre + ' ▾' : 'Жанры ▾';
+                    if (currentGenre) { genreBtn.classList.add('active'); } else { genreBtn.classList.remove('active'); }
                     genreMenu.classList.remove('open');
                     loadData();
                 });
             });
         }
         
-        // ===== ACTIONS =====
-        function openStory(storyId) {
-            window.location.href = `/read.html?id=${storyId}`;
-        }
+        function openStory(storyId) { window.location.href = '/read.html?id=' + storyId; }
         
-        // ===== START =====
         init();
     </script>
 </body>
