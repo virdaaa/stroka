@@ -257,7 +257,7 @@
                 if (cached) {
                     var parsed = JSON.parse(cached);
                     if (parsed.filter === currentFilter && parsed.genre === currentGenre && Date.now() - parsed.timestamp < CACHE_TTL) {
-                        allShorts = filterByAge(parsed.data); // Фильтруем кэш по возрасту
+                        allShorts = parsed.data;
                         displayedCount = 0;
                         renderFeed(true);
                     }
@@ -354,8 +354,8 @@
                     shorts = smartSort(shorts);
                 }
                 
-                // Фильтруем по возрасту перед показом
-                allShorts = filterByAge(shorts);
+                // Показываем все рассказы в ленте, проверка возраста — при открытии
+                allShorts = shorts;
                 displayedCount = 0;
                 saveToCache();
                 renderFeed(false);
