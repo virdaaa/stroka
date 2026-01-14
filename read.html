@@ -550,8 +550,13 @@
         let isSubscribed = false;
         let isBookmarked = false;
         let currentReaction = null;
-        let readStartTime = Date.now();
         let maxScrollPercent = 0;
+        
+        // Честный подсчёт времени чтения
+        let totalReadTime = 0;           // Накопленное время в секундах
+        let lastActiveTime = Date.now(); // Последняя активность
+        let isPageActive = true;         // Страница активна
+        let activityTimeout = null;      // Таймаут неактивности
         
         const LOCAL_HISTORY_KEY = 'stroka_history';
         const LOCAL_BOOKMARKS_KEY = 'stroka_bookmarks';
@@ -661,12 +666,69 @@
         function showStoryContent() {
             checkBookmarkStatus();
             setupScrollTracking();
+            setupActivityTracking();
             
             window.addEventListener('beforeunload', saveProgress);
             window.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'hidden') saveProgress();
+                if (document.visibilityState === 'hidden') {
+                    pauseReadingTimer();
+                    saveProgress();
+                } else {
+                    resumeReadingTimer();
+                }
             });
             setInterval(saveProgress, 30000);
+        }
+        
+        // Трекинг активности пользователя
+        function setupActivityTracking() {
+            const activityEvents = ['scroll', 'touchstart', 'touchmove', 'click', 'keydown'];
+            
+            activityEvents.forEach(event => {
+                window.addEventListener(event, onUserActivity, { passive: true });
+            });
+            
+            // Запускаем таймер
+            resumeReadingTimer();
+        }
+        
+        function onUserActivity() {
+            if (!isPageActive) {
+                resumeReadingTimer();
+            }
+            
+            // Сбрасываем таймаут неактивности
+            if (activityTimeout) clearTimeout(activityTimeout);
+            
+            // Если нет активности 30 секунд — пауза
+            activityTimeout = setTimeout(() => {
+                pauseReadingTimer();
+            }, 30000);
+        }
+        
+        function pauseReadingTimer() {
+            if (isPageActive) {
+                // Сохраняем накопленное время
+                const now = Date.now();
+                totalReadTime += Math.round((now - lastActiveTime) / 1000);
+                isPageActive = false;
+            }
+        }
+        
+        function resumeReadingTimer() {
+            if (!isPageActive) {
+                lastActiveTime = Date.now();
+                isPageActive = true;
+            }
+            onUserActivity(); // Запускаем таймаут
+        }
+        
+        function getCurrentReadTime() {
+            let time = totalReadTime;
+            if (isPageActive) {
+                time += Math.round((Date.now() - lastActiveTime) / 1000);
+            }
+            return time;
         }
         
         async function loadStory() {
@@ -842,7 +904,7 @@
         }
         
         async function saveProgress() {
-            const readTimeSeconds = Math.round((Date.now() - readStartTime) / 1000);
+            const readTimeSeconds = getCurrentReadTime();
             const isFinished = maxScrollPercent >= 90;
             
             if (currentUser) {
@@ -861,7 +923,6 @@
                         story_id: storyId,
                         read_percent: maxScrollPercent,
                         read_time_seconds: readTimeSeconds,
-                        started_at: new Date(readStartTime).toISOString(),
                         finished_at: isFinished ? new Date().toISOString() : null
                     }, { onConflict: 'user_id,story_id' });
                     
