@@ -375,6 +375,69 @@
             to { transform: rotate(360deg); }
         }
         
+        /* Skeleton Loading */
+        .skeleton-card {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-secondary) 50%, var(--bg-card) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
+        
+        .skeleton-title {
+            height: 28px;
+            width: 70%;
+            margin-bottom: 8px;
+        }
+        
+        .skeleton-author {
+            height: 16px;
+            width: 40%;
+            margin-bottom: 16px;
+        }
+        
+        .skeleton-meta {
+            height: 14px;
+            width: 50%;
+            margin-bottom: 12px;
+        }
+        
+        .skeleton-text {
+            height: 80px;
+            width: 100%;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        /* Load More */
+        .load-more {
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .load-more-btn {
+            padding: 12px 32px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-family: var(--font-ui);
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .load-more-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
         /* Empty State */
         .empty-state {
             display: flex;
@@ -469,9 +532,26 @@
         </div>
         
         <div class="feed" id="feed">
-            <div class="loading">
-                <div class="spinner"></div>
-                <span>Загрузка...</span>
+            <!-- Скелетоны показываются сразу -->
+            <div id="skeleton-loader">
+                <div class="skeleton-card">
+                    <div class="skeleton skeleton-title"></div>
+                    <div class="skeleton skeleton-author"></div>
+                    <div class="skeleton skeleton-meta"></div>
+                    <div class="skeleton skeleton-text"></div>
+                </div>
+                <div class="skeleton-card">
+                    <div class="skeleton skeleton-title"></div>
+                    <div class="skeleton skeleton-author"></div>
+                    <div class="skeleton skeleton-meta"></div>
+                    <div class="skeleton skeleton-text"></div>
+                </div>
+                <div class="skeleton-card">
+                    <div class="skeleton skeleton-title"></div>
+                    <div class="skeleton skeleton-author"></div>
+                    <div class="skeleton skeleton-meta"></div>
+                    <div class="skeleton skeleton-text"></div>
+                </div>
             </div>
         </div>
         
@@ -512,6 +592,13 @@
         let userPreferences = {}; // { genre: weight }
         let readStoryIds = new Set(); // Уже прочитанные
         
+        // Pagination & Cache
+        const ITEMS_PER_PAGE = 10;
+        let displayedCount = 0;
+        let allShorts = [];
+        const CACHE_KEY = 'stroka_feed_cache';
+        const CACHE_TTL = 5 * 60 * 1000; // 5 минут
+        
         // ===== HELPERS =====
         function formatNumber(num) {
             if (!num || num === 0) return '0';
@@ -530,14 +617,51 @@
                 currentUser = user;
             }
             
+            // Сначала показываем кэш (мгновенно)
+            showCachedData();
+            
             // Загружаем предпочтения пользователя
             if (currentUser) {
                 await loadUserPreferences();
                 await loadReadHistory();
             }
             
+            // Загружаем свежие данные
             await loadData();
             setupEventListeners();
+            setupInfiniteScroll();
+        }
+        
+        // ===== CACHE =====
+        function showCachedData() {
+            try {
+                const cached = localStorage.getItem(CACHE_KEY);
+                if (cached) {
+                    const { data, timestamp, filter, genre } = JSON.parse(cached);
+                    // Показываем кэш только если фильтры совпадают и не протух
+                    if (filter === currentFilter && genre === currentGenre && Date.now() - timestamp < CACHE_TTL) {
+                        allShorts = data;
+                        displayedCount = 0;
+                        renderFeed(true); // true = из кэша
+                    }
+                }
+            } catch (e) {
+                console.error('Cache error:', e);
+            }
+        }
+        
+        function saveToCache() {
+            try {
+                const cacheData = {
+                    data: allShorts,
+                    timestamp: Date.now(),
+                    filter: currentFilter,
+                    genre: currentGenre
+                };
+                localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+            } catch (e) {
+                console.error('Cache save error:', e);
+            }
         }
         
         // ===== LOAD USER PREFERENCES =====
@@ -652,7 +776,12 @@
                     shorts = smartSort(shorts);
                 }
                 
-                renderFeed();
+                // Сохраняем все шортсы и кэшируем
+                allShorts = shorts;
+                displayedCount = 0;
+                saveToCache();
+                
+                renderFeed(false); // false = свежие данные
                 
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -740,10 +869,10 @@
         }
         
         // ===== RENDER =====
-        function renderFeed() {
+        function renderFeed(fromCache = false) {
             const feed = document.getElementById('feed');
             
-            if (shorts.length === 0) {
+            if (allShorts.length === 0) {
                 feed.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">📖</div>
@@ -755,7 +884,11 @@
                 return;
             }
             
-            feed.innerHTML = shorts.map(short => `
+            // Берём первые N элементов
+            const toShow = allShorts.slice(0, displayedCount + ITEMS_PER_PAGE);
+            displayedCount = toShow.length;
+            
+            let html = toShow.map(short => `
                 <div class="short-card" onclick="openStory('${short.story_id}')">
                     <div class="short-book-info">
                         <div class="short-book-title">${short.title}<span class="age-badge age-${short.age_rating?.replace('+','')}">${short.age_rating || '16+'}</span></div>
@@ -799,6 +932,33 @@
                     </div>
                 </div>
             `).join('');
+            
+            // Кнопка "Показать ещё" если есть что показывать
+            if (displayedCount < allShorts.length) {
+                html += `
+                    <div class="load-more">
+                        <button class="load-more-btn" onclick="loadMore()">Показать ещё</button>
+                    </div>
+                `;
+            }
+            
+            feed.innerHTML = html;
+        }
+        
+        function loadMore() {
+            renderFeed();
+        }
+        
+        // ===== INFINITE SCROLL =====
+        function setupInfiniteScroll() {
+            const feed = document.getElementById('feed');
+            feed.addEventListener('scroll', () => {
+                if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 200) {
+                    if (displayedCount < allShorts.length) {
+                        loadMore();
+                    }
+                }
+            });
         }
         
         // ===== EVENT LISTENERS =====
