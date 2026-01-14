@@ -370,11 +370,20 @@
             var now = Date.now();
             var hour48 = 48 * 60 * 60 * 1000;
             
-            var seenStories = {};
-            var uniqueItems = items.filter(function(item) {
-                if (seenStories[item.story_id]) return false;
-                seenStories[item.story_id] = true;
-                return true;
+            // Группируем шортсы по story_id
+            var storyGroups = {};
+            items.forEach(function(item) {
+                if (!storyGroups[item.story_id]) {
+                    storyGroups[item.story_id] = [];
+                }
+                storyGroups[item.story_id].push(item);
+            });
+            
+            // Из каждой группы берём случайный шортс
+            var uniqueItems = Object.keys(storyGroups).map(function(storyId) {
+                var group = storyGroups[storyId];
+                var randomIndex = Math.floor(Math.random() * group.length);
+                return group[randomIndex];
             });
             
             var filtered = uniqueItems;
