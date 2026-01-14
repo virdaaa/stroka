@@ -265,30 +265,73 @@
         }
         
         /* Achievements */
-        .achievements-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+        .achievements-list {
+            display: flex;
+            flex-direction: column;
             gap: 12px;
         }
         
         .achievement {
             background: var(--bg-card);
             border-radius: 12px;
-            padding: 16px 8px;
-            text-align: center;
-            opacity: 0.4;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            opacity: 0.5;
+            transition: opacity 0.3s;
         }
         
-        .achievement.unlocked { opacity: 1; }
+        .achievement.unlocked { 
+            opacity: 1; 
+        }
+        
+        .achievement.unlocked .achievement-icon {
+            transform: scale(1.1);
+        }
         
         .achievement-icon {
-            font-size: 28px;
-            margin-bottom: 6px;
+            font-size: 32px;
+            flex-shrink: 0;
+            transition: transform 0.3s;
+        }
+        
+        .achievement-info {
+            flex: 1;
+            min-width: 0;
         }
         
         .achievement-name {
-            font-size: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .achievement-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        
+        .achievement-progress {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .achievement-progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 3px;
+            transition: width 0.5s ease-out;
+        }
+        
+        .achievement-count {
+            font-size: 12px;
             color: var(--text-secondary);
+            font-weight: 500;
+            white-space: nowrap;
         }
         
         /* Author Profile */
@@ -525,7 +568,7 @@
                 <!-- Achievements -->
                 <div class="profile-section">
                     <div class="section-title">Достижения</div>
-                    <div class="achievements-grid" id="achievements-grid"></div>
+                    <div class="achievements-list" id="achievements-list"></div>
                 </div>
             </div>
         </div>
@@ -566,15 +609,28 @@
         
         // ===== ACHIEVEMENTS =====
         const ACHIEVEMENTS = [
-            { id: 'first_read', icon: '📖', name: 'Первое чтение', condition: s => s.read >= 1 },
-            { id: 'reader_10', icon: '📚', name: '10 рассказов', condition: s => s.read >= 10 },
-            { id: 'reader_50', icon: '🏆', name: '50 рассказов', condition: s => s.read >= 50 },
-            { id: 'first_like', icon: '❤️', name: 'Первый лайк', condition: s => s.likes >= 1 },
-            { id: 'critic', icon: '⭐', name: 'Критик', condition: s => s.likes >= 50 },
-            { id: 'hour', icon: '⏱️', name: 'Час чтения', condition: s => s.time >= 60 },
-            { id: 'sub', icon: '👤', name: 'Подписчик', condition: s => s.subs >= 1 },
-            { id: 'fan', icon: '🌟', name: 'Фанат', condition: s => s.subs >= 10 },
-            { id: 'author', icon: '✍️', name: 'Автор', condition: s => s.isAuthor },
+            // Чтение
+            { id: 'bookworm_10', icon: '📖', name: 'Книгочей', desc: 'Дочитать 10 рассказов', target: 10, stat: 'finished' },
+            { id: 'bookworm_50', icon: '📚', name: 'Библиофил', desc: 'Дочитать 50 рассказов', target: 50, stat: 'finished' },
+            { id: 'bookworm_100', icon: '🏆', name: 'Марафонец', desc: 'Дочитать 100 рассказов', target: 100, stat: 'finished' },
+            
+            // Регулярность
+            { id: 'streak_3', icon: '🔥', name: 'На волне', desc: 'Читать 3 дня подряд', target: 3, stat: 'streak' },
+            { id: 'streak_7', icon: '⚡', name: 'В ударе', desc: 'Читать 7 дней подряд', target: 7, stat: 'streak' },
+            { id: 'streak_30', icon: '💎', name: 'Преданный', desc: 'Читать 30 дней подряд', target: 30, stat: 'streak' },
+            
+            // Разнообразие
+            { id: 'explorer', icon: '🎭', name: 'Исследователь', desc: 'Прочитать 5 разных жанров', target: 5, stat: 'genres' },
+            
+            // Оценки
+            { id: 'critic_20', icon: '⭐', name: 'Критик', desc: 'Поставить 20 оценок', target: 20, stat: 'reactions' },
+            { id: 'critic_100', icon: '🎯', name: 'Эксперт', desc: 'Поставить 100 оценок', target: 100, stat: 'reactions' },
+            
+            // Автор
+            { id: 'author_first', icon: '✍️', name: 'Дебют', desc: 'Опубликовать первый рассказ', target: 1, stat: 'stories' },
+            { id: 'author_5', icon: '📝', name: 'Писатель', desc: 'Опубликовать 5 рассказов', target: 5, stat: 'stories' },
+            { id: 'author_views', icon: '👁', name: 'Читаемый', desc: 'Набрать 100 просмотров', target: 100, stat: 'totalViews' },
+            { id: 'author_likes', icon: '❤️', name: 'Любимый', desc: 'Получить 50 лайков', target: 50, stat: 'totalLikes' },
         ];
         
         // ===== TELEGRAM AUTH =====
@@ -935,22 +991,26 @@
         // ===== LOAD STATS =====
         async function loadStats() {
             try {
+                // Finished stories (read >= 90%)
                 const { data: history } = await db
                     .from('reading_history')
-                    .select('read_time_seconds')
+                    .select('story_id, read_percent, read_time_seconds, finished_at')
                     .eq('user_id', currentUser.id);
                 
-                const read = history?.length || 0;
+                const finished = (history || []).filter(h => h.read_percent >= 90).length;
+                const totalHistory = history?.length || 0;
                 const time = Math.round((history?.reduce((sum, h) => sum + (h.read_time_seconds || 0), 0) || 0) / 60);
                 
+                // Reactions count
                 const { data: reactions } = await db
                     .from('reactions')
-                    .select('id')
-                    .eq('user_id', currentUser.id)
-                    .eq('reaction', 'like');
+                    .select('id, reaction')
+                    .eq('user_id', currentUser.id);
                 
-                const likes = reactions?.length || 0;
+                const reactionsCount = reactions?.length || 0;
+                const likes = (reactions || []).filter(r => r.reaction === 'like').length;
                 
+                // Subscriptions
                 const { data: subscriptions } = await db
                     .from('subscriptions')
                     .select('id')
@@ -958,26 +1018,140 @@
                 
                 const subs = subscriptions?.length || 0;
                 
-                document.getElementById('stat-read').textContent = read;
+                // Unique genres read
+                const finishedStoryIds = (history || []).filter(h => h.read_percent >= 90).map(h => h.story_id);
+                let uniqueGenres = 0;
+                if (finishedStoryIds.length > 0) {
+                    const { data: genreStories } = await db
+                        .from('stories')
+                        .select('genre, genres')
+                        .in('id', finishedStoryIds);
+                    
+                    const genreSet = new Set();
+                    (genreStories || []).forEach(s => {
+                        if (s.genres?.length) {
+                            s.genres.forEach(g => genreSet.add(g.name));
+                        } else if (s.genre) {
+                            genreSet.add(s.genre);
+                        }
+                    });
+                    uniqueGenres = genreSet.size;
+                }
+                
+                // Reading streak (simplified - check consecutive days)
+                const streak = calculateStreak(history || []);
+                
+                // Author stats
+                let storiesCount = 0;
+                let totalViews = 0;
+                let totalLikes = 0;
+                
+                if (currentAuthor) {
+                    const { data: authorStories } = await db
+                        .from('stories')
+                        .select('id, views')
+                        .eq('author_id', currentAuthor.id)
+                        .eq('status', 'published');
+                    
+                    storiesCount = authorStories?.length || 0;
+                    totalViews = (authorStories || []).reduce((sum, s) => sum + (s.views || 0), 0);
+                    
+                    if (storiesCount > 0) {
+                        const storyIds = authorStories.map(s => s.id);
+                        const { data: storyReactions } = await db
+                            .from('reactions')
+                            .select('reaction')
+                            .in('story_id', storyIds)
+                            .eq('reaction', 'like');
+                        
+                        totalLikes = storyReactions?.length || 0;
+                    }
+                }
+                
+                // Update UI
+                document.getElementById('stat-read').textContent = finished;
                 document.getElementById('stat-time').textContent = time;
                 document.getElementById('stat-likes').textContent = likes;
                 document.getElementById('stat-subs').textContent = subs;
                 
-                renderAchievements({ read, time, likes, subs, isAuthor: !!currentAuthor });
+                // Render achievements
+                const stats = {
+                    finished,
+                    streak,
+                    genres: uniqueGenres,
+                    reactions: reactionsCount,
+                    stories: storiesCount,
+                    totalViews,
+                    totalLikes
+                };
+                
+                renderAchievements(stats);
                 
             } catch (error) {
                 console.error('Stats error:', error);
             }
         }
         
+        function calculateStreak(history) {
+            if (!history || history.length === 0) return 0;
+            
+            // Get unique reading days
+            const days = new Set();
+            history.forEach(h => {
+                if (h.finished_at) {
+                    const day = new Date(h.finished_at).toDateString();
+                    days.add(day);
+                }
+            });
+            
+            if (days.size === 0) return 0;
+            
+            // Sort days and count consecutive
+            const sortedDays = Array.from(days).map(d => new Date(d)).sort((a, b) => b - a);
+            
+            let streak = 1;
+            const today = new Date().toDateString();
+            const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
+            
+            // Must have read today or yesterday to have active streak
+            if (sortedDays[0].toDateString() !== today && sortedDays[0].toDateString() !== yesterday) {
+                return 0;
+            }
+            
+            for (let i = 0; i < sortedDays.length - 1; i++) {
+                const diff = (sortedDays[i] - sortedDays[i + 1]) / (24 * 60 * 60 * 1000);
+                if (diff <= 1.5) {
+                    streak++;
+                } else {
+                    break;
+                }
+            }
+            
+            return streak;
+        }
+        
         function renderAchievements(stats) {
-            const container = document.getElementById('achievements-grid');
-            container.innerHTML = ACHIEVEMENTS.map(a => `
-                <div class="achievement ${a.condition(stats) ? 'unlocked' : ''}">
-                    <div class="achievement-icon">${a.icon}</div>
-                    <div class="achievement-name">${a.name}</div>
-                </div>
-            `).join('');
+            const container = document.getElementById('achievements-list');
+            
+            container.innerHTML = ACHIEVEMENTS.map(a => {
+                const current = stats[a.stat] || 0;
+                const percent = Math.min(100, Math.round((current / a.target) * 100));
+                const unlocked = current >= a.target;
+                
+                return `
+                    <div class="achievement ${unlocked ? 'unlocked' : ''}">
+                        <div class="achievement-icon">${a.icon}</div>
+                        <div class="achievement-info">
+                            <div class="achievement-name">${a.name}</div>
+                            <div class="achievement-desc">${a.desc}</div>
+                            <div class="achievement-progress">
+                                <div class="achievement-progress-fill" style="width: ${percent}%"></div>
+                            </div>
+                        </div>
+                        <div class="achievement-count">${current}/${a.target}</div>
+                    </div>
+                `;
+            }).join('');
         }
         
         // ===== EDIT PROFILE =====
