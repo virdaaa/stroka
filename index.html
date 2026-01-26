@@ -29,9 +29,11 @@
             --font-ui: 'IBM Plex Sans', sans-serif;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body { height: 100%; overflow: hidden; }
-        body { font-family: var(--font-ui); background: var(--bg-primary); color: var(--text-primary); }
-        .app { height: 100%; display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; position: relative; padding-bottom: 70px; }
+        html, body { height: 100%; overflow: hidden; overflow-x: hidden; }
+        body { font-family: var(--font-ui); background: var(--bg-primary); color: var(--text-primary); overflow-x: hidden; }
+        .app { height: 100%; display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; position: relative; padding-bottom: 70px; overflow-x: hidden; }
+        .short-card, .short-text, .short-book-title { word-break: break-word; overflow-wrap: break-word; }
+        .short-text { max-width: 100%; }
         .header { padding: 16px 20px; display: flex; justify-content: center; align-items: center; background: var(--bg-primary); border-bottom: 1px solid var(--border); z-index: 100; }
         .logo { font-family: var(--font-display); font-size: 28px; font-weight: 600; letter-spacing: 0.05em; }
         .logo span { color: var(--accent); }
@@ -51,17 +53,33 @@
         .short-card:active { background: var(--bg-secondary); }
         .short-book-info { margin-bottom: 16px; }
         .short-book-title { font-family: var(--font-display); font-size: 24px; font-weight: 600; margin-bottom: 4px; }
-        .short-book-author { font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; }
+        .short-book-author { font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+        .author-link { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 4px 8px 4px 4px; margin: -4px; border-radius: 20px; transition: background 0.2s; }
+        .author-link:hover { background: var(--bg-card); }
+        .author-avatar-small { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 13px; color: var(--bg-primary); font-weight: 600; flex-shrink: 0; }
+        .author-name-text { color: var(--text-secondary); transition: color 0.2s; }
+        .author-link:hover .author-name-text { color: var(--accent); }
+        .author-popup { display: none; position: absolute; top: 100%; left: 0; margin-top: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; min-width: 260px; z-index: 200; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+        .author-popup.open { display: block; }
+        .author-popup-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .author-popup-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 22px; color: var(--bg-primary); font-weight: 600; }
+        .author-popup-name { font-family: var(--font-display); font-size: 18px; color: var(--text-primary); }
+        .author-popup-stats { font-size: 12px; color: var(--text-muted); }
+        .author-popup-btn { width: 100%; padding: 10px; background: var(--accent); color: var(--bg-primary); border: none; border-radius: 8px; font-family: var(--font-ui); font-size: 13px; font-weight: 500; cursor: pointer; margin-top: 12px; }
+        .author-popup-btn:hover { background: var(--accent-dim); }
         .short-meta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
         .short-meta-item { font-size: 12px; color: var(--text-muted); }
-        .short-meta-item.genre { color: var(--accent); font-weight: 500; }
+        .short-meta-item.genre { color: var(--accent); font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
+        .short-meta-item.genre:hover { opacity: 0.7; text-decoration: underline; }
         .genre-pct { opacity: 0.6; font-weight: 400; font-size: 11px; }
         .short-tags { display: flex; gap: 8px; flex-wrap: wrap; }
-        .short-tag { font-size: 11px; padding: 4px 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; color: var(--text-secondary); }
+        .short-tag { font-size: 11px; padding: 4px 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; color: var(--text-secondary); cursor: pointer; transition: all 0.2s; }
+        .short-tag:hover { border-color: var(--accent); color: var(--accent); background: rgba(201, 165, 92, 0.1); }
         .short-stats { display: flex; gap: 16px; margin-top: 12px; font-size: 13px; color: var(--text-muted); align-items: center; }
         .short-stat { display: flex; align-items: center; gap: 4px; }
         .short-stat-icon { font-size: 14px; }
-        .rating-block { display: flex; align-items: center; gap: 8px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; }
+        .rating-block { display: flex; align-items: center; gap: 8px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; position: relative; cursor: pointer; transition: border-color 0.2s; }
+        .rating-block:hover { border-color: var(--accent); }
         .rating-thumbs { display: flex; align-items: center; gap: 4px; }
         .rating-thumb { font-size: 18px; }
         .rating-thumb.up { color: #c9a55c; }
@@ -69,10 +87,33 @@
         .rating-percent { font-size: 16px; font-weight: 600; color: var(--accent); }
         .rating-divider { width: 1px; height: 20px; background: var(--border); }
         .rating-votes { font-size: 11px; color: var(--text-muted); }
+        .rating-tooltip { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; white-space: nowrap; z-index: 100; margin-bottom: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+        .rating-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--border); }
+        .rating-block:hover .rating-tooltip { display: block; }
+        .rating-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin: 8px 0; width: 120px; }
+        .rating-bar-like { background: var(--accent); }
+        .rating-bar-dislike { background: var(--text-muted); }
+        .rating-detail { font-size: 11px; color: var(--text-secondary); display: flex; justify-content: space-between; gap: 16px; }
+        .short-stat.views { cursor: pointer; position: relative; transition: color 0.2s; }
+        .short-stat.views:hover { color: var(--accent); }
+        .views-tooltip { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; white-space: nowrap; z-index: 100; margin-bottom: 6px; font-size: 11px; color: var(--text-secondary); }
+        .views-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--border); }
+        .short-stat.views:hover .views-tooltip { display: block; }
         .literacy-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
         .literacy-badge.high { background: rgba(124, 179, 66, 0.15); color: #7cb342; border: 1px solid #7cb342; }
         .literacy-badge.medium { background: rgba(255, 183, 77, 0.15); color: #ffb74d; border: 1px solid #ffb74d; }
         .literacy-badge.low { background: rgba(229, 115, 115, 0.15); color: #e57373; border: 1px solid #e57373; }
+        .literacy-meter { position: relative; display: inline-flex; flex-direction: column; align-items: center; cursor: pointer; }
+        .literacy-meter svg { width: 48px; height: 32px; }
+        .literacy-meter-label { font-size: 8px; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .literacy-tooltip { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; white-space: nowrap; z-index: 100; margin-bottom: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+        .literacy-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--border); }
+        .literacy-meter:hover .literacy-tooltip, .literacy-meter:active .literacy-tooltip { display: block; }
+        .tooltip-title { font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+        .tooltip-score { font-size: 11px; color: var(--text-secondary); }
+        .tooltip-score.high { color: #7cb342; }
+        .tooltip-score.medium { color: #ffb74d; }
+        .tooltip-score.low { color: #e57373; }
         .age-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 8px; }
         .age-badge.age-0 { background: #4a822; color: #4a8; border: 1px solid #4a8; }
         .age-badge.age-6 { background: #8bc34a22; color: #8bc34a; border: 1px solid #8bc34a; }
@@ -179,6 +220,28 @@
             if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
             if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
             return num.toString();
+        }
+
+        function createLiteracyMeter(score) {
+            var litClass = score < 5 ? 'low' : score < 7 ? 'medium' : 'high';
+            var litText = score < 5 ? 'Низкая' : score < 7 ? 'Средняя' : 'Высокая';
+            // Угол стрелки: 0 = -90° (лево), 10 = 90° (право), карта 0-10 на -90 до 90
+            var angle = (score / 10) * 180 - 90;
+            return '<div class="literacy-meter" onclick="event.stopPropagation()">' +
+                '<div class="literacy-tooltip">' +
+                    '<div class="tooltip-title">Грамотность текста</div>' +
+                    '<div class="tooltip-score ' + litClass + '">' + litText + ': ' + score + '/10</div>' +
+                '</div>' +
+                '<svg viewBox="0 0 48 32">' +
+                    '<path d="M6 28 A18 18 0 0 1 42 28" fill="none" stroke="#e57373" stroke-width="4" stroke-linecap="round"/>' +
+                    '<path d="M6 28 A18 18 0 0 1 14 14" fill="none" stroke="#e57373" stroke-width="4" stroke-linecap="round"/>' +
+                    '<path d="M14 14 A18 18 0 0 1 34 14" fill="none" stroke="#ffb74d" stroke-width="4" stroke-linecap="round"/>' +
+                    '<path d="M34 14 A18 18 0 0 1 42 28" fill="none" stroke="#7cb342" stroke-width="4" stroke-linecap="round"/>' +
+                    '<line x1="24" y1="28" x2="24" y2="14" stroke="var(--text-primary)" stroke-width="2" stroke-linecap="round" transform="rotate(' + angle + ' 24 28)"/>' +
+                    '<circle cx="24" cy="28" r="3" fill="var(--text-primary)"/>' +
+                '</svg>' +
+                '<span class="literacy-meter-label">Грамотность</span>' +
+            '</div>';
         }
         
         // Получить требуемый возраст для рейтинга
@@ -293,7 +356,7 @@
         
         async function loadData() {
             try {
-                var query = db.from('stories').select('*, authors (name, pen_name), shorts (id, text, position)').eq('status', 'published');
+                var query = db.from('stories').select('*, authors (id, name, pen_name), shorts (id, text, position)').eq('status', 'published');
                 if (currentGenre) query = query.eq('genre', currentGenre);
                 if (currentFilter === 'new') {
                     query = query.order('published_at', { ascending: false });
@@ -333,6 +396,7 @@
                                 story_id: story.id,
                                 title: story.title,
                                 author: story.authors?.pen_name || story.authors?.name || 'Неизвестный автор',
+                                author_id: story.authors?.id || null,
                                 genres: story.genres || [],
                                 subgenres: story.subgenres || [],
                                 age_rating: story.age_rating || '16+',
@@ -436,12 +500,16 @@
             var html = toShow.map(function(short) {
                 var genresHtml = '';
                 if (short.genres && short.genres.length) {
-                    genresHtml = short.genres.map(function(g) { return '<span class="short-meta-item genre">' + g.name + ' <span class="genre-pct">' + g.percent + '%</span></span>'; }).join('');
+                    genresHtml = short.genres.map(function(g) {
+                        return '<span class="short-meta-item genre" onclick="event.stopPropagation(); filterByGenre(\'' + g.name + '\')" title="Фильтровать по жанру">' + g.name + ' <span class="genre-pct">' + g.percent + '%</span></span>';
+                    }).join('');
                 } else {
-                    genresHtml = '<span class="short-meta-item genre">Проза</span>';
+                    genresHtml = '<span class="short-meta-item genre" onclick="event.stopPropagation(); filterByGenre(\'Проза\')" title="Фильтровать по жанру">Проза</span>';
                 }
                 
-                var tagsHtml = (short.subgenres || []).slice(0, 4).map(function(tag) { return '<span class="short-tag">' + tag + '</span>'; }).join('');
+                var tagsHtml = (short.subgenres || []).slice(0, 4).map(function(tag) {
+                    return '<span class="short-tag" onclick="event.stopPropagation(); searchByTag(\'' + tag.replace(/'/g, "\\'") + '\')" title="Искать по тегу">#' + tag + '</span>';
+                }).join('');
                 
                 var similarHtml = '';
                 if (short.similar_to && short.similar_to.length) {
@@ -449,26 +517,53 @@
                 }
                 
                 var ratingHtml = '';
-                if (short.like_percent !== null) {
-                    ratingHtml = '<div class="rating-block"><div class="rating-thumbs"><span class="rating-thumb up">👍</span><span class="rating-thumb down">👎</span></div><span class="rating-percent">' + short.like_percent + '%</span><div class="rating-divider"></div><span class="rating-votes">Голосов: ' + (short.total_votes || 0) + '</span></div>';
+                if (short.like_percent !== null && short.total_votes > 0) {
+                    var likes = Math.round(short.total_votes * short.like_percent / 100);
+                    var dislikes = short.total_votes - likes;
+                    var dislikePercent = 100 - short.like_percent;
+                    ratingHtml = '<div class="rating-block" onclick="event.stopPropagation()">' +
+                        '<div class="rating-tooltip">' +
+                            '<div style="font-weight: 600; margin-bottom: 4px; color: var(--text-primary);">Оценки читателей</div>' +
+                            '<div class="rating-bar">' +
+                                '<div class="rating-bar-like" style="width: ' + short.like_percent + '%"></div>' +
+                                '<div class="rating-bar-dislike" style="width: ' + dislikePercent + '%"></div>' +
+                            '</div>' +
+                            '<div class="rating-detail">' +
+                                '<span>👍 ' + likes + ' (' + short.like_percent + '%)</span>' +
+                                '<span>👎 ' + dislikes + ' (' + dislikePercent + '%)</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="rating-thumbs"><span class="rating-thumb up">👍</span><span class="rating-thumb down">👎</span></div>' +
+                        '<span class="rating-percent">' + short.like_percent + '%</span>' +
+                        '<div class="rating-divider"></div>' +
+                        '<span class="rating-votes">' + short.total_votes + '</span>' +
+                    '</div>';
                 }
                 
                 var literacyHtml = '';
                 if (short.literacy_score) {
-                    var litClass = short.literacy_score < 5 ? 'low' : short.literacy_score < 7 ? 'medium' : 'high';
-                    literacyHtml = '<span class="literacy-badge ' + litClass + '" title="Грамотность текста">✎ ' + short.literacy_score + '</span>';
+                    literacyHtml = createLiteracyMeter(short.literacy_score);
                 }
                 
                 var ageClass = 'age-' + (short.age_rating || '16+').replace('+', '');
                 
+                var authorInitial = (short.author || 'А')[0].toUpperCase();
+                var authorHtml = '<div class="short-book-author">' +
+                    '<div class="author-link" onclick="event.stopPropagation(); showAuthorPopup(this, \'' + (short.author_id || '') + '\', \'' + short.author.replace(/'/g, "\\'") + '\')">' +
+                        '<div class="author-avatar-small">' + authorInitial + '</div>' +
+                        '<span class="author-name-text">' + short.author + '</span>' +
+                    '</div>' +
+                '</div>';
+
                 return '<div class="short-card" onclick="openStory(\'' + short.story_id + '\')">' +
                     '<div class="short-book-info">' +
                         '<div class="short-book-title">' + short.title + '<span class="age-badge ' + ageClass + '">' + (short.age_rating || '16+') + '</span></div>' +
+                        authorHtml +
                         '<div class="short-meta">' + genresHtml + '<span class="short-meta-item">⏱ ' + (short.reading_time || '?') + ' мин</span></div>' +
                         '<div class="short-tags">' + tagsHtml + '</div>' +
                         similarHtml +
                         '<div class="short-stats">' +
-                            '<span class="short-stat views"><span class="short-stat-icon">👁</span><span class="short-stat-value">' + formatNumber(short.views) + '</span></span>' +
+                            '<span class="short-stat views" onclick="event.stopPropagation()"><span class="views-tooltip">Просмотров: ' + (short.views || 0).toLocaleString() + '</span><span class="short-stat-icon">👁</span><span class="short-stat-value">' + formatNumber(short.views) + '</span></span>' +
                             ratingHtml +
                             literacyHtml +
                         '</div>' +
@@ -529,6 +624,70 @@
         }
         
         function openStory(storyId) { window.location.href = '/read.html?id=' + storyId; }
+
+        function filterByGenre(genre) {
+            currentGenre = genre;
+            var genreBtn = document.getElementById('genre-btn');
+            genreBtn.textContent = genre + ' ▾';
+            genreBtn.classList.add('active');
+            document.querySelectorAll('.genre-item').forEach(function(i) {
+                i.classList.remove('active');
+                if (i.dataset.genre === genre) i.classList.add('active');
+            });
+            loadData();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function searchByTag(tag) {
+            window.location.href = '/search.html?q=' + encodeURIComponent(tag);
+        }
+
+        var currentAuthorPopup = null;
+
+        function showAuthorPopup(element, authorId, authorName) {
+            // Закрыть предыдущий popup
+            closeAuthorPopup();
+
+            var initial = authorName[0].toUpperCase();
+            var popup = document.createElement('div');
+            popup.className = 'author-popup open';
+            popup.id = 'author-popup-active';
+            popup.innerHTML = '<div class="author-popup-header">' +
+                '<div class="author-popup-avatar">' + initial + '</div>' +
+                '<div>' +
+                    '<div class="author-popup-name">' + authorName + '</div>' +
+                    '<div class="author-popup-stats">Автор на Строке</div>' +
+                '</div>' +
+            '</div>' +
+            '<button class="author-popup-btn" onclick="searchAuthorStories(\'' + authorName.replace(/'/g, "\\'") + '\')">Все произведения автора</button>';
+
+            element.style.position = 'relative';
+            element.appendChild(popup);
+            currentAuthorPopup = popup;
+
+            // Закрыть при клике снаружи
+            setTimeout(function() {
+                document.addEventListener('click', closeAuthorPopupOnOutside);
+            }, 10);
+        }
+
+        function closeAuthorPopupOnOutside(e) {
+            if (currentAuthorPopup && !currentAuthorPopup.contains(e.target)) {
+                closeAuthorPopup();
+            }
+        }
+
+        function closeAuthorPopup() {
+            if (currentAuthorPopup) {
+                currentAuthorPopup.remove();
+                currentAuthorPopup = null;
+                document.removeEventListener('click', closeAuthorPopupOnOutside);
+            }
+        }
+
+        function searchAuthorStories(authorName) {
+            window.location.href = '/search.html?author=' + encodeURIComponent(authorName);
+        }
         
         init();
     </script>

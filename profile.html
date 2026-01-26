@@ -16,8 +16,9 @@
             --font-display: 'Cormorant Garamond', serif; --font-ui: 'IBM Plex Sans', sans-serif;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: var(--font-ui); background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
-        .app { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; padding-bottom: 70px; }
+        html { overflow-x: hidden; }
+        body { font-family: var(--font-ui); background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; overflow-x: hidden; }
+        .app { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; padding-bottom: 70px; overflow-x: hidden; }
         .header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
         .header-title { font-family: var(--font-display); font-size: 24px; font-weight: 600; }
         .btn-logout { padding: 8px 16px; background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border); border-radius: 8px; font-size: 13px; cursor: pointer; }
