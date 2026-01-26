@@ -26,11 +26,13 @@
             --font-reading: 'Literata', serif;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { overflow-x: hidden; }
         body {
             font-family: var(--font-ui);
             background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
+            overflow-x: hidden;
         }
         .app {
             max-width: 680px;
@@ -38,7 +40,9 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
         }
+        .story-title, .story-content, .story-content p { word-break: break-word; overflow-wrap: break-word; }
         .header {
             padding: 12px 20px;
             display: flex;
@@ -81,13 +85,29 @@
             border-bottom: 1px solid var(--border);
         }
         .story-genre {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .genre-chip {
             display: inline-block;
             padding: 4px 10px;
             background: var(--bg-card);
             border-radius: 4px;
             font-size: 12px;
             color: var(--accent);
-            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .genre-chip:hover {
+            background: rgba(201, 165, 92, 0.2);
+            border-color: var(--accent);
+        }
+        .genre-chip .pct {
+            opacity: 0.6;
+            margin-left: 4px;
         }
         .story-title {
             font-family: var(--font-display);
@@ -200,6 +220,43 @@
             margin-top: 16px;
             font-size: 13px;
             color: var(--text-muted);
+        }
+        .story-meta span {
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s;
+        }
+        .story-meta span:hover {
+            color: var(--accent);
+        }
+        .meta-tooltip {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            white-space: nowrap;
+            z-index: 100;
+            margin-bottom: 6px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .meta-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: var(--border);
+        }
+        .story-meta span:hover .meta-tooltip {
+            display: block;
         }
         .story-content {
             padding: 32px 20px;
@@ -471,10 +528,10 @@
                     <button class="btn-subscribe" id="subscribe-btn" onclick="toggleSubscribe()">Подписаться</button>
                 </div>
                 <div class="story-meta">
-                    <span id="story-reading-time">? мин</span>
-                    <span id="story-char-count">? зн.</span>
-                    <span id="story-views">👁 0</span>
-                    <span id="story-likes">👍 —</span>
+                    <span id="story-reading-time"><span class="meta-tooltip">Время чтения</span>? мин</span>
+                    <span id="story-char-count"><span class="meta-tooltip">Количество знаков</span>? зн.</span>
+                    <span id="story-views"><span class="meta-tooltip">Просмотры</span>👁 0</span>
+                    <span id="story-likes"><span class="meta-tooltip">Рейтинг одобрения</span>👍 —</span>
                 </div>
             </div>
             
@@ -789,13 +846,15 @@
             document.getElementById('story-genre').textContent = story.genre || 'Проза';
             document.getElementById('story-title').textContent = story.title;
             
-            const genreEl = document.getElementById('story-genre');
+            var genreEl = document.getElementById('story-genre');
             if (story.genres && story.genres.length > 0) {
-                genreEl.innerHTML = story.genres.map(g => g.name + ' <span style="opacity:0.6">' + g.percent + '%</span>').join(' • ');
+                genreEl.innerHTML = story.genres.map(function(g) {
+                    return '<span class="genre-chip" onclick="window.location.href=\'/search.html?genre=' + encodeURIComponent(g.name) + '\'" title="Искать ' + g.name + '">' + g.name + '<span class="pct">' + g.percent + '%</span></span>';
+                }).join('');
             } else if (story.genre) {
-                genreEl.textContent = story.genre;
+                genreEl.innerHTML = '<span class="genre-chip" onclick="window.location.href=\'/search.html?genre=' + encodeURIComponent(story.genre) + '\'">' + story.genre + '</span>';
             } else {
-                genreEl.textContent = 'Проза';
+                genreEl.innerHTML = '<span class="genre-chip">Проза</span>';
             }
             
             const ageRating = story.age_rating || '16+';
@@ -805,10 +864,10 @@
             
             document.getElementById('author-name').textContent = story.authors?.pen_name || story.authors?.name || 'Аноним';
             document.getElementById('author-avatar').textContent = (story.authors?.pen_name || story.authors?.name || 'А')[0].toUpperCase();
-            document.getElementById('story-reading-time').textContent = (story.reading_time_minutes || '?') + ' мин';
-            document.getElementById('story-char-count').textContent = (story.character_count?.toLocaleString() || '?') + ' зн.';
-            document.getElementById('story-views').textContent = '👁 ' + formatNumber(stats.views || story.views || 0);
-            document.getElementById('story-likes').textContent = stats.likePercent !== null ? '👍 ' + stats.likePercent + '%' : '👍 —';
+            document.getElementById('story-reading-time').innerHTML = '<span class="meta-tooltip">Время чтения</span>' + (story.reading_time_minutes || '?') + ' мин';
+            document.getElementById('story-char-count').innerHTML = '<span class="meta-tooltip">' + (story.character_count || 0).toLocaleString() + ' знаков</span>' + (story.character_count ? (story.character_count / 1000).toFixed(1) + 'K' : '?') + ' зн.';
+            document.getElementById('story-views').innerHTML = '<span class="meta-tooltip">' + (stats.views || story.views || 0).toLocaleString() + ' просмотров</span>👁 ' + formatNumber(stats.views || story.views || 0);
+            document.getElementById('story-likes').innerHTML = stats.likePercent !== null ? '<span class="meta-tooltip">Понравилось ' + stats.likePercent + '% читателей</span>👍 ' + stats.likePercent + '%' : '<span class="meta-tooltip">Пока нет оценок</span>👍 —';
             
             const text = story.full_text || '';
             const paragraphs = text.split('\n').filter(p => p.trim());
