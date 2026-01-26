@@ -223,8 +223,8 @@
         }
 
         function createLiteracyMeter(score) {
-            var litClass = score < 5 ? 'low' : score < 7 ? 'medium' : 'high';
-            var litText = score < 5 ? 'Низкая' : score < 7 ? 'Средняя' : 'Высокая';
+            var litClass = score < 6 ? 'low' : score <= 8 ? 'medium' : 'high';
+            var litText = score < 6 ? 'Низкая' : score <= 8 ? 'Средняя' : 'Высокая';
             // Угол стрелки: 0 = -90° (лево), 10 = 90° (право), карта 0-10 на -90 до 90
             var angle = (score / 10) * 180 - 90;
             return '<div class="literacy-meter" onclick="event.stopPropagation()">' +
