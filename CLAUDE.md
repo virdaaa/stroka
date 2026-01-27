@@ -9,6 +9,7 @@ This document provides guidance for AI assistants working with the Stroka codeba
 - **Type**: Monolithic vanilla JavaScript web application
 - **Language**: Russian (all UI and content)
 - **Hosting**: GitHub Pages (custom domain: stroka.app)
+- **Total codebase**: ~6,600 lines across 10 HTML files
 
 ## Tech Stack
 
@@ -35,6 +36,8 @@ This document provides guidance for AI assistants working with the Stroka codeba
 - Google Fonts: Cormorant Garamond, IBM Plex Sans, Literata
 - Yandex.Metrika (ID: 106258778) - Analytics
 - Telegram Login Widget - Authentication
+- Telegram Login Widget - Authentication via `@stroka_auth_bot`
+- Yandex.Metrika (ID: 106258778) - Analytics with webvisor, clickmap, ecommerce tracking
 
 ## File Structure
 
@@ -50,6 +53,16 @@ This document provides guidance for AI assistants working with the Stroka codeba
 ├── stroka-pitch.html   # Landing/marketing page
 ├── privacy.html        # Privacy policy
 ├── terms.html          # Terms of service
+├── index.html          # Main feed/home page (~695 lines)
+├── read.html           # Story reading interface (~1170 lines)
+├── search.html         # Search functionality (~1080 lines)
+├── profile.html        # User profile & settings (~625 lines)
+├── author.html         # Author dashboard/workspace (~670 lines)
+├── admin.html          # Moderation interface (~790 lines)
+├── moe.html            # User bookmarks & history (~660 lines)
+├── stroka-pitch.html   # Landing/marketing page (~640 lines)
+├── privacy.html        # Privacy policy (~170 lines)
+├── terms.html          # Terms of service (~130 lines)
 ├── manifest.json       # PWA configuration
 ├── CNAME               # GitHub Pages custom domain (stroka.app)
 └── icons/              # App icons (192x192, 512x512, apple-touch-icon)
@@ -66,6 +79,29 @@ This document provides guidance for AI assistants working with the Stroka codeba
 | `profile.html` | Telegram/email auth, achievements system, reading statistics, age settings |
 | `moe.html` | Reading history (continue/finished), bookmarks, author subscriptions |
 | `admin.html` | Content moderation dashboard (requires admin/moderator role) |
+| `index.html` | Smart feed with genre filtering, personalized recommendations, infinite scroll, author popups |
+| `read.html` | Full story display, reading progress, voting (like/dislike), author info, bookmarks, age verification |
+| `search.html` | Full-text search with filtering, author search, tag search, pagination |
+| `author.html` | Story submission workflow, draft management, literacy scoring, edit tracking |
+| `profile.html` | Authentication (Telegram/Email), user profile, achievements, notifications, settings |
+| `moe.html` | Reading history, bookmarks, statistics |
+| `admin.html` | Content moderation dashboard |
+
+## Authentication
+
+The app supports two authentication methods:
+1. **Telegram Login** - Primary method via `@stroka_auth_bot` widget
+2. **Email Magic Link** - Fallback via Supabase Auth
+
+```javascript
+// Telegram auth callback
+function onTelegramAuth(user) {
+    // user contains: id, first_name, last_name, username, photo_url, auth_date, hash
+}
+
+// Email auth
+await db.auth.signInWithOtp({ email: email });
+```
 
 ## Code Conventions
 
@@ -146,6 +182,16 @@ Key tables:
 - `subscriptions` - Author subscriptions (user_id, author_id)
 - `moderation_queue` - Stories pending moderation (ai_status, ai_reason, literacy_score)
 - `notifications` - User notifications (type, title, message, link, is_read)
+- `stories` - Story content and metadata (title, genre, genres[], subgenres[], age_rating, literacy_score, similar_to[], status, views, published_at)
+- `shorts` - Story segments/chapters (text, position, story_id)
+- `authors` - Author profiles (name, pen_name, confirmed_age)
+- `reactions` - Like/dislike votes (user_id, story_id, reaction: 'like'|'dislike')
+- `user_preferences` - Genre preferences with weights (user_id, genre, weight)
+- `reading_history` - User reading tracking (user_id, story_id)
+
+Story statuses: `draft`, `pending`, `published`, `rejected`
+
+Age ratings: `0+`, `6+`, `12+`, `16+`, `18+`
 
 ## State Management
 
@@ -225,6 +271,60 @@ Authors can edit stories max 3 times (including initial publish):
 var MAX_EDITS = 3;
 // edit_count field in stories table tracks this
 ```
+
+```javascript
+function getRequiredAge(rating) {
+    switch (rating) {
+        case '18+': return 18;
+        case '16+': return 16;
+        case '12+': return 12;
+        default: return 0;
+    }
+}
+
+function filterByAge(items) {
+    return items.filter(function(item) {
+        var requiredAge = getRequiredAge(item.age_rating);
+        return confirmedAge >= requiredAge;
+    });
+}
+```
+
+### Literacy Meter
+Visual gauge showing text quality score (0-10):
+- **Red** (low): score < 6
+- **Yellow** (medium): score 6-8
+- **Green** (high): score > 8
+
+```javascript
+function createLiteracyMeter(score) {
+    var litClass = score < 6 ? 'low' : score <= 8 ? 'medium' : 'high';
+    var litText = score < 6 ? 'Низкая' : score <= 8 ? 'Средняя' : 'Высокая';
+    var angle = (score / 10) * 180 - 90; // Map 0-10 to -90° to 90°
+    // Returns SVG gauge with rotating needle
+}
+```
+
+### Author Popup
+Clicking on author name shows a popup with author info and link to all their works:
+
+```javascript
+function showAuthorPopup(element, authorId, authorName) {
+    closeAuthorPopup(); // Close any existing popup
+    // Creates popup element with author avatar, name, and "Все произведения автора" button
+}
+```
+
+### Smart Feed Algorithm
+The `smartSort()` function personalizes the feed:
+1. Groups shorts by story_id, picks random one per story
+2. Filters out already-read stories (if user has read 5+ stories)
+3. Scores each story based on:
+   - Recency bonus (+3 for stories < 48h old)
+   - Genre preference weights from user_preferences
+   - Like percentage bonus (+0.5 if > 70% likes)
+   - Random factor for variety
+4. Limits to 2 stories per author
 
 ### Skeleton Loading
 UI shows skeleton placeholders while data loads:
@@ -311,6 +411,7 @@ Admin/moderator access in admin.html is checked via `authors.role` field.
 
 ## Quick Reference
 
+### Global Variables
 | Variable | Purpose |
 |----------|---------|
 | `db` | Supabase client |
@@ -344,3 +445,49 @@ Admin/moderator access in admin.html is checked via `authors.role` field.
 | `CACHE_TTL` | 5 minutes | index.html |
 | `MAX_EDITS` | 3 | author.html |
 | `ITEMS_PER_PAGE` | 10 | index.html |
+| `currentUser` | Logged-in user object |
+| `stories` | Loaded story data array |
+| `shorts` | Story segments array |
+| `allShorts` | All shorts for pagination |
+| `userPreferences` | Genre preferences map (genre -> weight) |
+| `readStoryIds` | Set of read story IDs |
+| `confirmedAge` | User's verified age (0, 6, 12, 16, 18) |
+| `currentFilter` | Active feed filter ('foryou', 'new') |
+| `currentGenre` | Active genre filter (string or empty) |
+| `displayedCount` | Number of items shown in feed |
+| `ITEMS_PER_PAGE` | Items to load per batch (10) |
+| `CACHE_TTL` | Cache expiration time (5 minutes) |
+
+### localStorage Keys
+| Key | Purpose |
+|-----|---------|
+| `stroka_user` | Cached current user data |
+| `stroka_confirmed_age` | User's verified age |
+| `stroka_feed_cache` | Feed data with timestamp and filter state |
+
+### CSS Variables
+| Variable | Value | Purpose |
+|----------|-------|---------|
+| `--bg-primary` | `#0a0a0b` | Main background |
+| `--bg-secondary` | `#111113` | Secondary background |
+| `--bg-card` | `#161618` | Card background |
+| `--bg-input` | `#1a1a1c` | Input field background |
+| `--accent` | `#c9a55c` | Gold accent color |
+| `--accent-dim` | `#8a7340` | Dimmed accent |
+| `--text-primary` | `#e8e6e3` | Main text color |
+| `--text-secondary` | `#8a8a8a` | Secondary text |
+| `--text-muted` | `#5a5a5a` | Muted text |
+| `--border` | `#2a2a2c` | Border color |
+| `--danger` | `#c44` | Error/danger color |
+| `--success` | `#4a8` | Success color |
+| `--warning` | `#f0a030` | Warning color |
+
+### Fonts
+| Variable | Font Family | Usage |
+|----------|-------------|-------|
+| `--font-display` | Cormorant Garamond | Titles, headings |
+| `--font-body` | Literata | Story reading content |
+| `--font-ui` | IBM Plex Sans | UI elements, buttons |
+
+### Available Genres
+Хоррор, Мистика, Фантастика, Триллер, Драма, Детектив, Фэнтези, Романтика, Проза
