@@ -79,7 +79,20 @@
         .achievement-progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.5s ease-out; }
         .achievement-count { font-size: 12px; color: var(--text-secondary); font-weight: 500; white-space: nowrap; }
         .author-profile-card { display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--bg-card); border-radius: 12px; position: relative; }
-        .author-avatar-large { width: 64px; height: 64px; border-radius: 50%; background: var(--accent); color: var(--bg-primary); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; flex-shrink: 0; }
+        .author-avatar-large { width: 64px; height: 64px; border-radius: 50%; background: var(--accent); color: var(--bg-primary); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; flex-shrink: 0; cursor: pointer; position: relative; overflow: hidden; transition: opacity 0.2s; background-size: cover; background-position: center; }
+        .author-avatar-large:hover { opacity: 0.8; }
+        .author-avatar-large::after { content: '📷'; position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); font-size: 14px; text-align: center; padding: 2px; opacity: 0; transition: opacity 0.2s; }
+        .author-avatar-large:hover::after { opacity: 1; }
+        .avatar-upload-input { display: none; }
+        .avatar-preview-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; }
+        .avatar-preview-modal.open { display: flex; }
+        .avatar-preview-content { background: var(--bg-card); border-radius: 16px; padding: 24px; text-align: center; max-width: 320px; width: 90%; }
+        .avatar-preview-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+        .avatar-preview-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 16px; border: 3px solid var(--accent); }
+        .avatar-preview-info { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+        .avatar-preview-error { color: #c44; font-size: 13px; margin-bottom: 12px; }
+        .avatar-preview-buttons { display: flex; gap: 12px; }
+        .avatar-preview-buttons .btn { flex: 1; }
         .author-profile-info { flex: 1; min-width: 0; }
         .author-profile-name { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
         .author-profile-bio { font-size: 14px; color: var(--text-secondary); line-height: 1.4; }
@@ -202,6 +215,21 @@
             <a href="/moe.html" class="bottom-nav-item"><span class="bottom-nav-icon">📚</span><span>Моё</span></a>
             <a href="/profile.html" class="bottom-nav-item active"><span class="bottom-nav-icon">👤</span><span>Профиль</span></a>
         </nav>
+
+        <!-- Avatar Upload -->
+        <input type="file" id="avatar-upload-input" class="avatar-upload-input" accept="image/jpeg,image/png,image/webp">
+        <div class="avatar-preview-modal" id="avatar-preview-modal">
+            <div class="avatar-preview-content">
+                <div class="avatar-preview-title">Новая аватарка</div>
+                <img id="avatar-preview-img" class="avatar-preview-img" src="" alt="Preview">
+                <div id="avatar-preview-error" class="avatar-preview-error" style="display: none;"></div>
+                <div class="avatar-preview-info">Максимум 100 КБ • JPG, PNG, WebP</div>
+                <div class="avatar-preview-buttons">
+                    <button class="btn btn-secondary" onclick="closeAvatarPreview()">Отмена</button>
+                    <button class="btn" id="avatar-save-btn" onclick="saveAvatar()">Сохранить</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -435,7 +463,7 @@
                 var displayName = currentAuthor?.pen_name || currentAuthor?.name || (currentUser?.email ? currentUser.email.split('@')[0] : 'Читатель');
                 var bio = currentAuthor?.bio || 'Любитель хороших историй';
                 
-                container.innerHTML = '<div class="profile-section"><div class="section-title">Профиль</div><div class="author-profile-card"><div class="author-avatar-large">' + avatarLetter + '</div><div class="author-profile-info"><div class="author-profile-name">' + displayName + '</div><div class="author-profile-bio">' + bio + '</div></div>' + (currentAuthor ? '<button class="btn-edit" onclick="showEditProfile()">✏️</button>' : '') + '</div>' + (currentAuthor ? '<div id="edit-profile-form" style="display: none; margin-top: 16px;"><div class="form-group"><label class="form-label">Имя</label><input type="text" class="input" id="edit-pen-name" value="' + (currentAuthor.pen_name || '') + '" placeholder="Ваше имя"></div><div class="form-group"><label class="form-label">О себе</label><textarea class="input textarea" id="edit-bio" placeholder="Расскажите о себе">' + (currentAuthor.bio || '') + '</textarea></div><div style="display: flex; gap: 8px;"><button class="btn" onclick="saveProfile()">Сохранить</button><button class="btn btn-secondary" onclick="hideEditProfile()">Отмена</button></div></div>' : '') + '</div><div class="author-cta"><div class="author-cta-icon">✍️</div><div class="author-cta-title">Станьте автором</div><div class="author-cta-text">Опубликуйте свой рассказ и найдите читателей</div><a href="/author.html" class="btn" style="text-decoration: none; display: inline-block;">Опубликовать</a></div>';
+                container.innerHTML = '<div class="profile-section"><div class="section-title">Профиль</div><div class="author-profile-card"><div class="author-avatar-large" onclick="openAvatarUpload()" style="' + (currentAuthor?.avatar_url ? 'background-image: url(' + currentAuthor.avatar_url + ')' : '') + '">' + (currentAuthor?.avatar_url ? '' : avatarLetter) + '</div><div class="author-profile-info"><div class="author-profile-name">' + displayName + '</div><div class="author-profile-bio">' + bio + '</div></div>' + (currentAuthor ? '<button class="btn-edit" onclick="showEditProfile()">✏️</button>' : '') + '</div>' + (currentAuthor ? '<div id="edit-profile-form" style="display: none; margin-top: 16px;"><div class="form-group"><label class="form-label">Имя</label><input type="text" class="input" id="edit-pen-name" value="' + (currentAuthor.pen_name || '') + '" placeholder="Ваше имя"></div><div class="form-group"><label class="form-label">О себе</label><textarea class="input textarea" id="edit-bio" placeholder="Расскажите о себе">' + (currentAuthor.bio || '') + '</textarea></div><div style="display: flex; gap: 8px;"><button class="btn" onclick="saveProfile()">Сохранить</button><button class="btn btn-secondary" onclick="hideEditProfile()">Отмена</button></div></div>' : '') + '</div><div class="author-cta"><div class="author-cta-icon">✍️</div><div class="author-cta-title">Станьте автором</div><div class="author-cta-text">Опубликуйте свой рассказ и найдите читателей</div><a href="/author.html" class="btn" style="text-decoration: none; display: inline-block;">Опубликовать</a></div>';
             } else {
                 var avatarLetter = (currentAuthor.pen_name || currentAuthor.name || 'A').charAt(0).toUpperCase();
                 var storiesHtml = stories.map(function(s) {
@@ -447,7 +475,7 @@
                     return '<div class="my-story-item"><div class="my-story-header"><div class="my-story-title">' + s.title + '</div><span class="my-story-status ' + statusClass + '">' + statusText + '</span></div><div class="my-story-stats"><span>' + (s.character_count ? s.character_count.toLocaleString() : '?') + ' зн.</span><span>' + (s.reading_time_minutes || '?') + ' мин</span></div>' + (s.status === 'published' ? '<div class="my-story-metrics"><span>👁 ' + views + '</span><span>👍 ' + likes + '</span></div>' : '') + '<div class="my-story-actions"><a href="/read.html?id=' + s.id + '" class="btn-small">Открыть</a><div class="dropdown"><button class="dropdown-toggle" onclick="toggleDropdown(\'dropdown-' + s.id + '\')">Действия ▾</button><div class="dropdown-menu" id="dropdown-' + s.id + '"><a href="/author.html?edit=' + s.id + '" class="dropdown-item">✏️ Редактировать</a><button class="dropdown-item danger" onclick="deleteStory(\'' + s.id + '\', \'' + safeTitle + '\')">🗑 Удалить</button></div></div></div></div>';
                 }).join('');
                 
-                container.innerHTML = '<div class="profile-section"><div class="section-title">Профиль автора</div><div class="author-profile-card"><div class="author-avatar-large">' + avatarLetter + '</div><div class="author-profile-info"><div class="author-profile-name">' + (currentAuthor.pen_name || currentAuthor.name) + '</div><div class="author-profile-bio">' + (currentAuthor.bio || 'Нет описания') + '</div></div><button class="btn-edit" onclick="showEditProfile()">✏️</button></div><div id="edit-profile-form" style="display: none; margin-top: 16px;"><div class="form-group"><label class="form-label">Псевдоним</label><input type="text" class="input" id="edit-pen-name" value="' + (currentAuthor.pen_name || '') + '"></div><div class="form-group"><label class="form-label">О себе</label><textarea class="input textarea" id="edit-bio">' + (currentAuthor.bio || '') + '</textarea></div><div style="display: flex; gap: 8px;"><button class="btn" onclick="saveProfile()">Сохранить</button><button class="btn btn-secondary" onclick="hideEditProfile()">Отмена</button></div></div></div><div class="profile-section"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;"><div class="section-title" style="margin-bottom: 0;">Мои рассказы</div><a href="/author.html" class="btn" style="padding: 8px 16px; font-size: 13px; text-decoration: none;">+ Добавить</a></div>' + storiesHtml + '</div>';
+                container.innerHTML = '<div class="profile-section"><div class="section-title">Профиль автора</div><div class="author-profile-card"><div class="author-avatar-large" onclick="openAvatarUpload()" style="' + (currentAuthor.avatar_url ? 'background-image: url(' + currentAuthor.avatar_url + ')' : '') + '">' + (currentAuthor.avatar_url ? '' : avatarLetter) + '</div><div class="author-profile-info"><div class="author-profile-name">' + (currentAuthor.pen_name || currentAuthor.name) + '</div><div class="author-profile-bio">' + (currentAuthor.bio || 'Нет описания') + '</div></div><button class="btn-edit" onclick="showEditProfile()">✏️</button></div><div id="edit-profile-form" style="display: none; margin-top: 16px;"><div class="form-group"><label class="form-label">Псевдоним</label><input type="text" class="input" id="edit-pen-name" value="' + (currentAuthor.pen_name || '') + '"></div><div class="form-group"><label class="form-label">О себе</label><textarea class="input textarea" id="edit-bio">' + (currentAuthor.bio || '') + '</textarea></div><div style="display: flex; gap: 8px;"><button class="btn" onclick="saveProfile()">Сохранить</button><button class="btn btn-secondary" onclick="hideEditProfile()">Отмена</button></div></div></div><div class="profile-section"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;"><div class="section-title" style="margin-bottom: 0;">Мои рассказы</div><a href="/author.html" class="btn" style="padding: 8px 16px; font-size: 13px; text-decoration: none;">+ Добавить</a></div>' + storiesHtml + '</div>';
             }
         }
         
@@ -619,7 +647,107 @@
                 console.error('Error loading platform stats:', e);
             }
         }
-        
+
+        // ===== AVATAR UPLOAD =====
+        var selectedAvatarFile = null;
+        var MAX_AVATAR_SIZE = 100 * 1024; // 100 KB
+
+        function openAvatarUpload() {
+            document.getElementById('avatar-upload-input').click();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('avatar-upload-input').addEventListener('change', handleAvatarSelect);
+        });
+
+        function handleAvatarSelect(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+
+            var errorEl = document.getElementById('avatar-preview-error');
+            errorEl.style.display = 'none';
+
+            // Проверка формата
+            var allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                errorEl.textContent = 'Неподдерживаемый формат. Используйте JPG, PNG или WebP';
+                errorEl.style.display = 'block';
+                document.getElementById('avatar-preview-modal').classList.add('open');
+                document.getElementById('avatar-preview-img').style.display = 'none';
+                document.getElementById('avatar-save-btn').disabled = true;
+                return;
+            }
+
+            // Проверка размера
+            if (file.size > MAX_AVATAR_SIZE) {
+                errorEl.textContent = 'Файл слишком большой (' + Math.round(file.size / 1024) + ' КБ). Максимум 100 КБ';
+                errorEl.style.display = 'block';
+                document.getElementById('avatar-preview-modal').classList.add('open');
+                document.getElementById('avatar-preview-img').style.display = 'none';
+                document.getElementById('avatar-save-btn').disabled = true;
+                return;
+            }
+
+            // Показать превью
+            selectedAvatarFile = file;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('avatar-preview-img').src = e.target.result;
+                document.getElementById('avatar-preview-img').style.display = 'block';
+                document.getElementById('avatar-save-btn').disabled = false;
+                document.getElementById('avatar-preview-modal').classList.add('open');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function closeAvatarPreview() {
+            document.getElementById('avatar-preview-modal').classList.remove('open');
+            document.getElementById('avatar-upload-input').value = '';
+            selectedAvatarFile = null;
+        }
+
+        async function saveAvatar() {
+            if (!selectedAvatarFile || !currentAuthor) return;
+
+            var btn = document.getElementById('avatar-save-btn');
+            btn.disabled = true;
+            btn.textContent = 'Сохранение...';
+
+            try {
+                // Загружаем в Supabase Storage
+                var fileName = currentAuthor.id + '_' + Date.now() + '.' + selectedAvatarFile.name.split('.').pop();
+                var { data: uploadData, error: uploadError } = await db.storage
+                    .from('avatars')
+                    .upload(fileName, selectedAvatarFile, { upsert: true });
+
+                if (uploadError) throw uploadError;
+
+                // Получаем публичный URL
+                var { data: urlData } = db.storage.from('avatars').getPublicUrl(fileName);
+                var avatarUrl = urlData.publicUrl;
+
+                // Обновляем профиль автора
+                var { error: updateError } = await db
+                    .from('authors')
+                    .update({ avatar_url: avatarUrl })
+                    .eq('id', currentAuthor.id);
+
+                if (updateError) throw updateError;
+
+                currentAuthor.avatar_url = avatarUrl;
+                closeAvatarPreview();
+                loadAuthorSection(); // Перезагружаем секцию профиля
+                alert('Аватарка обновлена!');
+
+            } catch (error) {
+                console.error('Avatar upload error:', error);
+                alert('Ошибка загрузки: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Сохранить';
+            }
+        }
+
         checkAuthAndLoad();
     </script>
 </body>
