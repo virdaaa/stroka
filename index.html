@@ -6,7 +6,7 @@
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
     <meta name="theme-color" content="#c9a55c">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Строка — короткая проза</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -109,6 +109,23 @@
         .literacy-tooltip { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; white-space: nowrap; z-index: 100; margin-bottom: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
         .literacy-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--border); }
         .literacy-meter:hover .literacy-tooltip, .literacy-meter:active .literacy-tooltip { display: block; }
+        .ai-review-btn { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 50%; cursor: pointer; font-size: 14px; margin-left: 8px; transition: all 0.2s; }
+        .ai-review-btn:hover { border-color: var(--accent); background: rgba(201, 165, 92, 0.1); }
+        .ai-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; align-items: flex-end; justify-content: center; }
+        .ai-modal-overlay.open { display: flex; }
+        .ai-modal { background: var(--bg-card); border-radius: 20px 20px 0 0; width: 100%; max-width: 480px; max-height: 70vh; overflow: hidden; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .ai-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+        .ai-modal-title { font-family: var(--font-display); font-size: 18px; display: flex; align-items: center; gap: 8px; }
+        .ai-modal-close { background: none; border: none; font-size: 24px; color: var(--text-muted); cursor: pointer; padding: 4px; }
+        .ai-modal-close:hover { color: var(--text-primary); }
+        .ai-modal-content { padding: 20px; overflow-y: auto; max-height: calc(70vh - 60px); font-size: 15px; line-height: 1.7; color: var(--text-secondary); }
+        .ai-modal-score { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 16px; }
+        .ai-modal-score-value { font-size: 20px; font-weight: 600; }
+        .ai-modal-score-value.high { color: #7cb342; }
+        .ai-modal-score-value.medium { color: #ffb74d; }
+        .ai-modal-score-value.low { color: #e57373; }
+        .ai-modal-score-label { font-size: 13px; color: var(--text-muted); }
         .tooltip-title { font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
         .tooltip-score { font-size: 11px; color: var(--text-secondary); }
         .tooltip-score.high { color: #7cb342; }
@@ -194,6 +211,23 @@
             <a href="/moe.html" class="bottom-nav-item"><span class="bottom-nav-icon">📚</span><span>Моё</span></a>
             <a href="/profile.html" class="bottom-nav-item"><span class="bottom-nav-icon">👤</span><span>Профиль</span></a>
         </nav>
+
+        <!-- AI Review Modal -->
+        <div class="ai-modal-overlay" id="ai-modal" onclick="closeAiReview(event)">
+            <div class="ai-modal" onclick="event.stopPropagation()">
+                <div class="ai-modal-header">
+                    <div class="ai-modal-title">🤖 Отзыв ИИ</div>
+                    <button class="ai-modal-close" onclick="closeAiReview()">&times;</button>
+                </div>
+                <div class="ai-modal-content">
+                    <div class="ai-modal-score">
+                        <span class="ai-modal-score-value" id="ai-modal-score">9</span>
+                        <span class="ai-modal-score-label">Оценка грамотности</span>
+                    </div>
+                    <div id="ai-modal-text"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -223,11 +257,12 @@
             return num.toString();
         }
 
-        function createLiteracyMeter(score) {
+        function createLiteracyMeter(score, literacyNote) {
             var litClass = score < 6 ? 'low' : score <= 8 ? 'medium' : 'high';
             var litText = score < 6 ? 'Низкая' : score <= 8 ? 'Средняя' : 'Высокая';
             // Угол стрелки: 0 = -90° (лево), 10 = 90° (право), карта 0-10 на -90 до 90
             var angle = (score / 10) * 180 - 90;
+            var aiButtonHtml = literacyNote ? '<button class="ai-review-btn" onclick="event.stopPropagation(); showAiReview(' + score + ', \'' + encodeURIComponent(literacyNote) + '\')" title="Отзыв ИИ">🤖</button>' : '';
             return '<div class="literacy-meter" onclick="event.stopPropagation()">' +
                 '<div class="literacy-tooltip">' +
                     '<div class="tooltip-title">Грамотность текста</div>' +
@@ -242,7 +277,7 @@
                     '<circle cx="24" cy="28" r="3" fill="var(--text-primary)"/>' +
                 '</svg>' +
                 '<span class="literacy-meter-label">Грамотность</span>' +
-            '</div>';
+            '</div>' + aiButtonHtml;
         }
         
         // Получить требуемый возраст для рейтинга
@@ -358,7 +393,7 @@
         async function loadData() {
             try {
                 var query = db.from('stories').select('*, authors (id, name, pen_name), shorts (id, text, position)').eq('status', 'published');
-                if (currentGenre) query = query.eq('genre', currentGenre);
+                // Фильтрация по жанру выполняется на клиенте, т.к. genres - это JSONB массив
                 if (currentFilter === 'new') {
                     query = query.order('published_at', { ascending: false });
                 } else {
@@ -407,6 +442,7 @@
                                 like_percent: likePercent,
                                 total_votes: totalReactions,
                                 literacy_score: story.literacy_score,
+                                literacy_note: story.literacy_note,
                                 similar_to: story.similar_to,
                                 published_at: story.published_at,
                                 created_at: story.created_at
@@ -418,7 +454,17 @@
                 if (currentFilter === 'foryou') {
                     shorts = smartSort(shorts);
                 }
-                
+
+                // Фильтрация по жанру на клиенте
+                if (currentGenre) {
+                    shorts = shorts.filter(function(s) {
+                        if (!s.genres || !s.genres.length) return false;
+                        return s.genres.some(function(g) {
+                            return g.name === currentGenre;
+                        });
+                    });
+                }
+
                 // Показываем все рассказы в ленте, проверка возраста — при открытии
                 allShorts = shorts;
                 displayedCount = 0;
@@ -543,7 +589,7 @@
                 
                 var literacyHtml = '';
                 if (short.literacy_score) {
-                    literacyHtml = createLiteracyMeter(short.literacy_score);
+                    literacyHtml = createLiteracyMeter(short.literacy_score, short.literacy_note);
                 }
                 
                 var ageClass = 'age-' + (short.age_rating || '16+').replace('+', '');
@@ -640,7 +686,23 @@
         }
 
         function searchByTag(tag) {
-            window.location.href = '/search.html?q=' + encodeURIComponent(tag);
+            window.location.href = '/search.html?tag=' + encodeURIComponent(tag);
+        }
+
+        function showAiReview(score, encodedNote) {
+            var note = decodeURIComponent(encodedNote);
+            var litClass = score < 6 ? 'low' : score <= 8 ? 'medium' : 'high';
+            document.getElementById('ai-modal-score').textContent = score + '/10';
+            document.getElementById('ai-modal-score').className = 'ai-modal-score-value ' + litClass;
+            document.getElementById('ai-modal-text').textContent = note;
+            document.getElementById('ai-modal').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAiReview(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('ai-modal').classList.remove('open');
+            document.body.style.overflow = '';
         }
 
         var currentAuthorPopup = null;

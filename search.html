@@ -622,8 +622,26 @@
         function init() {
             loadRecentSearches();
             setupEventListeners();
-            loadTopViews('week');
-            loadTopLikes('week');
+
+            // Проверяем параметры URL
+            var urlParams = new URLSearchParams(window.location.search);
+            var tagParam = urlParams.get('tag');
+            var genreParam = urlParams.get('genre');
+            var queryParam = urlParams.get('q');
+
+            if (tagParam) {
+                document.getElementById('search-input').value = '#' + tagParam;
+                searchBySubgenre(tagParam);
+            } else if (genreParam) {
+                document.getElementById('search-input').value = genreParam;
+                searchByGenre(genreParam);
+            } else if (queryParam) {
+                document.getElementById('search-input').value = queryParam;
+                performSearch(queryParam);
+            } else {
+                loadTopViews('week');
+                loadTopLikes('week');
+            }
         }
         
         // ===== TOP VIEWS =====
@@ -917,7 +935,67 @@
                 `;
             }
         }
-        
+
+        // ===== ПОИСК ПО ТЕГУ =====
+        async function searchBySubgenre(tag) {
+            document.getElementById('initial-state').style.display = 'none';
+            document.getElementById('search-tabs').style.display = 'none';
+            document.getElementById('search-results').style.display = 'block';
+            document.getElementById('search-results').innerHTML = '<div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-author"></div></div>'.repeat(3);
+
+            try {
+                const { data: stories, error } = await db
+                    .from('stories')
+                    .select('id, title, genres, genre, subgenres, age_rating, reading_time_minutes, authors(pen_name)')
+                    .eq('status', 'published')
+                    .contains('subgenres', [tag])
+                    .order('published_at', { ascending: false })
+                    .limit(50);
+
+                if (error) throw error;
+                renderStoryResults(stories || [], '#' + tag);
+            } catch (error) {
+                console.error('Search error:', error);
+                document.getElementById('search-results').innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><div class="empty-state-text">Ошибка поиска</div></div>';
+            }
+        }
+
+        // ===== ПОИСК ПО ЖАНРУ =====
+        async function searchByGenre(genreName) {
+            document.getElementById('initial-state').style.display = 'none';
+            document.getElementById('search-tabs').style.display = 'none';
+            document.getElementById('search-results').style.display = 'block';
+            document.getElementById('search-results').innerHTML = '<div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-author"></div></div>'.repeat(3);
+
+            try {
+                // Загружаем все опубликованные рассказы и фильтруем по жанру на клиенте
+                const { data: stories, error } = await db
+                    .from('stories')
+                    .select('id, title, genres, genre, subgenres, age_rating, reading_time_minutes, authors(pen_name)')
+                    .eq('status', 'published')
+                    .order('published_at', { ascending: false });
+
+                if (error) throw error;
+
+                // Фильтруем по жанру в массиве genres
+                const filtered = (stories || []).filter(function(s) {
+                    if (s.genres && s.genres.length) {
+                        return s.genres.some(function(g) { return g.name === genreName; });
+                    }
+                    return s.genre === genreName;
+                });
+
+                renderStoryResults(filtered, genreName);
+            } catch (error) {
+                console.error('Search error:', error);
+                document.getElementById('search-results').innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><div class="empty-state-text">Ошибка поиска</div></div>';
+            }
+        }
+
+        function performSearch(query) {
+            search(query);
+        }
+
         // ===== RENDER =====
         function renderStoryResults(stories, query) {
             const container = document.getElementById('search-results');
