@@ -249,7 +249,6 @@
             { id: 'first_story', icon: '📝', name: 'Первая строка', desc: 'Опубликовать первый рассказ', check: 'stories' },
             { id: 'five_stories', icon: '📚', name: 'Пятёрка', desc: 'Опубликовать 5 рассказов', check: 'fiveStories' },
             { id: 'perfect_grammar', icon: '✨', name: 'Чистый слог', desc: 'Рассказ с оценкой 10/10', check: 'perfectGrammar' },
-            { id: 'multi_genre', icon: '🎭', name: 'Многоликий', desc: 'Публикации в 3+ жанрах', check: 'multiGenre' },
             { id: 'hundred_views', icon: '👁️', name: 'Замечен', desc: '100 просмотров на рассказе', check: 'hundredViews' },
             { id: 'fifty_likes', icon: '❤️', name: 'Любимчик', desc: '50 лайков на рассказе', check: 'fiftyLikes' },
             { id: 'early_bird', icon: '🌊', name: 'У истоков', desc: 'Один из первых 50 авторов', check: 'earlyBird' },
@@ -507,7 +506,6 @@
                     stories: false,
                     fiveStories: false,
                     perfectGrammar: false,
-                    multiGenre: false,
                     hundredViews: false,
                     fiftyLikes: false,
                     earlyBird: false
@@ -516,7 +514,7 @@
                 if (currentAuthor) {
                     // Получаем рассказы автора с деталями
                     var { data: authorStories } = await db.from('stories')
-                        .select('id, views, literacy_score, genres')
+                        .select('id, views, literacy_score')
                         .eq('author_id', currentAuthor.id)
                         .eq('status', 'published');
 
@@ -531,15 +529,6 @@
 
                     // Чистый слог (literacy_score = 10)
                     achievementData.perfectGrammar = storiesArr.some(function(s) { return s.literacy_score === 10; });
-
-                    // Многоликий (3+ разных жанров)
-                    var genreSet = {};
-                    storiesArr.forEach(function(s) {
-                        if (s.genres && s.genres.length) {
-                            s.genres.forEach(function(g) { genreSet[g.name] = true; });
-                        }
-                    });
-                    achievementData.multiGenre = Object.keys(genreSet).length >= 3;
 
                     // Замечен (100+ просмотров на одном рассказе)
                     achievementData.hundredViews = storiesArr.some(function(s) { return (s.views || 0) >= 100; });
