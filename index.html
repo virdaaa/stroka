@@ -264,7 +264,7 @@
             var litText = score < 6 ? 'Низкая' : score <= 8 ? 'Средняя' : 'Высокая';
             // Угол стрелки: 0 = -90° (лево), 10 = 90° (право), карта 0-10 на -90 до 90
             var angle = (score / 10) * 180 - 90;
-            var aiButtonHtml = literacyNote ? '<button class="ai-review-btn" onclick="event.stopPropagation(); showAiReview(' + score + ', \'' + encodeURIComponent(literacyNote) + '\')" title="Отзыв ИИ">О тексте</button>' : '';
+            var aiButtonHtml = literacyNote ? '<button class="ai-review-btn" onclick="event.stopPropagation(); showAiReview(' + score + ', \'' + encodeURIComponent(literacyNote) + '\')">О тексте</button>' : '';
             return '<div class="literacy-meter" onclick="event.stopPropagation()">' +
                 '<div class="literacy-tooltip">' +
                     '<div class="tooltip-title">Грамотность текста</div>' +
