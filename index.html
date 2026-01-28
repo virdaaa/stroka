@@ -111,8 +111,8 @@
         .literacy-tooltip { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; white-space: nowrap; z-index: 100; margin-bottom: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
         .literacy-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--border); }
         .literacy-meter:hover .literacy-tooltip, .literacy-meter:active .literacy-tooltip { display: block; }
-        .ai-review-btn { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 50%; cursor: pointer; font-size: 14px; margin-left: 8px; transition: all 0.2s; }
-        .ai-review-btn:hover { border-color: var(--accent); background: rgba(201, 165, 92, 0.1); }
+        .ai-review-btn { display: inline-flex; align-items: center; padding: 4px 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; font-size: 11px; color: var(--text-secondary); margin-left: 8px; transition: all 0.2s; font-family: var(--font-ui); }
+        .ai-review-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(201, 165, 92, 0.1); }
         .ai-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; align-items: flex-end; justify-content: center; }
         .ai-modal-overlay.open { display: flex; }
         .ai-modal { background: var(--bg-card); border-radius: 20px 20px 0 0; width: 100%; max-width: 480px; max-height: 70vh; overflow: hidden; animation: slideUp 0.3s ease; }
@@ -218,7 +218,7 @@
         <div class="ai-modal-overlay" id="ai-modal" onclick="closeAiReview(event)">
             <div class="ai-modal" onclick="event.stopPropagation()">
                 <div class="ai-modal-header">
-                    <div class="ai-modal-title">🤖 Отзыв ИИ</div>
+                    <div class="ai-modal-title">О тексте</div>
                     <button class="ai-modal-close" onclick="closeAiReview()">&times;</button>
                 </div>
                 <div class="ai-modal-content">
@@ -264,7 +264,7 @@
             var litText = score < 6 ? 'Низкая' : score <= 8 ? 'Средняя' : 'Высокая';
             // Угол стрелки: 0 = -90° (лево), 10 = 90° (право), карта 0-10 на -90 до 90
             var angle = (score / 10) * 180 - 90;
-            var aiButtonHtml = literacyNote ? '<button class="ai-review-btn" onclick="event.stopPropagation(); showAiReview(' + score + ', \'' + encodeURIComponent(literacyNote) + '\')" title="Отзыв ИИ">🤖</button>' : '';
+            var aiButtonHtml = literacyNote ? '<button class="ai-review-btn" onclick="event.stopPropagation(); showAiReview(' + score + ', \'' + encodeURIComponent(literacyNote) + '\')" title="Отзыв ИИ">О тексте</button>' : '';
             return '<div class="literacy-meter" onclick="event.stopPropagation()">' +
                 '<div class="literacy-tooltip">' +
                     '<div class="tooltip-title">Грамотность текста</div>' +
