@@ -714,17 +714,20 @@
             btn.textContent = 'Сохранение...';
 
             try {
-                // Загружаем в Supabase Storage
-                var fileName = currentAuthor.id + '_' + Date.now() + '.' + selectedAvatarFile.name.split('.').pop();
+                // Путь: {user_id}/avatar.{ext} для соответствия RLS политике
+                var fileExt = selectedAvatarFile.name.split('.').pop().toLowerCase();
+                var filePath = currentAuthor.id + '/avatar.' + fileExt;
+
+                // Загружаем в Supabase Storage (upsert перезаписывает старый файл)
                 var { data: uploadData, error: uploadError } = await db.storage
                     .from('avatars')
-                    .upload(fileName, selectedAvatarFile, { upsert: true });
+                    .upload(filePath, selectedAvatarFile, { upsert: true });
 
                 if (uploadError) throw uploadError;
 
-                // Получаем публичный URL
-                var { data: urlData } = db.storage.from('avatars').getPublicUrl(fileName);
-                var avatarUrl = urlData.publicUrl;
+                // Получаем публичный URL с cache-bust параметром
+                var { data: urlData } = db.storage.from('avatars').getPublicUrl(filePath);
+                var avatarUrl = urlData.publicUrl + '?t=' + Date.now();
 
                 // Обновляем профиль автора
                 var { error: updateError } = await db
