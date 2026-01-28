@@ -58,7 +58,7 @@
         .short-book-author { font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
         .author-link { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 4px 8px 4px 4px; margin: -4px; border-radius: 20px; transition: background 0.2s; }
         .author-link:hover { background: var(--bg-card); }
-        .author-avatar-small { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 13px; color: var(--bg-primary); font-weight: 600; flex-shrink: 0; }
+        .author-avatar-small { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 13px; color: var(--bg-primary); font-weight: 600; flex-shrink: 0; background-size: cover; background-position: center; }
         .author-name-text { color: var(--text-secondary); transition: color 0.2s; }
         .author-link:hover .author-name-text { color: var(--accent); }
         .author-popup { display: none; position: absolute; top: 100%; left: 0; margin-top: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; min-width: 260px; z-index: 200; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
@@ -393,7 +393,7 @@
         
         async function loadData() {
             try {
-                var query = db.from('stories').select('*, authors (id, name, pen_name), shorts (id, text, position)').eq('status', 'published');
+                var query = db.from('stories').select('*, authors (id, name, pen_name, avatar_url), shorts (id, text, position)').eq('status', 'published');
                 // Фильтрация по жанру выполняется на клиенте, т.к. genres - это JSONB массив
                 if (currentFilter === 'new') {
                     query = query.order('published_at', { ascending: false });
@@ -434,6 +434,7 @@
                                 title: story.title,
                                 author: story.authors?.pen_name || story.authors?.name || 'Неизвестный автор',
                                 author_id: story.authors?.id || null,
+                                author_avatar: story.authors?.avatar_url || null,
                                 genres: story.genres || [],
                                 subgenres: story.subgenres || [],
                                 age_rating: story.age_rating || '16+',
@@ -596,9 +597,11 @@
                 var ageClass = 'age-' + (short.age_rating || '16+').replace('+', '');
                 
                 var authorInitial = (short.author || 'А')[0].toUpperCase();
+                var avatarStyle = short.author_avatar ? 'background-image: url(' + short.author_avatar + ')' : '';
+                var avatarContent = short.author_avatar ? '' : authorInitial;
                 var authorHtml = '<div class="short-book-author">' +
-                    '<div class="author-link" onclick="event.stopPropagation(); showAuthorPopup(this, \'' + (short.author_id || '') + '\', \'' + short.author.replace(/'/g, "\\'") + '\')">' +
-                        '<div class="author-avatar-small">' + authorInitial + '</div>' +
+                    '<div class="author-link" onclick="event.stopPropagation(); showAuthorPopup(this, \'' + (short.author_id || '') + '\', \'' + short.author.replace(/'/g, "\\'") + '\', \'' + (short.author_avatar || '').replace(/'/g, "\\'") + '\')">' +
+                        '<div class="author-avatar-small" style="' + avatarStyle + '">' + avatarContent + '</div>' +
                         '<span class="author-name-text">' + short.author + '</span>' +
                     '</div>' +
                 '</div>';
@@ -708,16 +711,18 @@
 
         var currentAuthorPopup = null;
 
-        function showAuthorPopup(element, authorId, authorName) {
+        function showAuthorPopup(element, authorId, authorName, authorAvatar) {
             // Закрыть предыдущий popup
             closeAuthorPopup();
 
             var initial = authorName[0].toUpperCase();
+            var avatarStyle = authorAvatar ? 'background-image: url(' + authorAvatar + '); background-size: cover; background-position: center;' : '';
+            var avatarContent = authorAvatar ? '' : initial;
             var popup = document.createElement('div');
             popup.className = 'author-popup open';
             popup.id = 'author-popup-active';
             popup.innerHTML = '<div class="author-popup-header">' +
-                '<div class="author-popup-avatar">' + initial + '</div>' +
+                '<div class="author-popup-avatar" style="' + avatarStyle + '">' + avatarContent + '</div>' +
                 '<div>' +
                     '<div class="author-popup-name">' + authorName + '</div>' +
                     '<div class="author-popup-stats">Автор на Строке</div>' +

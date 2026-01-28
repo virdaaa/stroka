@@ -125,6 +125,24 @@
             font-size: 13px;
             color: var(--accent);
             margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .story-card-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
         }
         
         .story-card-meta {
@@ -405,7 +423,7 @@
                 try {
                     const { data: history, error } = await db
                         .from('reading_history')
-                        .select('*, stories(id, title, genre, reading_time_minutes, authors(pen_name))')
+                        .select('*, stories(id, title, genre, reading_time_minutes, authors(pen_name, avatar_url))')
                         .eq('user_id', currentUser.id)
                         .lt('read_percent', 100)
                         .order('started_at', { ascending: false })
@@ -425,10 +443,18 @@
                         return;
                     }
                     
-                    container.innerHTML = history.map(h => `
+                    container.innerHTML = history.map(h => {
+                        const authorName = h.stories.authors?.pen_name || 'Автор';
+                        const avatarUrl = h.stories.authors?.avatar_url;
+                        const avatarStyle = avatarUrl ? `background-image: url(${avatarUrl})` : '';
+                        const avatarContent = avatarUrl ? '' : authorName.charAt(0).toUpperCase();
+                        return `
                         <div class="story-card" onclick="openStory('${h.stories.id}', ${h.read_percent || 0})">
                             <div class="story-card-title">${h.stories.title}</div>
-                            <div class="story-card-author">${h.stories.authors?.pen_name || 'Автор'}</div>
+                            <div class="story-card-author">
+                                <div class="story-card-avatar" style="${avatarStyle}">${avatarContent}</div>
+                                <span>${authorName}</span>
+                            </div>
                             <div class="story-card-meta">
                                 <span>${h.stories.reading_time_minutes || '?'} мин</span>
                                 <span>${h.stories.genre || 'Проза'}</span>
@@ -437,7 +463,7 @@
                                 <div class="story-card-progress-fill" style="width: ${h.read_percent || 0}%"></div>
                             </div>
                         </div>
-                    `).join('');
+                    `}).join('');
                     
                 } catch (error) {
                     console.error('Error loading continue:', error);
@@ -478,7 +504,7 @@
                 try {
                     const { data: history, error } = await db
                         .from('reading_history')
-                        .select('*, stories(id, title, genre, reading_time_minutes, authors(pen_name))')
+                        .select('*, stories(id, title, genre, reading_time_minutes, authors(pen_name, avatar_url))')
                         .eq('user_id', currentUser.id)
                         .gte('read_percent', 90)
                         .order('finished_at', { ascending: false })
@@ -498,17 +524,25 @@
                         return;
                     }
                     
-                    container.innerHTML = history.map(h => `
+                    container.innerHTML = history.map(h => {
+                        const authorName = h.stories.authors?.pen_name || 'Автор';
+                        const avatarUrl = h.stories.authors?.avatar_url;
+                        const avatarStyle = avatarUrl ? `background-image: url(${avatarUrl})` : '';
+                        const avatarContent = avatarUrl ? '' : authorName.charAt(0).toUpperCase();
+                        return `
                         <div class="story-card" onclick="openStory('${h.stories.id}')">
                             <div class="story-card-title">${h.stories.title}</div>
-                            <div class="story-card-author">${h.stories.authors?.pen_name || 'Автор'}</div>
+                            <div class="story-card-author">
+                                <div class="story-card-avatar" style="${avatarStyle}">${avatarContent}</div>
+                                <span>${authorName}</span>
+                            </div>
                             <div class="story-card-meta">
                                 <span>${h.stories.reading_time_minutes || '?'} мин</span>
                                 <span>${h.stories.genre || 'Проза'}</span>
                             </div>
                             <div class="story-card-badge">✓ Прочитано</div>
                         </div>
-                    `).join('');
+                    `}).join('');
                     
                 } catch (error) {
                     console.error('Error loading finished:', error);
@@ -546,7 +580,7 @@
             try {
                 const { data: stories, error } = await db
                     .from('stories')
-                    .select('id, title, genres, genre, reading_time_minutes, authors(pen_name)')
+                    .select('id, title, genres, genre, reading_time_minutes, authors(pen_name, avatar_url)')
                     .in('id', localBookmarks);
                 
                 if (error) throw error;
@@ -564,10 +598,17 @@
                 
                 container.innerHTML = stories.map(s => {
                     const genreText = s.genres?.length ? s.genres.map(g => g.name).join(', ') : (s.genre || 'Проза');
+                    const authorName = s.authors?.pen_name || 'Автор';
+                    const avatarUrl = s.authors?.avatar_url;
+                    const avatarStyle = avatarUrl ? `background-image: url(${avatarUrl})` : '';
+                    const avatarContent = avatarUrl ? '' : authorName.charAt(0).toUpperCase();
                     return `
                     <div class="story-card" onclick="openStory('${s.id}')">
                         <div class="story-card-title">${s.title}</div>
-                        <div class="story-card-author">${s.authors?.pen_name || 'Автор'}</div>
+                        <div class="story-card-author">
+                            <div class="story-card-avatar" style="${avatarStyle}">${avatarContent}</div>
+                            <span>${authorName}</span>
+                        </div>
                         <div class="story-card-meta">
                             <span>${s.reading_time_minutes || '?'} мин</span>
                             <span>${genreText}</span>
@@ -600,7 +641,7 @@
             try {
                 const { data: subs, error } = await db
                     .from('subscriptions')
-                    .select('author_id, authors(id, pen_name, name)')
+                    .select('author_id, authors(id, pen_name, name, avatar_url)')
                     .eq('user_id', currentUser.id);
                 
                 if (error) throw error;
@@ -617,14 +658,20 @@
                     return;
                 }
                 
-                container.innerHTML = subs.map(s => `
+                container.innerHTML = subs.map(s => {
+                    const authorName = s.authors?.pen_name || s.authors?.name || 'Автор';
+                    const avatarUrl = s.authors?.avatar_url;
+                    const avatarStyle = avatarUrl ? `background-image: url(${avatarUrl}); background-size: cover; background-position: center;` : '';
+                    const avatarContent = avatarUrl ? '' : authorName.charAt(0).toUpperCase();
+                    return `
                     <div class="author-card">
+                        <div class="story-card-avatar" style="width: 40px; height: 40px; font-size: 16px; margin-right: 12px; ${avatarStyle}">${avatarContent}</div>
                         <div class="author-info">
-                            <div class="author-name">${s.authors?.pen_name || s.authors?.name || 'Автор'}</div>
+                            <div class="author-name">${authorName}</div>
                         </div>
                         <button class="btn-small" onclick="unsubscribe('${s.author_id}')">Отписаться</button>
                     </div>
-                `).join('');
+                `}).join('');
                 
             } catch (error) {
                 console.error('Error loading subscriptions:', error);

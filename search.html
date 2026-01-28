@@ -185,6 +185,24 @@
             font-size: 13px;
             color: var(--accent);
             margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .story-card-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
         }
         
         .story-card-meta {
@@ -256,6 +274,8 @@
             font-size: 20px;
             font-weight: 600;
             flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
         }
         
         .author-info {
@@ -860,7 +880,7 @@
             try {
                 const { data: stories, error } = await db
                     .from('stories')
-                    .select('id, title, genres, genre, subgenres, age_rating, reading_time_minutes, authors(pen_name)')
+                    .select('id, title, genres, genre, subgenres, age_rating, reading_time_minutes, authors(pen_name, avatar_url)')
                     .eq('status', 'published')
                     .or(`title.ilike.%${query}%,genre.ilike.%${query}%`)
                     .order('published_at', { ascending: false })
@@ -871,7 +891,7 @@
                 // Также ищем по тегам (subgenres)
                 const { data: byTags } = await db
                     .from('stories')
-                    .select('id, title, genres, genre, subgenres, age_rating, reading_time_minutes, authors(pen_name)')
+                    .select('id, title, genres, genre, subgenres, age_rating, reading_time_minutes, authors(pen_name, avatar_url)')
                     .eq('status', 'published')
                     .contains('subgenres', [query])
                     .limit(20);
@@ -901,7 +921,7 @@
             try {
                 const { data: authors, error } = await db
                     .from('authors')
-                    .select('id, pen_name, name, bio')
+                    .select('id, pen_name, name, bio, avatar_url')
                     .or(`pen_name.ilike.%${query}%,name.ilike.%${query}%`)
                     .limit(20);
                 
@@ -948,7 +968,7 @@
             try {
                 const { data: stories, error } = await db
                     .from('stories')
-                    .select('id, title, genres, genre, subgenres, age_rating, reading_time_minutes, authors(pen_name)')
+                    .select('id, title, genres, genre, subgenres, age_rating, reading_time_minutes, authors(pen_name, avatar_url)')
                     .eq('status', 'published')
                     .contains('subgenres', [tag])
                     .order('published_at', { ascending: false })
@@ -973,7 +993,7 @@
                 // Загружаем все опубликованные рассказы и фильтруем по жанру на клиенте
                 const { data: stories, error } = await db
                     .from('stories')
-                    .select('id, title, genres, genre, subgenres, age_rating, reading_time_minutes, authors(pen_name)')
+                    .select('id, title, genres, genre, subgenres, age_rating, reading_time_minutes, authors(pen_name, avatar_url)')
                     .eq('status', 'published')
                     .order('published_at', { ascending: false });
 
@@ -1016,18 +1036,25 @@
             container.innerHTML = `
                 <div class="results-count">Найдено: ${stories.length}</div>
                 ${stories.map(s => {
-                    const genreText = s.genres?.length 
-                        ? s.genres.map(g => g.name).join(', ') 
+                    const genreText = s.genres?.length
+                        ? s.genres.map(g => g.name).join(', ')
                         : (s.genre || 'Проза');
                     const ageRating = s.age_rating || '16+';
-                    
+                    const authorName = s.authors?.pen_name || 'Автор';
+                    const avatarUrl = s.authors?.avatar_url;
+                    const avatarStyle = avatarUrl ? `background-image: url(${avatarUrl})` : '';
+                    const avatarContent = avatarUrl ? '' : authorName.charAt(0).toUpperCase();
+
                     return `
                     <div class="story-card" onclick="openStory('${s.id}')">
                         <div class="story-card-title">
                             ${highlightMatch(s.title, query)}
                             <span class="age-badge age-${ageRating.replace('+', '')}">${ageRating}</span>
                         </div>
-                        <div class="story-card-author">${s.authors?.pen_name || 'Автор'}</div>
+                        <div class="story-card-author">
+                            <div class="story-card-avatar" style="${avatarStyle}">${avatarContent}</div>
+                            <span>${authorName}</span>
+                        </div>
                         <div class="story-card-meta">
                             <span>${genreText}</span>
                             <span>⏱ ${s.reading_time_minutes || '?'} мин</span>
@@ -1058,15 +1085,18 @@
             
             container.innerHTML = `
                 <div class="results-count">Найдено: ${authors.length}</div>
-                ${authors.map(a => `
+                ${authors.map(a => {
+                    const avatarStyle = a.avatar_url ? `background-image: url(${a.avatar_url})` : '';
+                    const avatarContent = a.avatar_url ? '' : (a.pen_name || a.name || 'A').charAt(0).toUpperCase();
+                    return `
                     <div class="author-card" onclick="searchByAuthor('${a.pen_name || a.name}')">
-                        <div class="author-avatar">${(a.pen_name || a.name || 'A').charAt(0).toUpperCase()}</div>
+                        <div class="author-avatar" style="${avatarStyle}">${avatarContent}</div>
                         <div class="author-info">
                             <div class="author-name">${highlightMatch(a.pen_name || a.name, query)}</div>
                             <div class="author-stats">${a.story_count} ${pluralize(a.story_count, 'рассказ', 'рассказа', 'рассказов')}</div>
                         </div>
                     </div>
-                `).join('')}
+                `}).join('')}
             `;
         }
         
