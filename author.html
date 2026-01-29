@@ -468,7 +468,7 @@
         
         async function analyzeStory() {
             var text = document.getElementById('story-text').value.trim();
-            if (!text || text.length < 500) { alert('Минимум 500 знаков'); return; }
+            if (!text || text.length < 5000) { alert('Минимальный объём рассказа — 5 000 знаков. Сейчас: ' + text.length.toLocaleString() + ' знаков'); return; }
             if (text.length > 60000) { alert('Максимум 60 000 знаков'); return; }
             storyData.text = text; 
             storyData.characterCount = text.length; 
@@ -567,6 +567,14 @@
         }
         
         async function publishStory() {
+            // Проверяем минимальный объём рассказа
+            var MIN_CHARS = 5000;
+            var charCount = storyData.characterCount || 0;
+            if (charCount < MIN_CHARS) {
+                alert('Минимальный объём рассказа — ' + MIN_CHARS.toLocaleString() + ' знаков. Сейчас: ' + charCount.toLocaleString() + ' знаков');
+                return;
+            }
+
             // Проверяем чекбокс для новых публикаций
             if (!editingStoryId) {
                 var checkbox = document.getElementById('terms-agree');
