@@ -440,7 +440,8 @@
             var container = document.getElementById('author-section');
             var stories = [];
             var storyLikes = {};
-            
+            var subscriberCount = 0;
+
             if (currentAuthor) {
                 var { data } = await db.from('stories').select('*').eq('author_id', currentAuthor.id).order('created_at', { ascending: false });
                 stories = data || [];
@@ -449,6 +450,10 @@
                     var { data: reactions } = await db.from('reactions').select('story_id, reaction').in('story_id', storyIds);
                     (reactions || []).forEach(function(r) { if (r.reaction === 'like') storyLikes[r.story_id] = (storyLikes[r.story_id] || 0) + 1; });
                 }
+
+                // Получаем количество подписчиков
+                var { count } = await db.from('subscriptions').select('*', { count: 'exact', head: true }).eq('author_id', currentAuthor.id);
+                subscriberCount = count || 0;
             }
             
             if (!stories || stories.length === 0) {
@@ -468,7 +473,8 @@
                     return '<div class="my-story-item"><div class="my-story-header"><div class="my-story-title">' + s.title + '</div><span class="my-story-status ' + statusClass + '">' + statusText + '</span></div><div class="my-story-stats"><span>' + (s.character_count ? s.character_count.toLocaleString() : '?') + ' зн.</span><span>' + (s.reading_time_minutes || '?') + ' мин</span></div>' + (s.status === 'published' ? '<div class="my-story-metrics"><span>👁 ' + views + '</span><span>👍 ' + likes + '</span></div>' : '') + '<div class="my-story-actions"><a href="/read.html?id=' + s.id + '" class="btn-small">Открыть</a><div class="dropdown"><button class="dropdown-toggle" onclick="toggleDropdown(\'dropdown-' + s.id + '\')">Действия ▾</button><div class="dropdown-menu" id="dropdown-' + s.id + '"><a href="/author.html?edit=' + s.id + '" class="dropdown-item">✏️ Редактировать</a><button class="dropdown-item danger" onclick="deleteStory(\'' + s.id + '\', \'' + safeTitle + '\')">🗑 Удалить</button></div></div></div></div>';
                 }).join('');
                 
-                container.innerHTML = '<div class="profile-section"><div class="section-title">Профиль автора</div><div class="author-profile-card"><div class="author-avatar-large" onclick="openAvatarUpload()" style="' + (currentAuthor.avatar_url ? 'background-image: url(' + currentAuthor.avatar_url + ')' : '') + '">' + (currentAuthor.avatar_url ? '' : avatarLetter) + '</div><div class="author-profile-info"><div class="author-profile-name">' + (currentAuthor.pen_name || currentAuthor.name) + '</div><div class="author-profile-bio">' + (currentAuthor.bio || 'Нет описания') + '</div></div><button class="btn-edit" onclick="showEditProfile()">✏️</button></div><div id="edit-profile-form" style="display: none; margin-top: 16px;"><div class="form-group"><label class="form-label">Псевдоним</label><input type="text" class="input" id="edit-pen-name" value="' + (currentAuthor.pen_name || '') + '"></div><div class="form-group"><label class="form-label">О себе</label><textarea class="input textarea" id="edit-bio">' + (currentAuthor.bio || '') + '</textarea></div><div style="display: flex; gap: 8px;"><button class="btn" onclick="saveProfile()">Сохранить</button><button class="btn btn-secondary" onclick="hideEditProfile()">Отмена</button></div></div></div><div class="profile-section"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;"><div class="section-title" style="margin-bottom: 0;">Мои рассказы</div><a href="/author.html" class="btn" style="padding: 8px 16px; font-size: 13px; text-decoration: none;">+ Добавить</a></div>' + storiesHtml + '</div>';
+                var subscriberText = subscriberCount + ' ' + pluralize(subscriberCount, 'подписчик', 'подписчика', 'подписчиков');
+                container.innerHTML = '<div class="profile-section"><div class="section-title">Профиль автора</div><div class="author-profile-card"><div class="author-avatar-large" onclick="openAvatarUpload()" style="' + (currentAuthor.avatar_url ? 'background-image: url(' + currentAuthor.avatar_url + ')' : '') + '">' + (currentAuthor.avatar_url ? '' : avatarLetter) + '</div><div class="author-profile-info"><div class="author-profile-name">' + (currentAuthor.pen_name || currentAuthor.name) + '</div><div class="author-profile-bio">' + (currentAuthor.bio || 'Нет описания') + '</div><div style="margin-top: 6px; font-size: 13px; color: var(--accent);">👥 ' + subscriberText + '</div></div><button class="btn-edit" onclick="showEditProfile()">✏️</button></div><div id="edit-profile-form" style="display: none; margin-top: 16px;"><div class="form-group"><label class="form-label">Псевдоним</label><input type="text" class="input" id="edit-pen-name" value="' + (currentAuthor.pen_name || '') + '"></div><div class="form-group"><label class="form-label">О себе</label><textarea class="input textarea" id="edit-bio">' + (currentAuthor.bio || '') + '</textarea></div><div style="display: flex; gap: 8px;"><button class="btn" onclick="saveProfile()">Сохранить</button><button class="btn btn-secondary" onclick="hideEditProfile()">Отмена</button></div></div></div><div class="profile-section"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;"><div class="section-title" style="margin-bottom: 0;">Мои рассказы</div><a href="/author.html" class="btn" style="padding: 8px 16px; font-size: 13px; text-decoration: none;">+ Добавить</a></div>' + storiesHtml + '</div>';
             }
         }
         
@@ -589,6 +595,12 @@
             }).join('');
         }
         
+        function pluralize(n, one, few, many) {
+            if (n % 10 === 1 && n % 100 !== 11) return one;
+            if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return few;
+            return many;
+        }
+
         function showEditProfile() { document.getElementById('edit-profile-form').style.display = 'block'; }
         function hideEditProfile() { document.getElementById('edit-profile-form').style.display = 'none'; }
         
