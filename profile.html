@@ -548,11 +548,29 @@
                         achievementData.fiftyLikes = Object.values(likesPerStory).some(function(count) { return count >= 50; });
                     }
 
-                    // У истоков (в первых 50 авторах)
-                    var { count: authorsBeforeMe } = await db.from('authors')
-                        .select('*', { count: 'exact', head: true })
-                        .lt('created_at', currentAuthor.created_at);
-                    achievementData.earlyBird = (authorsBeforeMe || 0) < 50;
+                    // Основатель (первые 50 авторов с публикациями, по дате первой публикации)
+                    if (storiesCount > 0) {
+                        // Получаем первых 50 авторов по дате первой публикации
+                        var { data: firstAuthors } = await db.from('stories')
+                            .select('author_id, created_at')
+                            .eq('status', 'published')
+                            .order('created_at', { ascending: true });
+
+                        // Находим первую публикацию каждого автора
+                        var authorFirstPub = {};
+                        (firstAuthors || []).forEach(function(s) {
+                            if (!authorFirstPub[s.author_id]) {
+                                authorFirstPub[s.author_id] = s.created_at;
+                            }
+                        });
+
+                        // Сортируем авторов по дате первой публикации и берём первых 50
+                        var sortedAuthors = Object.keys(authorFirstPub).sort(function(a, b) {
+                            return new Date(authorFirstPub[a]) - new Date(authorFirstPub[b]);
+                        }).slice(0, 50);
+
+                        achievementData.earlyBird = sortedAuthors.indexOf(currentAuthor.id) !== -1;
+                    }
                 }
 
                 renderAchievements(achievementData);
