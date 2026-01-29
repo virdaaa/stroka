@@ -129,6 +129,15 @@
         .bottom-nav-icon { font-size: 22px; margin-bottom: 2px; }
         .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .become-author-badge { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; text-decoration: none; color: var(--text-secondary); font-size: 13px; transition: border-color 0.2s; }
+        .become-author-badge:hover { border-color: var(--accent); }
+        .become-author-badge-icon { font-size: 20px; }
+        .become-author-badge-text { flex: 1; }
+        .become-author-badge-arrow { color: var(--text-muted); }
+        .reader-stats { display: flex; justify-content: center; gap: 24px; padding: 16px; background: var(--bg-card); border-radius: 12px; }
+        .reader-stat { text-align: center; }
+        .reader-stat-value { font-family: var(--font-display); font-size: 24px; color: var(--accent); }
+        .reader-stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
     </style>
 <!-- Yandex.Metrika counter -->
 <script type="text/javascript">
@@ -152,7 +161,7 @@
             
             <div id="auth-screen" class="auth-screen" style="display: none;">
                 <div class="auth-title">Добро пожаловать</div>
-                <div class="auth-subtitle">Войдите, чтобы сохранять прогресс и публиковать рассказы</div>
+                <div class="auth-subtitle" id="auth-subtitle">Войдите, чтобы сохранять прогресс и публиковать рассказы</div>
                 <div class="platform-stats" id="platform-stats" style="display: none; margin-bottom: 24px; padding: 12px 20px; background: var(--bg-card); border-radius: 10px; font-size: 14px; color: var(--text-secondary);"></div>
                 <div style="margin-bottom: 24px;">
                     <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="stroka_auth_bot" data-size="large" data-radius="8" data-onauth="onTelegramAuth(user)" data-request-access="write"></script>
@@ -174,20 +183,22 @@
                 
                 <div id="author-section"></div>
                 
-                <div class="profile-section">
+                <div class="profile-section" id="stats-section">
                     <div class="section-title">Статистика</div>
-                    <div class="stats-grid">
+                    <div class="stats-grid" id="stats-grid">
                         <div class="stat-card"><div class="stat-value" id="stat-read">0</div><div class="stat-label">Прочитано</div></div>
                         <div class="stat-card"><div class="stat-value" id="stat-time">0</div><div class="stat-label">Мин чтения</div></div>
                         <div class="stat-card"><div class="stat-value" id="stat-likes">0</div><div class="stat-label">Лайков</div></div>
                         <div class="stat-card"><div class="stat-value" id="stat-subs">0</div><div class="stat-label">Подписок</div></div>
                     </div>
                 </div>
-                
-                <div class="profile-section">
+
+                <div class="profile-section" id="achievements-section" style="display: none;">
                     <div class="section-title">Достижения</div>
                     <div class="achievements-grid" id="achievements-grid"></div>
                 </div>
+
+                <div id="become-author-section" style="display: none;"></div>
                 
                 <div class="profile-section">
                     <div class="section-title">Настройки</div>
@@ -241,6 +252,29 @@
         var currentAuthor = null;
         var pendingEmail = null;
         var justLoggedOut = false;
+
+        // Проверяем параметр редиректа
+        var urlParams = new URLSearchParams(window.location.search);
+        var redirectTo = urlParams.get('redirect');
+        var editParam = urlParams.get('edit');
+
+        function handlePostLoginRedirect() {
+            if (redirectTo === 'author') {
+                var url = '/author.html';
+                if (editParam) url += '?edit=' + editParam;
+                window.location.href = url;
+                return true;
+            }
+            return false;
+        }
+
+        // Обновляем текст в зависимости от источника
+        if (redirectTo === 'author') {
+            var subtitleEl = document.getElementById('auth-subtitle');
+            if (subtitleEl) {
+                subtitleEl.textContent = 'Войдите, чтобы опубликовать свой рассказ';
+            }
+        }
         
         // Админские email-адреса
         var ADMIN_EMAILS = ['svalka.plus@gmail.com', 'admin@stroka.app'];
@@ -294,12 +328,16 @@
                 }
                 
                 localStorage.setItem('stroka_user', JSON.stringify({ id: currentAuthor.id, email: currentAuthor.email, telegram_id: tgUser.id.toString() }));
+                localStorage.setItem('stroka_author', JSON.stringify(currentAuthor));
                 currentUser = { id: currentAuthor.id, email: currentAuthor.email };
-                
+
+                // Проверяем редирект на автора
+                if (handlePostLoginRedirect()) return;
+
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('profile-content').style.display = 'block';
                 document.getElementById('logout-btn').style.display = 'block';
-                
+
                 loadAdminSection();
                 loadAuthorSection();
                 loadStats();
@@ -331,7 +369,7 @@
             try {
                 var { error } = await db.auth.verifyOtp({ email: pendingEmail, token: code, type: 'email' });
                 if (error) throw error;
-                await checkAuthAndLoad();
+                await checkAuthAndLoad(true);
             } catch (error) { alert('Неверный код: ' + error.message); }
         }
         
@@ -388,12 +426,12 @@
             alert('Возраст сброшен. Контент с возрастными ограничениями будет скрыт.');
         }
         
-        async function checkAuthAndLoad() {
+        async function checkAuthAndLoad(isNewLogin) {
             var loadingScreen = document.getElementById('loading-screen');
             var authScreen = document.getElementById('auth-screen');
             var profileContent = document.getElementById('profile-content');
             var logoutBtn = document.getElementById('logout-btn');
-            
+
             var savedUser = localStorage.getItem('stroka_user');
             if (savedUser) {
                 var userData = JSON.parse(savedUser);
@@ -401,6 +439,11 @@
                 var { data: author } = await db.from('authors').select('*').eq('id', userData.id).single();
                 if (author) {
                     currentAuthor = author;
+                    localStorage.setItem('stroka_author', JSON.stringify(author));
+
+                    // Проверяем редирект только если это новый логин
+                    if (isNewLogin && handlePostLoginRedirect()) return;
+
                     loadingScreen.style.display = 'none';
                     authScreen.style.display = 'none';
                     profileContent.style.display = 'block';
@@ -413,13 +456,29 @@
                     return;
                 }
             }
-            
+
             var { data: { user } } = await db.auth.getUser();
             if (user) {
                 currentUser = user;
                 var { data: author } = await db.from('authors').select('*').eq('email', user.email).single();
+                if (!author) {
+                    // Создаём запись автора для нового пользователя
+                    var { data: newAuthor } = await db.from('authors').insert({
+                        email: user.email,
+                        name: user.email.split('@')[0],
+                        pen_name: user.email.split('@')[0]
+                    }).select().single();
+                    author = newAuthor;
+                }
                 currentAuthor = author;
-                if (author) localStorage.setItem('stroka_user', JSON.stringify({ id: author.id, email: author.email }));
+                if (author) {
+                    localStorage.setItem('stroka_user', JSON.stringify({ id: author.id, email: author.email }));
+                    localStorage.setItem('stroka_author', JSON.stringify(author));
+                }
+
+                // Проверяем редирект
+                if (isNewLogin && handlePostLoginRedirect()) return;
+
                 loadingScreen.style.display = 'none';
                 authScreen.style.display = 'none';
                 profileContent.style.display = 'block';
@@ -438,31 +497,56 @@
         
         async function loadAuthorSection() {
             var container = document.getElementById('author-section');
+            var becomeAuthorSection = document.getElementById('become-author-section');
+            var achievementsSection = document.getElementById('achievements-section');
             var stories = [];
             var storyLikes = {};
             var subscriberCount = 0;
+            var totalViews = 0;
+            var totalLikes = 0;
 
             if (currentAuthor) {
-                var { data } = await db.from('stories').select('*').eq('author_id', currentAuthor.id).order('created_at', { ascending: false });
+                var { data } = await db.from('stories').select('*').eq('author_id', currentAuthor.id).eq('status', 'published').order('created_at', { ascending: false });
                 stories = data || [];
                 if (stories.length > 0) {
                     var storyIds = stories.map(function(s) { return s.id; });
                     var { data: reactions } = await db.from('reactions').select('story_id, reaction').in('story_id', storyIds);
-                    (reactions || []).forEach(function(r) { if (r.reaction === 'like') storyLikes[r.story_id] = (storyLikes[r.story_id] || 0) + 1; });
+                    (reactions || []).forEach(function(r) {
+                        if (r.reaction === 'like') {
+                            storyLikes[r.story_id] = (storyLikes[r.story_id] || 0) + 1;
+                            totalLikes++;
+                        }
+                    });
+                    stories.forEach(function(s) { totalViews += (s.views || 0); });
                 }
 
                 // Получаем количество подписчиков
                 var { count } = await db.from('subscriptions').select('*', { count: 'exact', head: true }).eq('author_id', currentAuthor.id);
                 subscriberCount = count || 0;
             }
-            
+
+            // Сохраняем для использования в loadStats
+            window.authorStoriesCount = stories.length;
+            window.authorTotalViews = totalViews;
+            window.authorTotalLikes = totalLikes;
+
             if (!stories || stories.length === 0) {
+                // ЧИТАТЕЛЬ: пользователь без публикаций
                 var avatarLetter = (currentAuthor?.pen_name || currentAuthor?.name || currentUser?.email || 'U').charAt(0).toUpperCase();
                 var displayName = currentAuthor?.pen_name || currentAuthor?.name || (currentUser?.email ? currentUser.email.split('@')[0] : 'Читатель');
                 var bio = currentAuthor?.bio || 'Любитель хороших историй';
-                
-                container.innerHTML = '<div class="profile-section"><div class="section-title">Профиль</div><div class="author-profile-card"><div class="author-avatar-large" onclick="openAvatarUpload()" style="' + (currentAuthor?.avatar_url ? 'background-image: url(' + currentAuthor.avatar_url + ')' : '') + '">' + (currentAuthor?.avatar_url ? '' : avatarLetter) + '</div><div class="author-profile-info"><div class="author-profile-name">' + displayName + '</div><div class="author-profile-bio">' + bio + '</div></div>' + (currentAuthor ? '<button class="btn-edit" onclick="showEditProfile()">✏️</button>' : '') + '</div>' + (currentAuthor ? '<div id="edit-profile-form" style="display: none; margin-top: 16px;"><div class="form-group"><label class="form-label">Имя</label><input type="text" class="input" id="edit-pen-name" value="' + (currentAuthor.pen_name || '') + '" placeholder="Ваше имя"></div><div class="form-group"><label class="form-label">О себе</label><textarea class="input textarea" id="edit-bio" placeholder="Расскажите о себе">' + (currentAuthor.bio || '') + '</textarea></div><div style="display: flex; gap: 8px;"><button class="btn" onclick="saveProfile()">Сохранить</button><button class="btn btn-secondary" onclick="hideEditProfile()">Отмена</button></div></div>' : '') + '</div><div class="author-cta"><div class="author-cta-icon">✍️</div><div class="author-cta-title">Станьте автором</div><div class="author-cta-text">Опубликуйте свой рассказ и найдите читателей</div><a href="/author.html" class="btn" style="text-decoration: none; display: inline-block;">Опубликовать</a></div>';
+
+                // Профиль читателя (без большой CTA)
+                container.innerHTML = '<div class="profile-section"><div class="section-title">Профиль</div><div class="author-profile-card"><div class="author-avatar-large" onclick="openAvatarUpload()" style="' + (currentAuthor?.avatar_url ? 'background-image: url(' + currentAuthor.avatar_url + ')' : '') + '">' + (currentAuthor?.avatar_url ? '' : avatarLetter) + '</div><div class="author-profile-info"><div class="author-profile-name">' + displayName + '</div><div class="author-profile-bio">' + bio + '</div></div>' + (currentAuthor ? '<button class="btn-edit" onclick="showEditProfile()">✏️</button>' : '') + '</div>' + (currentAuthor ? '<div id="edit-profile-form" style="display: none; margin-top: 16px;"><div class="form-group"><label class="form-label">Имя</label><input type="text" class="input" id="edit-pen-name" value="' + (currentAuthor.pen_name || '') + '" placeholder="Ваше имя"></div><div class="form-group"><label class="form-label">О себе</label><textarea class="input textarea" id="edit-bio" placeholder="Расскажите о себе">' + (currentAuthor.bio || '') + '</textarea></div><div style="display: flex; gap: 8px;"><button class="btn" onclick="saveProfile()">Сохранить</button><button class="btn btn-secondary" onclick="hideEditProfile()">Отмена</button></div></div>' : '') + '</div>';
+
+                // Скрываем авторские достижения для читателей
+                achievementsSection.style.display = 'none';
+
+                // Маленькая плашка "Стать автором" внизу
+                becomeAuthorSection.style.display = 'block';
+                becomeAuthorSection.innerHTML = '<div class="profile-section"><a href="/author.html" class="become-author-badge"><span class="become-author-badge-icon">✍️</span><span class="become-author-badge-text">Хотите опубликовать свой рассказ?</span><span class="become-author-badge-arrow">→</span></a></div>';
             } else {
+                // АВТОР: пользователь с публикациями
                 var avatarLetter = (currentAuthor.pen_name || currentAuthor.name || 'A').charAt(0).toUpperCase();
                 var storiesHtml = stories.map(function(s) {
                     var statusClass = s.status === 'draft' ? 'draft' : (s.status === 'pending' || s.status === 'pending_review' ? 'pending' : '');
@@ -472,9 +556,15 @@
                     var safeTitle = s.title.replace(/'/g, "\\'");
                     return '<div class="my-story-item"><div class="my-story-header"><div class="my-story-title">' + s.title + '</div><span class="my-story-status ' + statusClass + '">' + statusText + '</span></div><div class="my-story-stats"><span>' + (s.character_count ? s.character_count.toLocaleString() : '?') + ' зн.</span><span>' + (s.reading_time_minutes || '?') + ' мин</span></div>' + (s.status === 'published' ? '<div class="my-story-metrics"><span>👁 ' + views + '</span><span>👍 ' + likes + '</span></div>' : '') + '<div class="my-story-actions"><a href="/read.html?id=' + s.id + '" class="btn-small">Открыть</a><div class="dropdown"><button class="dropdown-toggle" onclick="toggleDropdown(\'dropdown-' + s.id + '\')">Действия ▾</button><div class="dropdown-menu" id="dropdown-' + s.id + '"><a href="/author.html?edit=' + s.id + '" class="dropdown-item">✏️ Редактировать</a><button class="dropdown-item danger" onclick="deleteStory(\'' + s.id + '\', \'' + safeTitle + '\')">🗑 Удалить</button></div></div></div></div>';
                 }).join('');
-                
+
                 var subscriberText = subscriberCount + ' ' + pluralize(subscriberCount, 'подписчик', 'подписчика', 'подписчиков');
                 container.innerHTML = '<div class="profile-section"><div class="section-title">Профиль автора</div><div class="author-profile-card"><div class="author-avatar-large" onclick="openAvatarUpload()" style="' + (currentAuthor.avatar_url ? 'background-image: url(' + currentAuthor.avatar_url + ')' : '') + '">' + (currentAuthor.avatar_url ? '' : avatarLetter) + '</div><div class="author-profile-info"><div class="author-profile-name">' + (currentAuthor.pen_name || currentAuthor.name) + '</div><div class="author-profile-bio">' + (currentAuthor.bio || 'Нет описания') + '</div><div style="margin-top: 6px; font-size: 13px; color: var(--accent);">👥 ' + subscriberText + '</div></div><button class="btn-edit" onclick="showEditProfile()">✏️</button></div><div id="edit-profile-form" style="display: none; margin-top: 16px;"><div class="form-group"><label class="form-label">Псевдоним</label><input type="text" class="input" id="edit-pen-name" value="' + (currentAuthor.pen_name || '') + '"></div><div class="form-group"><label class="form-label">О себе</label><textarea class="input textarea" id="edit-bio">' + (currentAuthor.bio || '') + '</textarea></div><div style="display: flex; gap: 8px;"><button class="btn" onclick="saveProfile()">Сохранить</button><button class="btn btn-secondary" onclick="hideEditProfile()">Отмена</button></div></div></div><div class="profile-section"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;"><div class="section-title" style="margin-bottom: 0;">Мои рассказы</div><a href="/author.html" class="btn" style="padding: 8px 16px; font-size: 13px; text-decoration: none;">+ Добавить</a></div>' + storiesHtml + '</div>';
+
+                // Показываем авторские достижения
+                achievementsSection.style.display = 'block';
+
+                // Скрываем плашку "Стать автором"
+                becomeAuthorSection.style.display = 'none';
             }
         }
         
@@ -497,17 +587,29 @@
                 var time = Math.round((history || []).reduce(function(sum, h) { return sum + (h.read_time_seconds || 0); }, 0) / 60);
 
                 var { data: reactions } = await db.from('reactions').select('id, reaction').eq('user_id', currentUser.id);
-                var likes = (reactions || []).filter(function(r) { return r.reaction === 'like'; }).length;
+                var ratingsGiven = (reactions || []).length; // Все оценки (лайки + дизлайки)
 
                 var { data: subscriptions } = await db.from('subscriptions').select('id').eq('user_id', currentUser.id);
                 var subs = (subscriptions || []).length;
 
-                document.getElementById('stat-read').textContent = finished;
-                document.getElementById('stat-time').textContent = time;
-                document.getElementById('stat-likes').textContent = likes;
-                document.getElementById('stat-subs').textContent = subs;
+                var statsGrid = document.getElementById('stats-grid');
+                var isAuthor = window.authorStoriesCount && window.authorStoriesCount > 0;
 
-                // Данные для достижений автора
+                if (isAuthor) {
+                    // АВТОР: показываем авторскую статистику
+                    statsGrid.innerHTML = '<div class="stat-card"><div class="stat-value">' + window.authorStoriesCount + '</div><div class="stat-label">Рассказов</div></div>' +
+                        '<div class="stat-card"><div class="stat-value">' + (window.authorTotalViews || 0) + '</div><div class="stat-label">Просмотров</div></div>' +
+                        '<div class="stat-card"><div class="stat-value">' + (window.authorTotalLikes || 0) + '</div><div class="stat-label">Лайков</div></div>' +
+                        '<div class="stat-card"><div class="stat-value">' + finished + '</div><div class="stat-label">Прочитано</div></div>';
+                } else {
+                    // ЧИТАТЕЛЬ: показываем читательскую статистику
+                    statsGrid.innerHTML = '<div class="stat-card"><div class="stat-value">' + finished + '</div><div class="stat-label">Прочитано</div></div>' +
+                        '<div class="stat-card"><div class="stat-value">' + time + '</div><div class="stat-label">Мин чтения</div></div>' +
+                        '<div class="stat-card"><div class="stat-value">' + ratingsGiven + '</div><div class="stat-label">Оценок</div></div>' +
+                        '<div class="stat-card"><div class="stat-value">' + subs + '</div><div class="stat-label">Подписок</div></div>';
+                }
+
+                // Данные для достижений автора (только если есть публикации)
                 var achievementData = {
                     stories: false,
                     fiveStories: false,
@@ -517,7 +619,7 @@
                     earlyBird: false
                 };
 
-                if (currentAuthor) {
+                if (currentAuthor && isAuthor) {
                     // Получаем рассказы автора с деталями
                     var { data: authorStories } = await db.from('stories')
                         .select('id, views, literacy_score')
@@ -577,9 +679,9 @@
 
                         achievementData.earlyBird = sortedAuthors.indexOf(currentAuthor.id) !== -1;
                     }
-                }
 
-                renderAchievements(achievementData);
+                    renderAchievements(achievementData);
+                }
             } catch (error) { console.error('Stats error:', error); }
         }
         

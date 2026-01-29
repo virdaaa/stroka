@@ -123,18 +123,27 @@
             <button class="btn btn-secondary" id="logout-btn" style="width: auto; padding: 8px 16px; display: none;" onclick="logout()">Выйти</button>
         </header>
         
-        <div class="screen active" id="auth-screen">
+        <div class="screen" id="auth-redirect-screen">
             <div class="auth-container">
-                <div class="auth-title">Вход для авторов</div>
-                <div class="auth-subtitle">Выберите способ входа</div>
-                <div style="margin-bottom: 24px;">
-                    <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="stroka_auth_bot" data-size="large" data-radius="8" data-onauth="onTelegramAuth(user)" data-request-access="write"></script>
-                </div>
-                <div style="color: var(--text-muted); margin-bottom: 24px; font-size: 13px;">или</div>
-                <form id="auth-form" style="width: 100%; max-width: 300px;">
-                    <div class="form-group"><input type="email" class="input" id="auth-email" placeholder="email@example.com" required></div>
-                    <button type="submit" class="btn">Войти через Email</button>
-                </form>
+                <div class="spinner"></div>
+                <div style="color: var(--text-muted); margin-top: 16px;">Перенаправление...</div>
+            </div>
+        </div>
+
+        <div class="screen" id="author-setup-screen">
+            <div class="step-title">Заполните профиль автора</div>
+            <div class="step-subtitle">Как вас будут видеть читатели</div>
+            <div class="form-group">
+                <label class="form-label">Псевдоним или имя *</label>
+                <input type="text" class="input" id="setup-pen-name" placeholder="Как вас будут называть читатели" maxlength="50">
+            </div>
+            <div class="form-group">
+                <label class="form-label">О себе (необязательно)</label>
+                <textarea class="textarea" id="setup-bio" placeholder="Расскажите немного о себе" style="min-height: 100px;"></textarea>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="window.location.href='/profile.html'">Отмена</button>
+                <button class="btn" onclick="saveAuthorProfile()">Продолжить</button>
             </div>
         </div>
         
@@ -233,95 +242,105 @@
         
         var urlParams = new URLSearchParams(window.location.search);
         var editId = urlParams.get('edit');
-        
-        function onTelegramAuth(user) { 
-            if (justLoggedOut) { justLoggedOut = false; return; }
-            if (currentAuthor) return;
-            handleTelegramLogin(user); 
-        }
-        
-        async function handleTelegramLogin(tgUser) {
-            showLoading('Авторизация...');
-            try {
-                var email = tgUser.username ? tgUser.username + '@telegram.user' : 'tg_' + tgUser.id + '@telegram.user';
-                var name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || tgUser.username || 'User ' + tgUser.id;
-                var { data: existingAuthor } = await db.from('authors').select('*').eq('telegram_id', tgUser.id.toString()).single();
-                if (!existingAuthor) { 
-                    var { data: byEmail } = await db.from('authors').select('*').eq('email', email).single(); 
-                    existingAuthor = byEmail; 
-                }
-                if (existingAuthor) { 
-                    if (!existingAuthor.telegram_id) await db.from('authors').update({ telegram_id: tgUser.id.toString() }).eq('id', existingAuthor.id); 
-                    currentAuthor = existingAuthor; 
-                } else { 
-                    var { data: newAuthor, error } = await db.from('authors').insert({ email: email, name: name, pen_name: tgUser.username || name, telegram_id: tgUser.id.toString() }).select().single(); 
-                    if (error) throw error; 
-                    currentAuthor = newAuthor; 
-                }
-                localStorage.setItem('stroka_author', JSON.stringify(currentAuthor));
-                localStorage.setItem('stroka_user', JSON.stringify({ id: currentAuthor.id, email: currentAuthor.email }));
-                document.getElementById('logout-btn').style.display = 'block';
-                hideLoading();
-                if (editId) { await loadStoryForEdit(editId); } else { await showDashboard(); }
-            } catch (error) { hideLoading(); alert('Ошибка: ' + error.message); }
-        }
-        
-        var pendingEmail = null;
-        document.getElementById('auth-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            var email = document.getElementById('auth-email').value;
-            showLoading('Отправляем код...');
-            try { 
-                var { error } = await db.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true } }); 
-                if (error) throw error; 
-                pendingEmail = email; hideLoading(); showOtpForm(email); 
-            } catch (error) { hideLoading(); alert('Ошибка: ' + error.message); }
-        });
-        
-        function showOtpForm(email) {
-            document.getElementById('auth-form').innerHTML = '<div class="form-group"><p style="color: var(--text-secondary); margin-bottom: 16px;">Код отправлен на<br><strong style="color: var(--text-primary);">' + email + '</strong></p><input type="text" class="input" id="otp-code" placeholder="Введите код" maxlength="6" style="text-align: center; font-size: 24px;" oninput="this.style.letterSpacing = this.value ? \'8px\' : \'0px\'"></div><button type="button" class="btn" onclick="verifyOtp()">Подтвердить</button><button type="button" class="btn btn-secondary" style="margin-top: 12px;" onclick="resetAuthForm()">Изменить email</button>';
-        }
-        
-        async function verifyOtp() {
-            var code = document.getElementById('otp-code').value;
-            if (!code || code.length < 6) { alert('Введите 6-значный код'); return; }
-            showLoading('Проверяем...');
-            try { 
-                var { error } = await db.auth.verifyOtp({ email: pendingEmail, token: code, type: 'email' }); 
-                if (error) throw error; 
-                await handleEmailAuthSuccess(pendingEmail); 
-            } catch (error) { hideLoading(); alert('Неверный код: ' + error.message); }
-        }
-        
-        async function handleEmailAuthSuccess(email) {
-            try {
-                var { data: existingAuthor } = await db.from('authors').select('*').eq('email', email).single();
-                if (existingAuthor) currentAuthor = existingAuthor;
-                else { 
-                    var { data: newAuthor, error } = await db.from('authors').insert({ email: email, name: email.split('@')[0], pen_name: email.split('@')[0] }).select().single(); 
-                    if (error) throw error; 
-                    currentAuthor = newAuthor; 
-                }
-                localStorage.setItem('stroka_author', JSON.stringify(currentAuthor));
-                localStorage.setItem('stroka_user', JSON.stringify({ id: currentAuthor.id, email: currentAuthor.email }));
-                document.getElementById('logout-btn').style.display = 'block';
-                hideLoading();
-                if (editId) { await loadStoryForEdit(editId); } else { await showDashboard(); }
-            } catch (error) { hideLoading(); alert('Ошибка: ' + error.message); }
-        }
-        
-        function resetAuthForm() { 
-            pendingEmail = null; 
-            document.getElementById('auth-form').innerHTML = '<div class="form-group"><input type="email" class="input" id="auth-email" placeholder="email@example.com" required></div><button type="submit" class="btn">Войти через Email</button>'; 
-        }
-        
-        function logout() { 
+
+        function logout() {
             justLoggedOut = true;
             currentAuthor = null; editingStoryId = null;
-            localStorage.removeItem('stroka_author'); 
-            db.auth.signOut(); resetAuthForm(); showScreen('auth'); 
+            localStorage.removeItem('stroka_author');
+            localStorage.removeItem('stroka_user');
+            db.auth.signOut();
             document.getElementById('logout-btn').style.display = 'none';
-            setTimeout(function() { justLoggedOut = false; }, 3000);
+            // Перенаправляем на профиль для авторизации
+            window.location.href = '/profile.html';
+        }
+
+        // Проверка авторизации и профиля автора
+        async function checkAuthAndInit() {
+            var savedUser = localStorage.getItem('stroka_user');
+            var savedAuthor = localStorage.getItem('stroka_author');
+
+            if (!savedUser) {
+                // Не авторизован — перенаправляем на профиль
+                showScreen('auth-redirect');
+                setTimeout(function() {
+                    window.location.href = '/profile.html?redirect=author' + (editId ? '&edit=' + editId : '');
+                }, 500);
+                return;
+            }
+
+            // Пользователь авторизован, проверяем данные автора
+            var userData = JSON.parse(savedUser);
+
+            if (savedAuthor) {
+                currentAuthor = JSON.parse(savedAuthor);
+            } else {
+                // Загружаем данные автора из БД
+                var { data: author } = await db.from('authors').select('*').eq('id', userData.id).single();
+                if (author) {
+                    currentAuthor = author;
+                    localStorage.setItem('stroka_author', JSON.stringify(author));
+                } else {
+                    // Создаём запись автора
+                    var { data: newAuthor } = await db.from('authors').insert({
+                        id: userData.id,
+                        email: userData.email,
+                        name: userData.email.split('@')[0],
+                        pen_name: ''
+                    }).select().single();
+                    currentAuthor = newAuthor;
+                    localStorage.setItem('stroka_author', JSON.stringify(newAuthor));
+                }
+            }
+
+            // Проверяем, заполнен ли профиль автора (есть ли псевдоним)
+            if (!currentAuthor.pen_name || currentAuthor.pen_name.trim() === '') {
+                showScreen('author-setup');
+                return;
+            }
+
+            // Всё ок, показываем кабинет
+            document.getElementById('logout-btn').style.display = 'block';
+            if (editId) {
+                await loadStoryForEdit(editId);
+            } else {
+                await showDashboard();
+            }
+        }
+
+        async function saveAuthorProfile() {
+            var penName = document.getElementById('setup-pen-name').value.trim();
+            var bio = document.getElementById('setup-bio').value.trim();
+
+            if (!penName) {
+                alert('Введите псевдоним или имя');
+                return;
+            }
+
+            showLoading('Сохраняем...');
+            try {
+                var { error } = await db.from('authors').update({
+                    pen_name: penName,
+                    bio: bio || null
+                }).eq('id', currentAuthor.id);
+
+                if (error) throw error;
+
+                currentAuthor.pen_name = penName;
+                currentAuthor.bio = bio || null;
+                localStorage.setItem('stroka_author', JSON.stringify(currentAuthor));
+
+                hideLoading();
+                document.getElementById('logout-btn').style.display = 'block';
+
+                if (editId) {
+                    await loadStoryForEdit(editId);
+                } else {
+                    await showDashboard();
+                }
+            } catch (error) {
+                hideLoading();
+                alert('Ошибка: ' + error.message);
+            }
         }
         
         function startNewStory() {
@@ -676,11 +695,8 @@
         function showLoading(text) { document.getElementById('loading-text').innerHTML = (text || 'Загрузка...').replace(/\n/g, '<br>'); document.getElementById('loading').classList.remove('hidden'); }
         function hideLoading() { document.getElementById('loading').classList.add('hidden'); }
         
-        var savedAuthor = localStorage.getItem('stroka_author');
-        if (savedAuthor) { 
-            currentAuthor = JSON.parse(savedAuthor); 
-            if (editId) { loadStoryForEdit(editId); } else { showDashboard(); }
-        }
+        // Инициализация — проверяем авторизацию и профиль
+        checkAuthAndInit();
     </script>
 </body>
 </html>
