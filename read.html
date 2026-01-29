@@ -625,14 +625,8 @@
         const storySlug = urlParams.get('s');
         const scrollFromUrl = urlParams.get('scroll');
 
-        console.log('[DEBUG] Page loaded with params:', { id: storyId, slug: storySlug, path: window.location.pathname });
-
         async function init() {
-            if (!storyId && !storySlug) {
-                console.error('[DEBUG] No id or slug provided');
-                showError();
-                return;
-            }
+            if (!storyId && !storySlug) { showError(); return; }
 
             const savedUser = localStorage.getItem('stroka_user');
             if (savedUser) {
@@ -641,8 +635,7 @@
                 try {
                     const { data: { user } } = await db.auth.getUser();
                     currentUser = user;
-                } catch (authError) {
-                    console.log('[DEBUG] Auth error (non-critical):', authError);
+                } catch (e) {
                     currentUser = null;
                 }
             }
@@ -808,22 +801,14 @@
 
                 // Поддержка поиска по slug или id
                 if (storySlug) {
-                    console.log('[DEBUG] Searching by slug:', storySlug);
                     query = query.eq('slug', storySlug);
                 } else {
-                    console.log('[DEBUG] Searching by id:', storyId);
                     query = query.eq('id', storyId);
                 }
 
                 const { data: story, error } = await query.single();
 
-                console.log('[DEBUG] Query result:', { story: story, error: error });
-
-                if (error || !story) {
-                    console.error('[DEBUG] Story not found. Error:', error);
-                    showError();
-                    return;
-                }
+                if (error || !story) { showError(); return; }
 
                 // Сохраняем storyId для дальнейших запросов
                 storyId = story.id;
@@ -859,8 +844,7 @@
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('story-container').style.display = 'block';
             } catch (error) {
-                console.error('[DEBUG] Load error:', error);
-                console.error('[DEBUG] Error details:', JSON.stringify(error, null, 2));
+                console.error('Load error:', error);
                 showError();
             }
         }
@@ -1178,9 +1162,9 @@
         
         // ===== SHARE =====
         function setupShareLinks() {
-            // Используем slug для красивых URL, если доступен
+            // Используем slug в query-параметре (Cloudflare Pages не поддерживает /s/:slug редиректы)
             var shareUrl = currentStory.slug
-                ? 'https://stroka.app/s/' + currentStory.slug
+                ? 'https://stroka.app/read.html?s=' + currentStory.slug
                 : 'https://stroka.app/read.html?id=' + storyId;
             var encodedUrl = encodeURIComponent(shareUrl);
             var title = encodeURIComponent(currentStory.title + ' — читать на Строке');
@@ -1190,9 +1174,9 @@
         }
 
         function copyLink() {
-            // Используем slug для красивых URL, если доступен
+            // Используем slug в query-параметре
             var shareUrl = currentStory.slug
-                ? 'https://stroka.app/s/' + currentStory.slug
+                ? 'https://stroka.app/read.html?s=' + currentStory.slug
                 : 'https://stroka.app/read.html?id=' + storyId;
             navigator.clipboard.writeText(shareUrl);
             alert('Ссылка скопирована!');
