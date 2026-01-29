@@ -354,8 +354,8 @@
                 document.getElementById('logout-btn').style.display = 'block';
 
                 loadAdminSection();
-                loadAuthorSection();
-                loadStats();
+                await loadAuthorSection();
+                await loadStats();
                 loadSettings();
             } catch (error) {
                 console.error('Telegram auth error:', error);
@@ -464,8 +464,8 @@
                     profileContent.style.display = 'block';
                     logoutBtn.style.display = 'block';
                     loadAdminSection();
-                    loadAuthorSection();
-                    loadStats();
+                    await loadAuthorSection();
+                    await loadStats();
                     loadNotifications();
                     loadSettings();
                     return;
@@ -499,8 +499,8 @@
                 profileContent.style.display = 'block';
                 logoutBtn.style.display = 'block';
                 loadAdminSection();
-                loadAuthorSection();
-                loadStats();
+                await loadAuthorSection();
+                await loadStats();
                 loadNotifications();
                 loadSettings();
             } else {
