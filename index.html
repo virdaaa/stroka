@@ -182,6 +182,7 @@
         <div class="top-tabs">
             <button class="top-tab active" data-filter="foryou">Для вас</button>
             <button class="top-tab" data-filter="new">Новинки</button>
+            <button class="top-tab" data-filter="subscriptions">Подписки</button>
             <div class="genre-dropdown">
                 <button class="top-tab" id="genre-btn">Жанры ▾</button>
                 <div class="genre-menu" id="genre-menu">
@@ -387,6 +388,12 @@
         
         async function loadData() {
             try {
+                // Обработка вкладки "Подписки"
+                if (currentFilter === 'subscriptions') {
+                    await loadSubscriptionsFeed();
+                    return;
+                }
+
                 var query = db.from('stories').select('*, authors (id, name, pen_name, avatar_url, bio), shorts (id, text, position)').eq('status', 'published');
                 // Фильтрация по жанру выполняется на клиенте, т.к. genres - это JSONB массив
                 if (currentFilter === 'new') {
@@ -394,7 +401,7 @@
                 } else {
                     query = query.order('created_at', { ascending: false });
                 }
-                
+
                 var { data: storiesData, error } = await query;
                 if (error) throw error;
                 
@@ -475,6 +482,114 @@
             }
         }
         
+        async function loadSubscriptionsFeed() {
+            var feed = document.getElementById('feed');
+
+            // Проверяем авторизацию
+            if (!currentUser) {
+                feed.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔐</div><div class="empty-state-text">Войдите, чтобы видеть подписки</div><div class="empty-state-subtext">Подпишитесь на авторов и следите за их рассказами</div><a href="/profile.html" style="margin-top: 16px; padding: 12px 24px; background: var(--accent); color: var(--bg-primary); border-radius: 8px; text-decoration: none; font-weight: 500;">Войти</a></div>';
+                return;
+            }
+
+            try {
+                // Получаем ID авторов из подписок
+                var { data: subs, error: subsError } = await db
+                    .from('subscriptions')
+                    .select('author_id')
+                    .eq('user_id', currentUser.id);
+
+                if (subsError) throw subsError;
+
+                if (!subs || subs.length === 0) {
+                    feed.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">Вы пока ни на кого не подписаны</div><div class="empty-state-subtext">Подпишитесь на авторов, чтобы их рассказы появлялись здесь</div><a href="/search.html" style="margin-top: 16px; padding: 12px 24px; background: var(--accent); color: var(--bg-primary); border-radius: 8px; text-decoration: none; font-weight: 500;">Найти авторов</a></div>';
+                    return;
+                }
+
+                var authorIds = subs.map(function(s) { return s.author_id; });
+
+                // Получаем рассказы этих авторов
+                var { data: storiesData, error: storiesError } = await db
+                    .from('stories')
+                    .select('*, authors (id, name, pen_name, avatar_url, bio), shorts (id, text, position)')
+                    .in('author_id', authorIds)
+                    .eq('status', 'published')
+                    .order('published_at', { ascending: false });
+
+                if (storiesError) throw storiesError;
+
+                stories = storiesData || [];
+
+                if (stories.length === 0) {
+                    feed.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📝</div><div class="empty-state-text">У авторов пока нет рассказов</div><div class="empty-state-subtext">Авторы, на которых вы подписаны, ещё не опубликовали рассказы</div></div>';
+                    return;
+                }
+
+                var storyIds = stories.map(function(s) { return s.id; });
+
+                var { data: reactionsData } = await db.from('reactions').select('story_id, reaction').in('story_id', storyIds);
+
+                var statsMap = {};
+                stories.forEach(function(s) { statsMap[s.id] = { views: s.views || 0, likes: 0, dislikes: 0 }; });
+                (reactionsData || []).forEach(function(r) {
+                    if (statsMap[r.story_id]) {
+                        if (r.reaction === 'like') statsMap[r.story_id].likes++;
+                        else if (r.reaction === 'dislike') statsMap[r.story_id].dislikes++;
+                    }
+                });
+
+                shorts = [];
+                stories.forEach(function(story) {
+                    var stats = statsMap[story.id] || { views: 0, likes: 0, dislikes: 0 };
+                    var totalReactions = stats.likes + stats.dislikes;
+                    var likePercent = totalReactions > 0 ? Math.round(100 * stats.likes / totalReactions) : null;
+
+                    if (story.shorts) {
+                        story.shorts.forEach(function(short) {
+                            shorts.push({
+                                id: short.id,
+                                text: short.text,
+                                position: short.position,
+                                story_id: story.id,
+                                title: story.title,
+                                author: story.authors?.pen_name || story.authors?.name || 'Неизвестный автор',
+                                author_id: story.authors?.id || null,
+                                author_avatar: story.authors?.avatar_url || null,
+                                author_bio: story.authors?.bio || '',
+                                genres: story.genres || [],
+                                subgenres: story.subgenres || [],
+                                age_rating: story.age_rating || '16+',
+                                reading_time: story.reading_time_minutes,
+                                character_count: story.character_count,
+                                views: stats.views,
+                                like_percent: likePercent,
+                                total_votes: totalReactions,
+                                literacy_score: story.literacy_score,
+                                literacy_note: story.literacy_note,
+                                similar_to: story.similar_to,
+                                published_at: story.published_at,
+                                created_at: story.created_at
+                            });
+                        });
+                    }
+                });
+
+                // Берём по одному шортсу от каждого рассказа (первый)
+                var storyGroups = {};
+                shorts.forEach(function(item) {
+                    if (!storyGroups[item.story_id]) {
+                        storyGroups[item.story_id] = item;
+                    }
+                });
+                allShorts = Object.values(storyGroups);
+                displayedCount = 0;
+                renderFeed(false);
+
+            } catch (error) {
+                console.error('Error loading subscriptions:', error);
+                feed.innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><div class="empty-state-text">Ошибка загрузки</div><div class="empty-state-subtext">' + error.message + '</div><button onclick="loadData()" style="margin-top: 16px; padding: 10px 20px; background: var(--accent); border: none; border-radius: 8px; color: var(--bg-primary); cursor: pointer;">Повторить</button></div>';
+            }
+        }
+
         function smartSort(items) {
             var now = Date.now();
             var hour48 = 48 * 60 * 60 * 1000;

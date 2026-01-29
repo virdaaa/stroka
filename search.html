@@ -624,7 +624,7 @@
                 </div>
                 
                 <div class="recent-section">
-                    <div class="section-title">❤️ Топ по рейтингу</div>
+                    <div class="section-title">👍 Топ по рейтингу</div>
                     <div class="time-filter" id="likes-filter">
                         <button class="time-btn active" data-period="week" onclick="loadTopLikes('week')">Неделя</button>
                         <button class="time-btn" data-period="month" onclick="loadTopLikes('month')">Месяц</button>
@@ -705,24 +705,45 @@
                 // Загружаем все опубликованные рассказы с жанрами
                 const { data: stories } = await db
                     .from('stories')
-                    .select('genres')
+                    .select('id, genres')
                     .eq('status', 'published');
 
-                // Подсчитываем популярность жанров
-                const genreCount = {};
+                if (!stories || stories.length === 0) {
+                    container.innerHTML = '<span class="genre-bubble mid" onclick="searchTag(\'Хоррор\')">Хоррор</span><span class="genre-bubble mid" onclick="searchTag(\'Мистика\')">Мистика</span><span class="genre-bubble mid" onclick="searchTag(\'Фантастика\')">Фантастика</span>';
+                    return;
+                }
+
+                // Загружаем историю прочтений для всех рассказов
+                const storyIds = stories.map(function(s) { return s.id; });
+                const { data: readingHistory } = await db
+                    .from('reading_history')
+                    .select('story_id')
+                    .in('story_id', storyIds);
+
+                // Считаем количество прочтений каждого рассказа
+                var readCounts = {};
+                (readingHistory || []).forEach(function(r) {
+                    readCounts[r.story_id] = (readCounts[r.story_id] || 0) + 1;
+                });
+
+                // Считаем баллы жанров: прочтение × процент_жанра / 100
+                var genreScore = {};
                 (stories || []).forEach(function(s) {
+                    var reads = readCounts[s.id] || 1; // минимум 1, чтобы учитывать и непрочитанные
                     if (s.genres && s.genres.length) {
                         s.genres.forEach(function(g) {
                             var name = g.name || g;
+                            var weight = g.weight || 100; // процент жанра (по умолчанию 100%)
                             if (name) {
-                                genreCount[name] = (genreCount[name] || 0) + 1;
+                                var score = reads * weight / 100;
+                                genreScore[name] = (genreScore[name] || 0) + score;
                             }
                         });
                     }
                 });
 
-                // Сортируем по популярности и берём топ-8
-                var sortedGenres = Object.entries(genreCount)
+                // Сортируем по баллам и берём топ-8
+                var sortedGenres = Object.entries(genreScore)
                     .sort(function(a, b) { return b[1] - a[1]; })
                     .slice(0, 8);
 
@@ -734,9 +755,9 @@
                 // Определяем размеры: топ-2 большие, 3-5 средние, остальные маленькие
                 container.innerHTML = sortedGenres.map(function(item, i) {
                     var genre = item[0];
-                    var count = item[1];
+                    var score = Math.round(item[1]);
                     var sizeClass = i < 2 ? 'top' : i < 5 ? 'mid' : 'low';
-                    return '<span class="genre-bubble ' + sizeClass + '" onclick="searchTag(\'' + genre.replace(/'/g, "\\'") + '\')" title="' + count + ' рассказов">' + genre + '</span>';
+                    return '<span class="genre-bubble ' + sizeClass + '" onclick="searchTag(\'' + genre.replace(/'/g, "\\'") + '\')" title="Популярность: ' + score + '">' + genre + '</span>';
                 }).join('');
 
             } catch (e) {
@@ -787,49 +808,57 @@
             document.querySelectorAll('#likes-filter .time-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.period === period);
             });
-            
+
             const container = document.getElementById('top-likes-list');
             container.innerHTML = '<div class="top-skeleton skeleton"></div><div class="top-skeleton skeleton"></div><div class="top-skeleton skeleton"></div>';
-            
+
             try {
                 // Get stories with reactions
                 let storiesQuery = db
                     .from('stories')
                     .select('id, title, genres, genre, reading_time_minutes, published_at')
                     .eq('status', 'published');
-                
+
                 if (period !== 'all') {
                     const dateFrom = getDateFrom(period);
                     storiesQuery = storiesQuery.gte('published_at', dateFrom.toISOString());
                 }
-                
-                const { data: stories } = await storiesQuery.limit(100);
-                
+
+                const { data: stories, error: storiesError } = await storiesQuery.limit(100);
+
+                console.log('[TopLikes] Period:', period);
+                console.log('[TopLikes] Stories found:', stories?.length || 0);
+                if (storiesError) console.error('[TopLikes] Stories error:', storiesError);
+
                 if (!stories || stories.length === 0) {
                     container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">Нет рассказов за этот период</div>';
                     return;
                 }
-                
+
                 const storyIds = stories.map(s => s.id);
-                
-                const { data: reactions } = await db
+
+                const { data: reactions, error: reactionsError } = await db
                     .from('reactions')
                     .select('story_id, reaction')
                     .in('story_id', storyIds);
-                
+
+                console.log('[TopLikes] Reactions found:', reactions?.length || 0);
+                console.log('[TopLikes] Reactions data:', reactions);
+                if (reactionsError) console.error('[TopLikes] Reactions error:', reactionsError);
+
                 // Calculate like percentage
                 const statsMap = {};
                 storyIds.forEach(id => {
                     statsMap[id] = { likes: 0, dislikes: 0 };
                 });
-                
+
                 (reactions || []).forEach(r => {
                     if (statsMap[r.story_id]) {
                         if (r.reaction === 'like') statsMap[r.story_id].likes++;
                         else statsMap[r.story_id].dislikes++;
                     }
                 });
-                
+
                 // Сортируем по количеству лайков (показываем если есть хотя бы 1 лайк)
                 const ranked = stories
                     .map(s => {
@@ -842,13 +871,15 @@
                     .sort((a, b) => b.likes - a.likes || b.like_percent - a.like_percent)
                     .slice(0, 5);
 
+                console.log('[TopLikes] Ranked stories with likes:', ranked);
+
                 if (ranked.length === 0) {
                     container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">Пока нет оценок за этот период</div>';
                     return;
                 }
 
                 renderTopList(container, ranked, 'likes');
-                
+
             } catch (e) {
                 console.error('Top likes error:', e);
                 container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">Ошибка загрузки</div>';
@@ -876,7 +907,7 @@
                 const genreText = s.genres?.length ? s.genres[0].name : (s.genre || 'Проза');
                 const statText = type === 'views'
                     ? `👁 ${formatNumber(s.views)}`
-                    : `❤️ ${s.likes}`;
+                    : `👍 ${s.likes}`;
                 
                 return `
                     <div class="top-item" onclick="openStory('${s.id}')">
