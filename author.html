@@ -215,7 +215,9 @@
         };
 
         function generateSlug(title) {
+            // Сначала toLowerCase, затем Unicode нормализация для корректной транслитерации
             var slug = title.toLowerCase();
+            if (slug.normalize) slug = slug.normalize('NFC');
             // Транслитерация русских букв
             slug = slug.split('').map(function(char) {
                 return TRANSLIT_MAP[char] !== undefined ? TRANSLIT_MAP[char] : char;
