@@ -797,14 +797,22 @@
 
                 // Поддержка поиска по slug или id
                 if (storySlug) {
+                    console.log('[DEBUG] Searching by slug:', storySlug);
                     query = query.eq('slug', storySlug);
                 } else {
+                    console.log('[DEBUG] Searching by id:', storyId);
                     query = query.eq('id', storyId);
                 }
 
                 const { data: story, error } = await query.single();
 
-                if (error || !story) { showError(); return; }
+                console.log('[DEBUG] Query result:', { story: story, error: error });
+
+                if (error || !story) {
+                    console.error('[DEBUG] Story not found. Error:', error);
+                    showError();
+                    return;
+                }
 
                 // Сохраняем storyId для дальнейших запросов
                 storyId = story.id;

@@ -1,5 +1,4 @@
-# Pretty URLs for story sharing
-/s/:slug /read.html?s=:slug 200
+# Pretty URLs handled by functions/s/[[slug]].js
 
 # Legacy share redirect (if needed)
 /share /read.html 200
