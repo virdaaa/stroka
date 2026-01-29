@@ -1,5 +1,5 @@
-# Fallback redirect for /s/* if function doesn't work
-/s/* /read.html?s=:splat 302
+# Pretty URLs for stories - use named placeholder
+/s/:slug /read.html?s=:slug 200
 
-# Legacy share redirect (if needed)
+# Legacy share redirect
 /share /read.html 200
