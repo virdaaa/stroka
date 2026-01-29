@@ -354,9 +354,44 @@
         .popular-tags {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 10px;
+            justify-content: center;
         }
-        
+
+        .genre-bubble {
+            display: inline-block;
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .genre-bubble:hover {
+            border-color: var(--accent);
+            transform: scale(1.05);
+        }
+
+        .genre-bubble.top {
+            font-size: 17px;
+            font-weight: 500;
+            color: var(--accent);
+            border-color: var(--accent-dim);
+            padding: 10px 20px;
+        }
+
+        .genre-bubble.mid {
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .genre-bubble.low {
+            font-size: 12px;
+            color: var(--text-muted);
+            padding: 6px 12px;
+        }
+
         .popular-tag {
             padding: 8px 14px;
             background: var(--bg-card);
@@ -572,15 +607,8 @@
                 
                 <div class="recent-section">
                     <div class="section-title">Популярные жанры</div>
-                    <div class="popular-tags">
-                        <span class="popular-tag" onclick="searchTag('Хоррор')">Хоррор</span>
-                        <span class="popular-tag" onclick="searchTag('Мистика')">Мистика</span>
-                        <span class="popular-tag" onclick="searchTag('Фантастика')">Фантастика</span>
-                        <span class="popular-tag" onclick="searchTag('Триллер')">Триллер</span>
-                        <span class="popular-tag" onclick="searchTag('Драма')">Драма</span>
-                        <span class="popular-tag" onclick="searchTag('Детектив')">Детектив</span>
-                        <span class="popular-tag" onclick="searchTag('Фэнтези')">Фэнтези</span>
-                        <span class="popular-tag" onclick="searchTag('Романтика')">Романтика</span>
+                    <div class="popular-tags" id="genre-bubbles">
+                        <!-- Загружается динамически -->
                     </div>
                 </div>
                 
@@ -664,11 +692,59 @@
                 document.getElementById('search-input').value = queryParam;
                 performSearch(queryParam);
             } else {
+                loadGenreBubbles();
                 loadTopViews('week');
                 loadTopLikes('week');
             }
         }
         
+        // ===== GENRE BUBBLES =====
+        async function loadGenreBubbles() {
+            const container = document.getElementById('genre-bubbles');
+            try {
+                // Загружаем все опубликованные рассказы с жанрами
+                const { data: stories } = await db
+                    .from('stories')
+                    .select('genres')
+                    .eq('status', 'published');
+
+                // Подсчитываем популярность жанров
+                const genreCount = {};
+                (stories || []).forEach(function(s) {
+                    if (s.genres && s.genres.length) {
+                        s.genres.forEach(function(g) {
+                            var name = g.name || g;
+                            if (name) {
+                                genreCount[name] = (genreCount[name] || 0) + 1;
+                            }
+                        });
+                    }
+                });
+
+                // Сортируем по популярности и берём топ-8
+                var sortedGenres = Object.entries(genreCount)
+                    .sort(function(a, b) { return b[1] - a[1]; })
+                    .slice(0, 8);
+
+                if (sortedGenres.length === 0) {
+                    container.innerHTML = '<span class="genre-bubble mid" onclick="searchTag(\'Хоррор\')">Хоррор</span><span class="genre-bubble mid" onclick="searchTag(\'Мистика\')">Мистика</span><span class="genre-bubble mid" onclick="searchTag(\'Фантастика\')">Фантастика</span>';
+                    return;
+                }
+
+                // Определяем размеры: топ-2 большие, 3-5 средние, остальные маленькие
+                container.innerHTML = sortedGenres.map(function(item, i) {
+                    var genre = item[0];
+                    var count = item[1];
+                    var sizeClass = i < 2 ? 'top' : i < 5 ? 'mid' : 'low';
+                    return '<span class="genre-bubble ' + sizeClass + '" onclick="searchTag(\'' + genre.replace(/'/g, "\\'") + '\')" title="' + count + ' рассказов">' + genre + '</span>';
+                }).join('');
+
+            } catch (e) {
+                console.error('Genre bubbles error:', e);
+                container.innerHTML = '<span class="genre-bubble mid" onclick="searchTag(\'Хоррор\')">Хоррор</span><span class="genre-bubble mid" onclick="searchTag(\'Мистика\')">Мистика</span>';
+            }
+        }
+
         // ===== TOP VIEWS =====
         async function loadTopViews(period) {
             // Update active button
@@ -754,18 +830,23 @@
                     }
                 });
                 
-                // Sort by like percentage (min 3 votes)
+                // Сортируем по количеству лайков (показываем если есть хотя бы 1 лайк)
                 const ranked = stories
                     .map(s => {
                         const stats = statsMap[s.id];
                         const total = stats.likes + stats.dislikes;
-                        const percent = total >= 3 ? Math.round(100 * stats.likes / total) : null;
-                        return { ...s, like_percent: percent, total_votes: total };
+                        const percent = total > 0 ? Math.round(100 * stats.likes / total) : 0;
+                        return { ...s, like_percent: percent, total_votes: total, likes: stats.likes };
                     })
-                    .filter(s => s.like_percent !== null)
-                    .sort((a, b) => b.like_percent - a.like_percent || b.total_votes - a.total_votes)
+                    .filter(s => s.likes > 0)
+                    .sort((a, b) => b.likes - a.likes || b.like_percent - a.like_percent)
                     .slice(0, 5);
-                
+
+                if (ranked.length === 0) {
+                    container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">Пока нет оценок за этот период</div>';
+                    return;
+                }
+
                 renderTopList(container, ranked, 'likes');
                 
             } catch (e) {
@@ -793,9 +874,9 @@
             container.innerHTML = stories.map((s, i) => {
                 const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
                 const genreText = s.genres?.length ? s.genres[0].name : (s.genre || 'Проза');
-                const statText = type === 'views' 
+                const statText = type === 'views'
                     ? `👁 ${formatNumber(s.views)}`
-                    : `👍 ${s.like_percent}% (${s.total_votes})`;
+                    : `❤️ ${s.likes}`;
                 
                 return `
                     <div class="top-item" onclick="openStory('${s.id}')">
