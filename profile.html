@@ -193,8 +193,13 @@
                     </div>
                 </div>
 
+                <div class="profile-section" id="reader-achievements-section" style="display: none;">
+                    <div class="section-title">Достижения читателя</div>
+                    <div class="achievements-grid" id="reader-achievements-grid"></div>
+                </div>
+
                 <div class="profile-section" id="achievements-section" style="display: none;">
-                    <div class="section-title">Достижения</div>
+                    <div class="section-title">Достижения автора</div>
                     <div class="achievements-grid" id="achievements-grid"></div>
                 </div>
 
@@ -278,7 +283,8 @@
         
         // Админские email-адреса
         var ADMIN_EMAILS = ['svalka.plus@gmail.com', 'admin@stroka.app'];
-        
+
+        // Достижения авторов
         var ACHIEVEMENTS = [
             { id: 'first_story', icon: '📝', name: 'Первая строка', desc: 'Опубликовать первый рассказ', check: 'stories' },
             { id: 'five_stories', icon: '📚', name: 'Пятёрка', desc: 'Опубликовать 5 рассказов', check: 'fiveStories' },
@@ -286,6 +292,15 @@
             { id: 'hundred_views', icon: '👁️', name: 'Замечен', desc: '100 просмотров на рассказе', check: 'hundredViews' },
             { id: 'fifty_likes', icon: '❤️', name: 'Любимчик', desc: '50 лайков на рассказе', check: 'fiftyLikes' },
             { id: 'early_bird', icon: '🌊', name: 'Основатель', desc: 'Один из первых 50 авторов', check: 'earlyBird' },
+        ];
+
+        // Достижения читателей
+        var READER_ACHIEVEMENTS = [
+            { id: 'first_read', icon: '📖', name: 'Первая страница', desc: 'Прочитать первый рассказ', check: 'firstRead' },
+            { id: 'ten_reads', icon: '📚', name: 'Ценитель', desc: 'Прочитать 10 рассказов', check: 'tenReads' },
+            { id: 'first_rating', icon: '👍', name: 'Благодарный', desc: 'Поставить первую оценку', check: 'firstRating' },
+            { id: 'first_sub', icon: '👤', name: 'Открыватель', desc: 'Подписаться на автора', check: 'firstSub' },
+            { id: 'early_reader', icon: '🌊', name: 'У истоков', desc: 'Один из первых 100 читателей', check: 'earlyReader' },
         ];
         
         document.addEventListener('click', function(e) {
@@ -539,7 +554,7 @@
                 // Профиль читателя (без большой CTA)
                 container.innerHTML = '<div class="profile-section"><div class="section-title">Профиль</div><div class="author-profile-card"><div class="author-avatar-large" onclick="openAvatarUpload()" style="' + (currentAuthor?.avatar_url ? 'background-image: url(' + currentAuthor.avatar_url + ')' : '') + '">' + (currentAuthor?.avatar_url ? '' : avatarLetter) + '</div><div class="author-profile-info"><div class="author-profile-name">' + displayName + '</div><div class="author-profile-bio">' + bio + '</div></div>' + (currentAuthor ? '<button class="btn-edit" onclick="showEditProfile()">✏️</button>' : '') + '</div>' + (currentAuthor ? '<div id="edit-profile-form" style="display: none; margin-top: 16px;"><div class="form-group"><label class="form-label">Имя</label><input type="text" class="input" id="edit-pen-name" value="' + (currentAuthor.pen_name || '') + '" placeholder="Ваше имя"></div><div class="form-group"><label class="form-label">О себе</label><textarea class="input textarea" id="edit-bio" placeholder="Расскажите о себе">' + (currentAuthor.bio || '') + '</textarea></div><div style="display: flex; gap: 8px;"><button class="btn" onclick="saveProfile()">Сохранить</button><button class="btn btn-secondary" onclick="hideEditProfile()">Отмена</button></div></div>' : '') + '</div>';
 
-                // Скрываем авторские достижения для читателей
+                // Скрываем авторские достижения для читателей (читательские показываются в loadStats)
                 achievementsSection.style.display = 'none';
 
                 // Маленькая плашка "Стать автором" внизу
@@ -609,7 +624,32 @@
                         '<div class="stat-card"><div class="stat-value">' + subs + '</div><div class="stat-label">Подписок</div></div>';
                 }
 
-                // Данные для достижений автора (только если есть публикации)
+                // === ДОСТИЖЕНИЯ ЧИТАТЕЛЯ ===
+                var readerAchievementData = {
+                    firstRead: finished >= 1,
+                    tenReads: finished >= 10,
+                    firstRating: ratingsGiven >= 1,
+                    firstSub: subs >= 1,
+                    earlyReader: false
+                };
+
+                // У истоков (первые 100 читателей по дате регистрации)
+                if (currentAuthor) {
+                    var { data: firstReaders } = await db.from('authors')
+                        .select('id')
+                        .order('created_at', { ascending: true })
+                        .limit(100);
+
+                    var firstReaderIds = (firstReaders || []).map(function(r) { return r.id; });
+                    readerAchievementData.earlyReader = firstReaderIds.indexOf(currentAuthor.id) !== -1;
+                }
+
+                // Показываем читательские достижения всем
+                var readerAchievementsSection = document.getElementById('reader-achievements-section');
+                readerAchievementsSection.style.display = 'block';
+                renderReaderAchievements(readerAchievementData);
+
+                // === ДОСТИЖЕНИЯ АВТОРА (только если есть публикации) ===
                 var achievementData = {
                     stories: false,
                     fiveStories: false,
@@ -696,7 +736,19 @@
                 '</div>';
             }).join('');
         }
-        
+
+        function renderReaderAchievements(data) {
+            document.getElementById('reader-achievements-grid').innerHTML = READER_ACHIEVEMENTS.map(function(a) {
+                var unlocked = data[a.check] || false;
+                return '<div class="achievement-tile ' + (unlocked ? 'unlocked' : '') + '">' +
+                    '<span class="lock-icon">🔒</span>' +
+                    '<div class="achievement-tile-icon">' + a.icon + '</div>' +
+                    '<div class="achievement-tile-name">' + a.name + '</div>' +
+                    '<div class="achievement-tile-desc">' + a.desc + '</div>' +
+                '</div>';
+            }).join('');
+        }
+
         function pluralize(n, one, few, many) {
             if (n % 10 === 1 && n % 100 !== 11) return one;
             if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return few;
