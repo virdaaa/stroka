@@ -621,11 +621,12 @@
         const LOCAL_BOOKMARKS_KEY = 'stroka_bookmarks';
         
         const urlParams = new URLSearchParams(window.location.search);
-        const storyId = urlParams.get('id');
+        var storyId = urlParams.get('id');
+        const storySlug = urlParams.get('s');
         const scrollFromUrl = urlParams.get('scroll');
-        
+
         async function init() {
-            if (!storyId) { showError(); return; }
+            if (!storyId && !storySlug) { showError(); return; }
             
             const savedUser = localStorage.getItem('stroka_user');
             if (savedUser) {
@@ -792,17 +793,25 @@
         
         async function loadStory() {
             try {
-                const { data: story, error } = await db
-                    .from('stories')
-                    .select('*, authors(id, pen_name, name)')
-                    .eq('id', storyId)
-                    .single();
-                
+                var query = db.from('stories').select('*, authors(id, pen_name, name)');
+
+                // Поддержка поиска по slug или id
+                if (storySlug) {
+                    query = query.eq('slug', storySlug);
+                } else {
+                    query = query.eq('id', storyId);
+                }
+
+                const { data: story, error } = await query.single();
+
                 if (error || !story) { showError(); return; }
-                
+
+                // Сохраняем storyId для дальнейших запросов
+                storyId = story.id;
+
                 currentStory = story;
                 currentAuthor = story.authors;
-                
+
                 await db.rpc('increment_views', { story_uuid: storyId });
                 
                 const { data: reactions } = await db
@@ -1149,18 +1158,22 @@
         
         // ===== SHARE =====
         function setupShareLinks() {
-            // Используем /share для красивого превью с og:image
-            var shareUrl = 'https://stroka.app/share?id=' + storyId;
+            // Используем slug для красивых URL, если доступен
+            var shareUrl = currentStory.slug
+                ? 'https://stroka.app/s/' + currentStory.slug
+                : 'https://stroka.app/read.html?id=' + storyId;
             var encodedUrl = encodeURIComponent(shareUrl);
             var title = encodeURIComponent(currentStory.title + ' — читать на Строке');
-            
+
             document.getElementById('share-tg').href = 'https://t.me/share/url?url=' + encodedUrl + '&text=' + title;
             document.getElementById('share-vk').href = 'https://vk.com/share.php?url=' + encodedUrl;
         }
-        
+
         function copyLink() {
-            // Копируем /share ссылку для красивого превью
-            var shareUrl = 'https://stroka.app/share?id=' + storyId;
+            // Используем slug для красивых URL, если доступен
+            var shareUrl = currentStory.slug
+                ? 'https://stroka.app/s/' + currentStory.slug
+                : 'https://stroka.app/read.html?id=' + storyId;
             navigator.clipboard.writeText(shareUrl);
             alert('Ссылка скопирована!');
         }
