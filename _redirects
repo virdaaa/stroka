@@ -1,4 +1,5 @@
-# Pretty URLs handled by functions/s/[[slug]].js
+# Fallback redirect for /s/* if function doesn't work
+/s/* /read.html?s=:splat 302
 
 # Legacy share redirect (if needed)
 /share /read.html 200
