@@ -650,8 +650,11 @@
             var tagParam = urlParams.get('tag');
             var genreParam = urlParams.get('genre');
             var queryParam = urlParams.get('q');
+            var authorIdParam = urlParams.get('author_id');
 
-            if (tagParam) {
+            if (authorIdParam) {
+                searchByAuthorId(authorIdParam);
+            } else if (tagParam) {
                 document.getElementById('search-input').value = '#' + tagParam;
                 searchBySubgenre(tagParam);
             } else if (genreParam) {
@@ -978,6 +981,41 @@
                 renderStoryResults(stories || [], '#' + tag);
             } catch (error) {
                 console.error('Search error:', error);
+                document.getElementById('search-results').innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><div class="empty-state-text">Ошибка поиска</div></div>';
+            }
+        }
+
+        // ===== ПОИСК ПО АВТОРУ (ID) =====
+        async function searchByAuthorId(authorId) {
+            document.getElementById('initial-state').style.display = 'none';
+            document.getElementById('search-tabs').style.display = 'none';
+            document.getElementById('search-results').style.display = 'block';
+            document.getElementById('search-results').innerHTML = '<div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-author"></div></div>'.repeat(3);
+
+            try {
+                // Сначала получаем имя автора
+                const { data: author, error: authorError } = await db
+                    .from('authors')
+                    .select('pen_name, name')
+                    .eq('id', authorId)
+                    .single();
+
+                var authorName = author?.pen_name || author?.name || 'Автор';
+                document.getElementById('search-input').value = authorName;
+
+                // Загружаем рассказы автора
+                const { data: stories, error } = await db
+                    .from('stories')
+                    .select('id, title, genres, genre, subgenres, age_rating, reading_time_minutes, authors(pen_name, avatar_url)')
+                    .eq('status', 'published')
+                    .eq('author_id', authorId)
+                    .order('published_at', { ascending: false });
+
+                if (error) throw error;
+
+                renderStoryResults(stories || [], authorName);
+            } catch (error) {
+                console.error('Author search error:', error);
                 document.getElementById('search-results').innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><div class="empty-state-text">Ошибка поиска</div></div>';
             }
         }

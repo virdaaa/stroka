@@ -186,14 +186,7 @@
                 <button class="top-tab" id="genre-btn">Жанры ▾</button>
                 <div class="genre-menu" id="genre-menu">
                     <div class="genre-item active" data-genre="">Все жанры</div>
-                    <div class="genre-item" data-genre="Хоррор">Хоррор</div>
-                    <div class="genre-item" data-genre="Мистика">Мистика</div>
-                    <div class="genre-item" data-genre="Фантастика">Фантастика</div>
-                    <div class="genre-item" data-genre="Триллер">Триллер</div>
-                    <div class="genre-item" data-genre="Драма">Драма</div>
-                    <div class="genre-item" data-genre="Детектив">Детектив</div>
-                    <div class="genre-item" data-genre="Фэнтези">Фэнтези</div>
-                    <div class="genre-item" data-genre="Романтика">Романтика</div>
+                    <!-- Жанры загружаются динамически -->
                 </div>
             </div>
         </div>
@@ -394,7 +387,7 @@
         
         async function loadData() {
             try {
-                var query = db.from('stories').select('*, authors (id, name, pen_name, avatar_url), shorts (id, text, position)').eq('status', 'published');
+                var query = db.from('stories').select('*, authors (id, name, pen_name, avatar_url, bio), shorts (id, text, position)').eq('status', 'published');
                 // Фильтрация по жанру выполняется на клиенте, т.к. genres - это JSONB массив
                 if (currentFilter === 'new') {
                     query = query.order('published_at', { ascending: false });
@@ -436,6 +429,7 @@
                                 author: story.authors?.pen_name || story.authors?.name || 'Неизвестный автор',
                                 author_id: story.authors?.id || null,
                                 author_avatar: story.authors?.avatar_url || null,
+                                author_bio: story.authors?.bio || '',
                                 genres: story.genres || [],
                                 subgenres: story.subgenres || [],
                                 age_rating: story.age_rating || '16+',
@@ -471,6 +465,7 @@
                 // Показываем все рассказы в ленте, проверка возраста — при открытии
                 allShorts = shorts;
                 displayedCount = 0;
+                updateGenreMenu(stories);
                 saveToCache();
                 renderFeed(false);
                 
@@ -601,7 +596,7 @@
                 var avatarStyle = short.author_avatar ? 'background-image: url(' + short.author_avatar + ')' : '';
                 var avatarContent = short.author_avatar ? '' : authorInitial;
                 var authorHtml = '<div class="short-book-author">' +
-                    '<div class="author-link" onclick="event.stopPropagation(); showAuthorPopup(this, \'' + (short.author_id || '') + '\', \'' + short.author.replace(/'/g, "\\'") + '\', \'' + (short.author_avatar || '').replace(/'/g, "\\'") + '\')">' +
+                    '<div class="author-link" onclick="event.stopPropagation(); showAuthorPopup(this, \'' + (short.author_id || '') + '\', \'' + short.author.replace(/'/g, "\\'") + '\', \'' + (short.author_avatar || '').replace(/'/g, "\\'") + '\', \'' + (short.author_bio || '').replace(/'/g, "\\'").replace(/\n/g, ' ') + '\')">' +
                         '<div class="author-avatar-small" style="' + avatarStyle + '">' + avatarContent + '</div>' +
                         '<span class="author-name-text">' + short.author + '</span>' +
                     '</div>' +
@@ -677,6 +672,40 @@
         
         function openStory(storyId) { window.location.href = '/read.html?id=' + storyId; }
 
+        function updateGenreMenu(storiesData) {
+            var genreSet = {};
+            (storiesData || []).forEach(function(story) {
+                if (story.genres && story.genres.length > 0) {
+                    story.genres.forEach(function(g) {
+                        var name = g.name || g;
+                        if (name) {
+                            genreSet[name] = (genreSet[name] || 0) + 1;
+                        }
+                    });
+                }
+            });
+
+            // Сортируем по количеству (популярности)
+            var sortedGenres = Object.keys(genreSet).sort(function(a, b) {
+                return genreSet[b] - genreSet[a];
+            });
+
+            var menu = document.getElementById('genre-menu');
+            var html = '<div class="genre-item' + (currentGenre === '' ? ' active' : '') + '" data-genre="">Все жанры</div>';
+            sortedGenres.forEach(function(genre) {
+                html += '<div class="genre-item' + (currentGenre === genre ? ' active' : '') + '" data-genre="' + genre + '">' + genre + '</div>';
+            });
+            menu.innerHTML = html;
+
+            // Перепривязываем события
+            menu.querySelectorAll('.genre-item').forEach(function(item) {
+                item.addEventListener('click', function() {
+                    filterByGenre(item.dataset.genre);
+                    menu.classList.remove('open');
+                });
+            });
+        }
+
         function filterByGenre(genre) {
             currentGenre = genre;
             var genreBtn = document.getElementById('genre-btn');
@@ -712,13 +741,14 @@
 
         var currentAuthorPopup = null;
 
-        function showAuthorPopup(element, authorId, authorName, authorAvatar) {
+        function showAuthorPopup(element, authorId, authorName, authorAvatar, authorBio) {
             // Закрыть предыдущий popup
             closeAuthorPopup();
 
             var initial = authorName[0].toUpperCase();
             var avatarStyle = authorAvatar ? 'background-image: url(' + authorAvatar + '); background-size: cover; background-position: center;' : '';
             var avatarContent = authorAvatar ? '' : initial;
+            var bioText = authorBio || 'Автор на Строке';
             var popup = document.createElement('div');
             popup.className = 'author-popup open';
             popup.id = 'author-popup-active';
@@ -726,10 +756,10 @@
                 '<div class="author-popup-avatar" style="' + avatarStyle + '">' + avatarContent + '</div>' +
                 '<div>' +
                     '<div class="author-popup-name">' + authorName + '</div>' +
-                    '<div class="author-popup-stats">Автор на Строке</div>' +
+                    '<div class="author-popup-stats">' + bioText + '</div>' +
                 '</div>' +
             '</div>' +
-            '<button class="author-popup-btn" onclick="searchAuthorStories(\'' + authorName.replace(/'/g, "\\'") + '\')">Все произведения автора</button>';
+            '<button class="author-popup-btn" onclick="searchAuthorStories(\'' + authorId + '\')">Все произведения автора</button>';
 
             element.style.position = 'relative';
             element.appendChild(popup);
@@ -755,8 +785,8 @@
             }
         }
 
-        function searchAuthorStories(authorName) {
-            window.location.href = '/search.html?author=' + encodeURIComponent(authorName);
+        function searchAuthorStories(authorId) {
+            window.location.href = '/search.html?author_id=' + encodeURIComponent(authorId);
         }
         
         init();

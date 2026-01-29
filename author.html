@@ -205,6 +205,29 @@
         var editingStoryEditCount = 0; // Текущее количество редактирований
         var storyData = { title: '', text: '', genres: [], subgenres: [], shorts: [], similar_to: null, age_rating: '16+', moderation: null, literacy: null };
         var justLoggedOut = false;
+
+        // Транслитерация для создания slug
+        var TRANSLIT_MAP = {
+            'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh',
+            'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o',
+            'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'h', 'ц': 'ts',
+            'ч': 'ch', 'ш': 'sh', 'щ': 'sch', 'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya'
+        };
+
+        function generateSlug(title) {
+            var slug = title.toLowerCase();
+            // Транслитерация русских букв
+            slug = slug.split('').map(function(char) {
+                return TRANSLIT_MAP[char] !== undefined ? TRANSLIT_MAP[char] : char;
+            }).join('');
+            // Заменяем пробелы и спецсимволы на дефисы
+            slug = slug.replace(/[^a-z0-9]+/g, '-');
+            // Убираем дефисы в начале и конце
+            slug = slug.replace(/^-+|-+$/g, '');
+            // Ограничиваем длину
+            if (slug.length > 60) slug = slug.substring(0, 60).replace(/-+$/, '');
+            return slug || 'story';
+        }
         
         var urlParams = new URLSearchParams(window.location.search);
         var editId = urlParams.get('edit');
@@ -601,8 +624,9 @@
             } else {
                 showLoading(isPending ? 'Отправляем на модерацию...' : 'Публикуем...');
                 try {
+                    var slug = generateSlug(storyData.title);
                     var { data: story, error } = await db.from('stories').insert({
-                        author_id: currentAuthor.id, title: storyData.title,
+                        author_id: currentAuthor.id, title: storyData.title, slug: slug,
                         full_text: storyData.text, genres: storyData.genres, subgenres: storyData.subgenres,
                         similar_to: storyData.similar_to, age_rating: storyData.age_rating,
                         character_count: storyData.characterCount, reading_time_minutes: storyData.readingTime,
