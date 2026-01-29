@@ -459,6 +459,25 @@
                     shorts = smartSort(shorts);
                 }
 
+                // Для вкладки "Новинки" — фильтруем прочитанное и берём один шортс
+                if (currentFilter === 'new') {
+                    // Группируем по story_id и берём только первый шортс
+                    var storyGroups = {};
+                    shorts.forEach(function(item) {
+                        if (!storyGroups[item.story_id]) {
+                            storyGroups[item.story_id] = item;
+                        }
+                    });
+                    shorts = Object.values(storyGroups);
+
+                    // Для авторизованных — показываем только непрочитанное
+                    if (currentUser && readStoryIds.size > 0) {
+                        shorts = shorts.filter(function(item) {
+                            return !readStoryIds.has(item.story_id);
+                        });
+                    }
+                }
+
                 // Фильтрация по жанру на клиенте
                 if (currentGenre) {
                     shorts = shorts.filter(function(s) {
