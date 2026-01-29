@@ -625,17 +625,28 @@
         const storySlug = urlParams.get('s');
         const scrollFromUrl = urlParams.get('scroll');
 
+        console.log('[DEBUG] Page loaded with params:', { id: storyId, slug: storySlug, path: window.location.pathname });
+
         async function init() {
-            if (!storyId && !storySlug) { showError(); return; }
-            
+            if (!storyId && !storySlug) {
+                console.error('[DEBUG] No id or slug provided');
+                showError();
+                return;
+            }
+
             const savedUser = localStorage.getItem('stroka_user');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
             } else {
-                const { data: { user } } = await db.auth.getUser();
-                currentUser = user;
+                try {
+                    const { data: { user } } = await db.auth.getUser();
+                    currentUser = user;
+                } catch (authError) {
+                    console.log('[DEBUG] Auth error (non-critical):', authError);
+                    currentUser = null;
+                }
             }
-            
+
             await loadStory();
             
             // Проверка возраста для 12+, 16+ и 18+ контента
@@ -848,7 +859,8 @@
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('story-container').style.display = 'block';
             } catch (error) {
-                console.error('Load error:', error);
+                console.error('[DEBUG] Load error:', error);
+                console.error('[DEBUG] Error details:', JSON.stringify(error, null, 2));
                 showError();
             }
         }
