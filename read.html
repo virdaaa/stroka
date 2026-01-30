@@ -844,6 +844,8 @@
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('story-container').style.display = 'block';
             } catch (error) {
+                // Игнорируем AbortError — это нормально при навигации
+                if (error.name === 'AbortError') return;
                 console.error('Load error:', error);
                 showError();
             }
@@ -1003,7 +1005,7 @@
                     if (isFinished && !wasFinished && currentStory?.genres) {
                         await updateGenrePreferences(currentStory.genres, 1);
                     }
-                } catch (e) { console.error('Error saving progress:', e); }
+                } catch (e) { if (e.name !== 'AbortError') console.error('Error saving progress:', e); }
             } else {
                 const localHistory = JSON.parse(localStorage.getItem(LOCAL_HISTORY_KEY) || '{}');
                 localHistory[storyId] = {
