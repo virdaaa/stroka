@@ -45,9 +45,9 @@
         .top-tab:hover { border-color: var(--text-muted); }
         .top-tab.active { background: var(--accent); border-color: var(--accent); color: var(--bg-primary); }
         .genre-dropdown { position: relative; }
-        .genre-menu { display: none; position: absolute; top: 100%; left: 0; margin-top: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 8px 0; min-width: 150px; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        .genre-menu { display: none; position: absolute; top: 100%; left: 0; margin-top: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 8px 0; min-width: 200px; max-width: 280px; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
         .genre-menu.open { display: block; }
-        .genre-item { padding: 10px 16px; color: var(--text-primary); cursor: pointer; transition: background 0.2s; }
+        .genre-item { padding: 10px 16px; color: var(--text-primary); cursor: pointer; transition: background 0.2s; white-space: normal; word-wrap: break-word; }
         .genre-item:hover { background: var(--bg-secondary); }
         .genre-item.active { color: var(--accent); }
         .feed { flex: 1; overflow-y: auto; padding: 0; }
@@ -495,6 +495,8 @@
                 renderFeed(false);
                 
             } catch (error) {
+                // Игнорируем AbortError — это нормально при навигации
+                if (error.name === 'AbortError') return;
                 console.error('Error loading data:', error);
                 document.getElementById('feed').innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><div class="empty-state-text">Ошибка загрузки</div><div class="empty-state-subtext">' + error.message + '</div><button onclick="loadData()" style="margin-top: 16px; padding: 10px 20px; background: var(--accent); border: none; border-radius: 8px; color: var(--bg-primary); cursor: pointer;">Повторить</button></div>';
             }
@@ -603,6 +605,8 @@
                 renderFeed(false);
 
             } catch (error) {
+                // Игнорируем AbortError — это нормально при навигации
+                if (error.name === 'AbortError') return;
                 console.error('Error loading subscriptions:', error);
                 feed.innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><div class="empty-state-text">Ошибка загрузки</div><div class="empty-state-subtext">' + error.message + '</div><button onclick="loadData()" style="margin-top: 16px; padding: 10px 20px; background: var(--accent); border: none; border-radius: 8px; color: var(--bg-primary); cursor: pointer;">Повторить</button></div>';
             }
