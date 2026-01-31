@@ -761,6 +761,7 @@
                 }).join('');
 
             } catch (e) {
+                if (e.name === 'AbortError') return;
                 console.error('Genre bubbles error:', e);
                 container.innerHTML = '<span class="genre-bubble mid" onclick="searchTag(\'Хоррор\')">Хоррор</span><span class="genre-bubble mid" onclick="searchTag(\'Мистика\')">Мистика</span>';
             }
@@ -797,6 +798,7 @@
                 renderTopList(container, stories || [], 'views');
                 
             } catch (e) {
+                if (e.name === 'AbortError') return;
                 console.error('Top views error:', e);
                 container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">Ошибка загрузки</div>';
             }
@@ -881,6 +883,7 @@
                 renderTopList(container, ranked, 'likes');
 
             } catch (e) {
+                if (e.name === 'AbortError') return;
                 console.error('Top likes error:', e);
                 container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">Ошибка загрузки</div>';
             }
@@ -1022,6 +1025,7 @@
                 renderStoryResults(allResults, query);
                 
             } catch (error) {
+                if (error.name === 'AbortError') return;
                 console.error('Search error:', error);
                 document.getElementById('search-results').innerHTML = `
                     <div class="empty-state">
@@ -1031,7 +1035,7 @@
                 `;
             }
         }
-        
+
         async function searchAuthors(query) {
             try {
                 const { data: authors, error } = await db
@@ -1063,6 +1067,7 @@
                 renderAuthorResults(authorsWithCounts, query);
                 
             } catch (error) {
+                if (error.name === 'AbortError') return;
                 console.error('Search error:', error);
                 document.getElementById('search-results').innerHTML = `
                     <div class="empty-state">
@@ -1092,6 +1097,7 @@
                 if (error) throw error;
                 renderStoryResults(stories || [], '#' + tag);
             } catch (error) {
+                if (error.name === 'AbortError') return;
                 console.error('Search error:', error);
                 document.getElementById('search-results').innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><div class="empty-state-text">Ошибка поиска</div></div>';
             }
@@ -1127,6 +1133,7 @@
 
                 renderStoryResults(stories || [], authorName);
             } catch (error) {
+                if (error.name === 'AbortError') return;
                 console.error('Author search error:', error);
                 document.getElementById('search-results').innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><div class="empty-state-text">Ошибка поиска</div></div>';
             }
@@ -1159,6 +1166,7 @@
 
                 renderStoryResults(filtered, genreName);
             } catch (error) {
+                if (error.name === 'AbortError') return;
                 console.error('Search error:', error);
                 document.getElementById('search-results').innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><div class="empty-state-text">Ошибка поиска</div></div>';
             }

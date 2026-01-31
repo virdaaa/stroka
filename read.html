@@ -1092,7 +1092,7 @@
                             });
                     }
                 } catch (e) {
-                    console.error('Error updating preferences:', e);
+                    if (e.name !== 'AbortError') console.error('Error updating preferences:', e);
                 }
             }
         }
