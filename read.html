@@ -599,6 +599,13 @@
     </div>
 
     <script>
+        // Глобальный обработчик для AbortError — игнорируем при навигации
+        window.addEventListener('unhandledrejection', function(event) {
+            if (event.reason && event.reason.name === 'AbortError') {
+                event.preventDefault();
+            }
+        });
+
         const SUPABASE_URL = 'https://xcnvejvkklypvkzkanwj.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbnZlanZra2x5cHZremthbndqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNjU4NzIsImV4cCI6MjA4MzY0MTg3Mn0.8ldNxEbzc8aNJYWtOgP0b5lOsPhl4zMeoht2rn0DeP8';
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -666,30 +673,36 @@
         
         async function getConfirmedAge() {
             const localAge = parseInt(localStorage.getItem('stroka_confirmed_age') || '0');
-            
+
             if (currentUser?.id) {
-                const { data: author } = await db
-                    .from('authors')
-                    .select('confirmed_age')
-                    .eq('id', currentUser.id)
-                    .single();
-                
-                const dbAge = author?.confirmed_age || 0;
-                const maxAge = Math.max(localAge, dbAge);
-                
-                if (maxAge > localAge) {
-                    localStorage.setItem('stroka_confirmed_age', maxAge.toString());
-                }
-                if (maxAge > dbAge) {
-                    await db
+                try {
+                    const { data: author } = await db
                         .from('authors')
-                        .update({ confirmed_age: maxAge, age_confirmed_at: new Date().toISOString() })
-                        .eq('id', currentUser.id);
+                        .select('confirmed_age')
+                        .eq('id', currentUser.id)
+                        .single();
+
+                    const dbAge = author?.confirmed_age || 0;
+                    const maxAge = Math.max(localAge, dbAge);
+
+                    if (maxAge > localAge) {
+                        localStorage.setItem('stroka_confirmed_age', maxAge.toString());
+                    }
+                    if (maxAge > dbAge) {
+                        await db
+                            .from('authors')
+                            .update({ confirmed_age: maxAge, age_confirmed_at: new Date().toISOString() })
+                            .eq('id', currentUser.id);
+                    }
+
+                    return maxAge;
+                } catch (e) {
+                    if (e.name === 'AbortError') return localAge;
+                    console.error('Error getting confirmed age:', e);
+                    return localAge;
                 }
-                
-                return maxAge;
             }
-            
+
             return localAge;
         }
         
@@ -931,38 +944,42 @@
         
         async function loadSavedProgress() {
             let progress = null;
-            
-            if (scrollFromUrl) {
-                progress = { read_percent: parseInt(scrollFromUrl) };
-            } else if (currentUser) {
-                const { data } = await db
-                    .from('reading_history')
-                    .select('read_percent')
-                    .eq('user_id', currentUser.id)
-                    .eq('story_id', storyId)
-                    .maybeSingle();
-                
-                if (data && data.read_percent > 0 && data.read_percent < 95) {
-                    progress = data;
-                }
-            } else {
-                const localHistory = JSON.parse(localStorage.getItem(LOCAL_HISTORY_KEY) || '{}');
-                if (localHistory[storyId] && localHistory[storyId].read_percent > 0 && localHistory[storyId].read_percent < 95) {
-                    progress = localHistory[storyId];
-                }
-            }
-            
-            if (progress && progress.read_percent > 5) {
-                const tryScroll = () => {
-                    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-                    if (docHeight > 100) {
-                        const scrollTo = (progress.read_percent / 100) * docHeight;
-                        window.scrollTo({ top: scrollTo, behavior: 'auto' });
-                    } else {
-                        setTimeout(tryScroll, 100);
+
+            try {
+                if (scrollFromUrl) {
+                    progress = { read_percent: parseInt(scrollFromUrl) };
+                } else if (currentUser) {
+                    const { data } = await db
+                        .from('reading_history')
+                        .select('read_percent')
+                        .eq('user_id', currentUser.id)
+                        .eq('story_id', storyId)
+                        .maybeSingle();
+
+                    if (data && data.read_percent > 0 && data.read_percent < 95) {
+                        progress = data;
                     }
-                };
-                setTimeout(tryScroll, 200);
+                } else {
+                    const localHistory = JSON.parse(localStorage.getItem(LOCAL_HISTORY_KEY) || '{}');
+                    if (localHistory[storyId] && localHistory[storyId].read_percent > 0 && localHistory[storyId].read_percent < 95) {
+                        progress = localHistory[storyId];
+                    }
+                }
+
+                if (progress && progress.read_percent > 5) {
+                    const tryScroll = () => {
+                        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                        if (docHeight > 100) {
+                            const scrollTo = (progress.read_percent / 100) * docHeight;
+                            window.scrollTo({ top: scrollTo, behavior: 'auto' });
+                        } else {
+                            setTimeout(tryScroll, 100);
+                        }
+                    };
+                    setTimeout(tryScroll, 200);
+                }
+            } catch (e) {
+                if (e.name !== 'AbortError') console.error('Error loading saved progress:', e);
             }
         }
         
@@ -1020,14 +1037,18 @@
         
         async function checkSubscription() {
             if (!currentAuthor) return;
-            const { data } = await db
-                .from('subscriptions')
-                .select('id')
-                .eq('user_id', currentUser.id)
-                .eq('author_id', currentAuthor.id)
-                .maybeSingle();
-            isSubscribed = !!data;
-            updateSubscribeButton();
+            try {
+                const { data } = await db
+                    .from('subscriptions')
+                    .select('id')
+                    .eq('user_id', currentUser.id)
+                    .eq('author_id', currentAuthor.id)
+                    .maybeSingle();
+                isSubscribed = !!data;
+                updateSubscribeButton();
+            } catch (e) {
+                if (e.name !== 'AbortError') console.error('Error checking subscription:', e);
+            }
         }
         
         function updateSubscribeButton() {
@@ -1098,15 +1119,19 @@
         }
         
         async function checkReaction() {
-            const { data } = await db
-                .from('reactions')
-                .select('reaction')
-                .eq('user_id', currentUser.id)
-                .eq('story_id', storyId)
-                .maybeSingle();
-            if (data) {
-                currentReaction = data.reaction;
-                updateReactionButtons();
+            try {
+                const { data } = await db
+                    .from('reactions')
+                    .select('reaction')
+                    .eq('user_id', currentUser.id)
+                    .eq('story_id', storyId)
+                    .maybeSingle();
+                if (data) {
+                    currentReaction = data.reaction;
+                    updateReactionButtons();
+                }
+            } catch (e) {
+                if (e.name !== 'AbortError') console.error('Error checking reaction:', e);
             }
         }
         
