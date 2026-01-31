@@ -308,7 +308,7 @@
                         }
                     }
                 } catch (e) {
-                    console.error('Error loading confirmed age:', e);
+                    if (e.name !== 'AbortError') console.error('Error loading confirmed age:', e);
                 }
             }
         }
@@ -357,7 +357,7 @@
                     }
                 }
             } catch (e) {
-                console.error('Cache error:', e);
+                if (e.name !== 'AbortError') console.error('Cache error:', e);
             }
         }
         
@@ -366,7 +366,7 @@
                 var cacheData = { data: allShorts, timestamp: Date.now(), filter: currentFilter, genre: currentGenre };
                 localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
             } catch (e) {
-                console.error('Cache save error:', e);
+                if (e.name !== 'AbortError') console.error('Cache save error:', e);
             }
         }
         
@@ -375,14 +375,14 @@
                 var { data } = await db.from('user_preferences').select('genre, weight').eq('user_id', currentUser.id);
                 userPreferences = {};
                 (data || []).forEach(function(p) { userPreferences[p.genre] = p.weight; });
-            } catch (e) { console.error('Error loading preferences:', e); }
+            } catch (e) { if (e.name !== 'AbortError') console.error('Error loading preferences:', e); }
         }
         
         async function loadReadHistory() {
             try {
                 var { data } = await db.from('reading_history').select('story_id').eq('user_id', currentUser.id);
                 readStoryIds = new Set((data || []).map(function(h) { return h.story_id; }));
-            } catch (e) { console.error('Error loading history:', e); }
+            } catch (e) { if (e.name !== 'AbortError') console.error('Error loading history:', e); }
         }
         
         async function loadData() {

@@ -466,6 +466,7 @@
                     `}).join('');
                     
                 } catch (error) {
+                    if (error.name === 'AbortError') return;
                     console.error('Error loading continue:', error);
                     container.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
                 }
@@ -545,6 +546,7 @@
                     `}).join('');
                     
                 } catch (error) {
+                    if (error.name === 'AbortError') return;
                     console.error('Error loading finished:', error);
                     container.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
                 }
@@ -617,11 +619,12 @@
                 `}).join('');
                 
             } catch (error) {
+                if (error.name === 'AbortError') return;
                 console.error('Error loading bookmarks:', error);
                 container.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
             }
         }
-        
+
         // ===== LOAD SUBSCRIPTIONS =====
         async function loadSubscriptions() {
             const container = document.getElementById('subscriptions-list');
@@ -674,11 +677,12 @@
                 `}).join('');
                 
             } catch (error) {
+                if (error.name === 'AbortError') return;
                 console.error('Error loading subscriptions:', error);
                 container.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
             }
         }
-        
+
         // ===== ACTIONS =====
         function openStory(storyId, scrollPercent) {
             let url = `/read.html?id=${storyId}`;
