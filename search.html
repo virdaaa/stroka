@@ -660,6 +660,13 @@
     </div>
 
     <script>
+        // Глобальный обработчик для AbortError — игнорируем при навигации
+        window.addEventListener('unhandledrejection', function(event) {
+            if (event.reason && event.reason.name === 'AbortError') {
+                event.preventDefault();
+            }
+        });
+
         const SUPABASE_URL = 'https://xcnvejvkklypvkzkanwj.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbnZlanZra2x5cHZremthbndqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNjU4NzIsImV4cCI6MjA4MzY0MTg3Mn0.8ldNxEbzc8aNJYWtOgP0b5lOsPhl4zMeoht2rn0DeP8';
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
