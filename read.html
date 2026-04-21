@@ -311,6 +311,17 @@
             border-color: var(--dislike);
             background: rgba(149, 165, 166, 0.2);
         }
+        .share-top-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 20px;
+            line-height: 1;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-family: var(--font-ui);
+        }
+        .share-top-btn:hover { color: var(--accent); }
         .share-section { padding-top: 24px; border-top: 1px solid var(--border); }
         .share-title { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; }
         .share-buttons { display: flex; justify-content: center; gap: 12px; }
@@ -499,6 +510,7 @@
             <a href="/" class="back-btn">← Назад</a>
             <div class="header-right">
                 <span class="header-info" id="header-info"></span>
+                <button class="share-top-btn" id="share-top-btn" onclick="shareStory()" title="Поделиться" aria-label="Поделиться">↗</button>
             </div>
             <div class="progress-bar" id="progress-bar" style="width: 0%;"></div>
         </header>
@@ -1207,6 +1219,33 @@
                 : 'https://stroka.app/read.html?id=' + storyId;
             navigator.clipboard.writeText(shareUrl);
             alert('Ссылка скопирована!');
+        }
+
+        async function shareStory() {
+            if (!currentStory) return;
+            var shareUrl = currentStory.slug
+                ? 'https://stroka.app/read.html?s=' + currentStory.slug
+                : 'https://stroka.app/read.html?id=' + storyId;
+            var shareData = {
+                title: currentStory.title + ' — Строка',
+                text: currentStory.title,
+                url: shareUrl
+            };
+            if (navigator.share) {
+                try {
+                    await navigator.share(shareData);
+                } catch (e) {
+                    // AbortError при отмене пользователем — ничего не делаем.
+                    // Никаких редиректов/закрытий страницы.
+                }
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                alert('Ссылка скопирована!');
+            } catch (e) {
+                // ignore
+            }
         }
         
         init();

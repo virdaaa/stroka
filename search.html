@@ -519,6 +519,7 @@
             max-width: 480px;
             margin: 0 auto;
         }
+        .bottom-nav.bottom-nav-hidden { display: none; }
         
         .bottom-nav-item {
             display: flex;
@@ -1347,6 +1348,20 @@
         }
         
         // ===== START =====
+        // Скрываем нижнюю навигацию, когда поле ввода в фокусе (чтобы не перекрывалось клавиатурой)
+        document.addEventListener('focusin', function(e) {
+            if (e.target && e.target.matches && e.target.matches('input, textarea')) {
+                const nav = document.querySelector('.bottom-nav');
+                if (nav) nav.classList.add('bottom-nav-hidden');
+            }
+        });
+        document.addEventListener('focusout', function(e) {
+            if (e.target && e.target.matches && e.target.matches('input, textarea')) {
+                const nav = document.querySelector('.bottom-nav');
+                if (nav) nav.classList.remove('bottom-nav-hidden');
+            }
+        });
+
         init();
     </script>
 </body>
