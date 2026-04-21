@@ -139,7 +139,8 @@
         .age-badge.age-12 { background: #ffc10722; color: #ffc107; border: 1px solid #ffc107; }
         .age-badge.age-16 { background: #ff980022; color: #ff9800; border: 1px solid #ff9800; }
         .age-badge.age-18 { background: #f4433622; color: #f44336; border: 1px solid #f44336; }
-        .similar-to { font-size: 12px; color: var(--text-muted); margin-top: 8px; font-style: italic; }
+        .similar-to { font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
+        .similar-author-name { color: var(--accent); }
         .short-content { flex: 1; position: relative; margin: 16px 0; }
         .short-text { font-family: var(--font-body); font-size: 16px; line-height: 1.7; color: var(--text-primary); }
         .short-fade { display: none; }
@@ -258,6 +259,16 @@
             if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
             if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
             return num.toString();
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
 
         function createLiteracyMeter(score, literacyNote) {
@@ -703,7 +714,10 @@
                 
                 var similarHtml = '';
                 if (short.similar_to && short.similar_to.length) {
-                    similarHtml = '<div class="similar-to">Если нравится: ' + short.similar_to.join(', ') + '</div>';
+                    var authorsHtml = short.similar_to.map(function(name) {
+                        return '<span class="similar-author-name">' + escapeHtml(name) + '</span>';
+                    }).join(', ');
+                    similarHtml = '<div class="similar-to">В духе: ' + authorsHtml + '</div>';
                 }
                 
                 var ratingHtml = '';
