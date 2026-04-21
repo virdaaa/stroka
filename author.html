@@ -97,14 +97,21 @@
         .checkbox-group input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
         .checkbox-group label { font-size: 14px; color: var(--text-secondary); line-height: 1.5; cursor: pointer; }
         .checkbox-group label a { color: var(--accent); }
-        .loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+        .loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .loading-overlay.hidden { display: none; }
         .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .loading-text { margin-top: 16px; color: var(--text-secondary); text-align: center; }
+        .analysis-panel { width: 100%; max-width: 340px; margin-top: 24px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+        .analysis-timer { font-family: var(--font-display); font-size: 28px; color: var(--accent); text-align: center; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+        .analysis-hint { font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 16px; }
+        .analysis-step { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 14px; color: var(--text-secondary); transition: color 0.2s; }
+        .analysis-step.done { color: var(--success); }
+        .analysis-step-icon { width: 18px; display: inline-block; text-align: center; flex-shrink: 0; }
         .nav-buttons { display: flex; gap: 12px; margin-top: 24px; }
         .nav-buttons .btn { flex: 1; }
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-secondary); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 8px 0; padding-bottom: max(8px, env(safe-area-inset-bottom)); z-index: 1000; max-width: 480px; margin: 0 auto; }
+        .bottom-nav.bottom-nav-hidden { display: none; }
         .bottom-nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: var(--text-muted); font-size: 11px; padding: 4px 16px; }
         .bottom-nav-item:hover { color: var(--text-secondary); }
         .bottom-nav-icon { font-size: 22px; margin-bottom: 2px; }
@@ -199,7 +206,19 @@
             <a href="/profile.html" class="bottom-nav-item"><span class="bottom-nav-icon">👤</span><span>Профиль</span></a>
         </nav>
         
-        <div class="loading-overlay hidden" id="loading"><div class="spinner"></div><div class="loading-text" id="loading-text">Загрузка...</div></div>
+        <div class="loading-overlay hidden" id="loading">
+            <div class="spinner"></div>
+            <div class="loading-text" id="loading-text">Загрузка...</div>
+            <div class="analysis-panel" id="analysis-panel" style="display: none;">
+                <div class="analysis-timer" id="analysis-timer">0:00</div>
+                <div class="analysis-hint">Обычно занимает 40–60 секунд</div>
+                <div class="analysis-step" id="analysis-step-moderation"><span class="analysis-step-icon">⏳</span><span>Модерация контента</span></div>
+                <div class="analysis-step" id="analysis-step-literacy"><span class="analysis-step-icon">⏳</span><span>Анализ грамотности</span></div>
+                <div class="analysis-step" id="analysis-step-genres"><span class="analysis-step-icon">⏳</span><span>Определение жанров</span></div>
+                <div class="analysis-step" id="analysis-step-similar"><span class="analysis-step-icon">⏳</span><span>Поиск похожих рассказов</span></div>
+                <div class="analysis-step" id="analysis-step-shorts"><span class="analysis-step-icon">⏳</span><span>Создание коротких цитат</span></div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -485,31 +504,96 @@
             el.classList.toggle('warning', c > 60000); 
         }
         
+        var analysisTimerInterval = null;
+        var ANALYSIS_STEPS = ['moderation', 'literacy', 'genres', 'similar', 'shorts'];
+
+        function resetAnalysisSteps() {
+            ANALYSIS_STEPS.forEach(function(id) {
+                var el = document.getElementById('analysis-step-' + id);
+                if (!el) return;
+                el.classList.remove('done');
+                el.querySelector('.analysis-step-icon').textContent = '⏳';
+            });
+        }
+
+        function markAnalysisStep(id) {
+            var el = document.getElementById('analysis-step-' + id);
+            if (!el) return;
+            el.classList.add('done');
+            el.querySelector('.analysis-step-icon').textContent = '✓';
+        }
+
+        function startAnalysisTimer() {
+            var start = Date.now();
+            var el = document.getElementById('analysis-timer');
+            if (el) el.textContent = '0:00';
+            if (analysisTimerInterval) clearInterval(analysisTimerInterval);
+            analysisTimerInterval = setInterval(function() {
+                var secs = Math.floor((Date.now() - start) / 1000);
+                var m = Math.floor(secs / 60);
+                var s = secs % 60;
+                if (el) el.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+            }, 1000);
+        }
+
+        function stopAnalysisTimer() {
+            if (analysisTimerInterval) { clearInterval(analysisTimerInterval); analysisTimerInterval = null; }
+        }
+
+        function showAnalysisUI() {
+            document.getElementById('loading-text').textContent = 'Строка анализирует текст';
+            var panel = document.getElementById('analysis-panel');
+            if (panel) panel.style.display = 'block';
+            resetAnalysisSteps();
+            startAnalysisTimer();
+            document.getElementById('loading').classList.remove('hidden');
+        }
+
+        function hideAnalysisUI() {
+            stopAnalysisTimer();
+            var panel = document.getElementById('analysis-panel');
+            if (panel) panel.style.display = 'none';
+            hideLoading();
+        }
+
+        function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+
+        async function revealAnalysisSteps() {
+            stopAnalysisTimer();
+            for (var i = 0; i < ANALYSIS_STEPS.length; i++) {
+                markAnalysisStep(ANALYSIS_STEPS[i]);
+                await sleep(150);
+            }
+            await sleep(150);
+        }
+
         async function analyzeStory() {
             var text = document.getElementById('story-text').value.trim();
             if (!text || text.length < 5000) { alert('Минимальный объём рассказа — 5 000 знаков. Сейчас: ' + text.length.toLocaleString() + ' знаков'); return; }
             if (text.length > 60000) { alert('Максимум 60 000 знаков'); return; }
-            storyData.text = text; 
-            storyData.characterCount = text.length; 
+            storyData.text = text;
+            storyData.characterCount = text.length;
             storyData.readingTime = Math.ceil(text.length / 1500);
-            showLoading('Строка анализирует текст...<br>Проверка грамотности и модерация');
+            showAnalysisUI();
             try {
-                var response = await fetch(AI_WORKER_URL, { 
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ text: text, title: storyData.title }) 
+                var response = await fetch(AI_WORKER_URL, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text, title: storyData.title })
                 });
                 if (!response.ok) { var err = await response.json(); throw new Error(err.error || 'Ошибка API'); }
                 var result = await response.json();
                 if (result.genre && !result.genres) result.genres = [{ name: result.genre, percent: 100 }];
                 storyData.genres = result.genres || [];
-                storyData.age_rating = result.age_rating || '16+'; 
-                storyData.subgenres = result.subgenres || []; 
+                storyData.age_rating = result.age_rating || '16+';
+                storyData.subgenres = result.subgenres || [];
                 storyData.shorts = result.shorts || [];
                 storyData.moderation = result.moderation || { status: 'ok', reason: null };
                 storyData.literacy = result.literacy || { score: 7, note: '', errors: [], similar_to: null };
                 storyData.similar_to = result.literacy?.similar_to || null;
-                hideLoading(); showStep3();
-            } catch (error) { hideLoading(); alert('Ошибка: ' + error.message); }
+                await revealAnalysisSteps();
+                hideAnalysisUI();
+                showStep3();
+            } catch (error) { hideAnalysisUI(); alert('Ошибка: ' + error.message); }
         }
         
         function showStep3() {
@@ -695,6 +779,20 @@
         function showLoading(text) { document.getElementById('loading-text').innerHTML = (text || 'Загрузка...').replace(/\n/g, '<br>'); document.getElementById('loading').classList.remove('hidden'); }
         function hideLoading() { document.getElementById('loading').classList.add('hidden'); }
         
+        // Скрываем нижнюю навигацию, когда поле ввода в фокусе (чтобы не перекрывалось клавиатурой)
+        document.addEventListener('focusin', function(e) {
+            if (e.target && e.target.matches && e.target.matches('input, textarea')) {
+                var nav = document.querySelector('.bottom-nav');
+                if (nav) nav.classList.add('bottom-nav-hidden');
+            }
+        });
+        document.addEventListener('focusout', function(e) {
+            if (e.target && e.target.matches && e.target.matches('input, textarea')) {
+                var nav = document.querySelector('.bottom-nav');
+                if (nav) nav.classList.remove('bottom-nav-hidden');
+            }
+        });
+
         // Инициализация — проверяем авторизацию и профиль
         checkAuthAndInit();
     </script>
