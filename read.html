@@ -312,16 +312,22 @@
             background: rgba(149, 165, 166, 0.2);
         }
         .share-top-btn {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 20px;
-            line-height: 1;
-            padding: 4px 8px;
-            cursor: pointer;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
             font-family: var(--font-ui);
+            font-size: 13px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s;
         }
-        .share-top-btn:hover { color: var(--accent); }
+        .share-top-btn:hover {
+            background: var(--accent);
+            color: var(--bg-primary);
+            border-color: var(--accent);
+        }
         .share-section { padding-top: 24px; border-top: 1px solid var(--border); }
         .share-title { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; }
         .share-buttons { display: flex; justify-content: center; gap: 12px; }
@@ -409,6 +415,9 @@
             .story-title { font-size: 26px; }
             .story-content { font-size: 17px; padding: 24px 16px; }
             .story-header { padding: 24px 16px; }
+        }
+        @media (max-width: 400px) {
+            .header-info { display: none; }
         }
         
         /* Age Modal */
@@ -510,7 +519,7 @@
             <a href="/" class="back-btn">← Назад</a>
             <div class="header-right">
                 <span class="header-info" id="header-info"></span>
-                <button class="share-top-btn" id="share-top-btn" onclick="shareStory()" title="Поделиться" aria-label="Поделиться">↗</button>
+                <button class="share-top-btn" onclick="shareStory()">Поделиться рассказом</button>
             </div>
             <div class="progress-bar" id="progress-bar" style="width: 0%;"></div>
         </header>
